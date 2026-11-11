@@ -35,17 +35,17 @@
   tickClock(); setInterval(tickClock, 1000);
 
   (function homeFx() {
-    var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0;
+    var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, lastT = 0;
     function seed() {
       g = fit(cv); dust = [];
       var n = small.matches ? 36 : 80;
       for (var i = 0; i < n; i++) dust.push({ x: Math.random(), y: Math.random(), s: .4 + Math.random() * 1.6, v: .008 + Math.random() * .03, p: Math.random() * 6.28 });
     }
-    seed(); addEventListener('resize', seed);
+    seed(); addEventListener('resize', function () { seed(); if (reduce) draw(0); });
     addEventListener('pointermove', function (e) { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
     function ring(c, r, a) { c.globalAlpha = a; c.beginPath(); c.arc(0, 0, r, 0, 6.2832); c.stroke(); }
     function draw(t) {
-      var c = g.c, w = g.w, h = g.h, s = t / 1000;
+      var c = g.c, w = g.w, h = g.h, s = t / 1000, k = lastT ? Math.min(3, (t - lastT) / 16.667) : 1; lastT = t;
       c.clearRect(0, 0, w, h);
       var cx = (small.matches ? .5 : .7) * w + mx * -18, cy = (small.matches ? .34 : .44) * h + my * -18;
       var R = Math.min(w, h) * (small.matches ? .4 : .42);
@@ -67,7 +67,7 @@
       c.restore();
       c.globalCompositeOperation = 'lighter';            /* 금가루 */
       for (var j = 0; j < dust.length; j++) {
-        var d = dust[j]; d.y -= d.v * .016; if (d.y < -.02) { d.y = 1.02; d.x = Math.random(); }
+        var d = dust[j]; d.y -= d.v * .016 * k; if (d.y < -.02) { d.y = 1.02; d.x = Math.random(); }
         var x = (d.x + Math.sin(s * .4 + d.p) * .012) * w, y = d.y * h;
         c.globalAlpha = .25 + .55 * Math.abs(Math.sin(s * .8 + d.p)); c.fillStyle = d.s > 1.5 ? '#fff3c4' : '#d4a73a';
         c.fillRect(x, y, d.s, d.s);
@@ -88,7 +88,8 @@
   /* ── 03 NATION: 점 입자 3D 모델 ── */
   var nation = (function () {
     var cv = $('.hud__model'), g = fit(cv), N = small.matches ? 1500 : 3200;
-    var cur = new Float32Array(N * 3), tgt = new Float32Array(N * 3), idx = 0, rotY = .6, rotX = -.28, vel = .004, drag = null;
+    var SPIN = reduce ? 0 : .004;                    /* 기준 회전 속도(60fps 한 프레임당) */
+    var cur = new Float32Array(N * 3), tgt = new Float32Array(N * 3), idx = 0, rotY = .6, rotX = -.28, vel = SPIN, drag = null, last = 0;
     var rnd = Math.random, PI2 = 6.2832;
     var SHAPES = [
       function () {                                     /* 첨탑 도시 */
@@ -129,16 +130,18 @@
     function up() { drag = null; }
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
 
-    function draw() {
+    function draw(t) {
       var c = g.c, w = g.w, h = g.h;
+      var k = last ? Math.min(3, (t - last) / 16.667) : 1; last = t;   /* 모니터 주사율과 상관없이 같은 속도 */
       c.clearRect(0, 0, w, h);
-      if (!drag) { rotY += vel; vel += (.004 - vel) * .02; }
+      if (!drag) { rotY += vel * k; vel += (SPIN - vel) * (1 - Math.pow(.98, k)); }
       var cy = Math.cos(rotY), sy = Math.sin(rotY), cx = Math.cos(rotX), sx = Math.sin(rotX);
       var S = Math.min(w, h) * .36, ox = w / 2, oy = h / 2;
+      var ease = 1 - Math.pow(1 - .028, k);
       c.globalCompositeOperation = 'lighter';
       for (var i = 0; i < N; i++) {
         var j = i * 3;
-        cur[j] += (tgt[j] - cur[j]) * .028; cur[j + 1] += (tgt[j + 1] - cur[j + 1]) * .028; cur[j + 2] += (tgt[j + 2] - cur[j + 2]) * .028;
+        cur[j] += (tgt[j] - cur[j]) * ease; cur[j + 1] += (tgt[j + 1] - cur[j + 1]) * ease; cur[j + 2] += (tgt[j + 2] - cur[j + 2]) * ease;
         var x = cur[j], y = cur[j + 1], z = cur[j + 2];
         var x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
         var y1 = y * cx - z1 * sx, z2 = y * sx + z1 * cx;
@@ -151,7 +154,7 @@
       }
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     }
-    if (reduce) { cur.set(tgt); draw(); } else loop(cv, draw);
+    loop(cv, draw);
 
     var panel = $('.npanel'), ticks = $('[data-n-ticks]');
     ticks.innerHTML = D.nations.map(function () { return '<li></li>'; }).join('');
@@ -159,7 +162,7 @@
     function show(i, quiet) {
       idx = (i + D.nations.length) % D.nations.length;
       var n = D.nations[idx];
-      shape(n.shape); if (reduce) { cur.set(tgt); draw(); }
+      shape(n.shape);
       RSC.scramble($('[data-n-code]'), n.code, 800);
       $('[data-n-en]').textContent = n.nameEn;
       $('[data-n-name]').textContent = n.name;
@@ -212,7 +215,7 @@
       cancelAnimationFrame(anim);
       var r = size(), a = { x: st.x, y: st.y, z: st.z };
       z = Math.max(zmin, Math.min(zmax, z));
-      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = reduce ? 1 : 1600;
+      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = 1600;
       (function step(now) {
         var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
         st.z = a.z + (b.z - a.z) * e; st.x = a.x + (b.x - a.x) * e; st.y = a.y + (b.y - a.y) * e; apply();

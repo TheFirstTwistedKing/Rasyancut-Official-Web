@@ -63,7 +63,7 @@
   menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
 
   /* 화면 전환 */
-  var COVER = reduce ? 0 : 1300, OPEN = reduce ? 0 : 1400;
+  var COVER = 1300, OPEN = 1400;
   function open() {
     wipe.className = 'wipe is-hold';
     requestAnimationFrame(function () { requestAnimationFrame(function () {
@@ -106,7 +106,6 @@
 
   /* 글자 해독 효과 */
   RSC.scramble = function (el, text, ms) {
-    if (reduce) { el.textContent = text; return; }
     var chars = '▚▞▙▟░▒#/\\<>01', start = performance.now(); ms = ms || 1200;
     (function tick(now) {
       var p = Math.min(1, (now - start) / ms), out = '';
