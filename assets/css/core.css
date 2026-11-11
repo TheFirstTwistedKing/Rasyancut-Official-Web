@@ -221,8 +221,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .foot { margin-left: var(--rail); padding: 40px var(--pad); border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 32px; justify-content: space-between; background: var(--obsidian); }
 
+/* 움직임 줄이기(OS 접근성 설정)가 켜진 경우:
+   계속 반복되는 장식 애니메이션만 멈춘다. 화면 전환·등장 연출은 그대로 둔다.
+   (예전처럼 재생 시간을 0.01ms로 줄이면 무한 반복 애니메이션이 오히려 미친 듯이 빨라진다) */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; transition-delay: 0s !important; }
-  .rv { opacity: 1; translate: none; }
+  .hud__ticks, .hud__arc, .pin::after, .home__down::after { animation: none !important; }
 }
