@@ -143,9 +143,13 @@
       <a class="btn" href="novels.html">소설 창으로 이동</a>
     </header>
     <a class="gate rv" style="--d:1" href="novels.html" aria-label="소설 창으로 이동">
-      <span class="gate__l"></span><span class="gate__r"></span>
-      <span class="gate__seam"></span>
-      <span class="gate__txt mono">Enter<br>Reading Room</span>
+      <span class="gate__in" aria-hidden="true"><span class="gate__word">열람</span><span class="mono">Enter Reading Room</span></span>
+      <span class="gate__l"><i></i></span><span class="gate__r"><i></i></span>
+      <svg class="gate__lock" viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="56"/><circle cx="60" cy="60" r="44" class="gate__ticks"/>
+        <path d="M60 22l38 38-38 38-38-38z"/><path d="M60 40l20 20-20 20-20-20z"/><circle cx="60" cy="60" r="4" class="gate__core"/>
+      </svg>
+      <span class="gate__cap mono">Sec-07 · Door</span>
     </a>
   </section>
 
