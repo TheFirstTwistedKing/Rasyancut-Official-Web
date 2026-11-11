@@ -1,0 +1,65 @@
+/* 캐릭터 선택 배너: 아래가 뾰족한 세로 깃발 + 사선으로 잘린 어두운 하단 */
+.strips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; }
+.strips > li { min-width: 0; }
+
+.strip {
+  position: relative; display: block; aspect-ratio: 9 / 21; max-height: 68vh; width: 100%;
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 50% 100%, 0 90%);
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 13px, rgba(212, 167, 58, .08) 13px 14px),
+    linear-gradient(180deg, var(--basalt), #201b13);
+  transition: translate .5s var(--ease), filter .5s;
+}
+.strip::before {                       /* 위쪽 금선 */
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gold-300);
+  scale: 0 1; transform-origin: left; transition: scale .5s var(--ease);
+}
+.strip__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.1); transition: filter .5s; }
+.strip__no { position: absolute; top: 14px; left: 14px; font-size: 22px; font-weight: 700; letter-spacing: 0; color: var(--gold-500); }
+.strip__empty {
+  position: absolute; top: 30%; left: 50%; translate: -50% -50%; writing-mode: vertical-rl;
+  font-size: 10px; letter-spacing: .5em; color: var(--gold-700); white-space: nowrap;
+}
+.strip__base {
+  position: absolute; inset: auto 0 0 0; height: 48%;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px;
+  padding: 0 8px 22%;
+  background: var(--void);
+  clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 100%);
+  transition: background .5s;
+}
+.strip__base::before {                 /* 사선 위에 얹힌 얇은 띠 */
+  content: ""; position: absolute; inset: 0; background: var(--gold-700);
+  clip-path: polygon(0 42%, 100% 0, 100% 3%, 0 45%);
+  transition: background .5s;
+}
+.strip__base svg { width: 34px; height: 34px; fill: none; stroke: var(--gold-300); stroke-width: 1.2; transition: rotate .7s var(--ease); }
+.strip__base .mono { font-size: 10px; }
+.strip__base strong { font-size: clamp(14px, 1.3vw, 18px); font-weight: 600; letter-spacing: .12em; }
+
+.strip:hover, .strip:focus-visible { translate: 0 -10px; }
+.strip:hover::before, .strip:focus-visible::before { scale: 1 1; }
+.strip:hover .strip__img { filter: none; }
+.strip:hover .strip__base::before { background: var(--gold-300); }
+.strip:hover .strip__base svg { rotate: 90deg; }
+
+/* 다음 화면을 예고하는 금색 띠 */
+.band {
+  position: relative; display: flex; flex-direction: column; justify-content: center;
+  min-height: 88px; padding: 12px clamp(20px, 5vw, 64px); margin: 0 calc(var(--pad) * -1);
+  background: var(--gold-300); color: var(--void); overflow: hidden;
+}
+.band .mono { color: var(--gold-900); }
+.band strong { font-size: clamp(22px, 2.6vw, 32px); font-weight: 900; line-height: 1.2; }
+.band i {
+  position: absolute; right: clamp(20px, 5vw, 64px); top: 50%; width: 72px; height: 2px; background: var(--void);
+  transition: width .5s var(--ease);
+}
+.band i::after { content: ""; position: absolute; right: 0; top: -5px; width: 12px; height: 12px; border-top: 2px solid var(--void); border-right: 2px solid var(--void); rotate: 45deg; }
+.band::after {
+  content: ""; position: absolute; inset: 0; background: var(--gold-100);
+  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); transition: clip-path .6s var(--ease); mix-blend-mode: screen;
+}
+.band:hover::after { clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%); }
+.band:hover i { width: 112px; }
+.band > * { position: relative; z-index: 1; }

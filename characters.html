@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>캐릭터 — RASYANCUT</title>
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/core.css">
+<link rel="stylesheet" href="assets/css/strips.css">
+<link rel="stylesheet" href="assets/css/characters.css">
+</head>
+<body data-nav="character">
+<main class="page">
+
+  <!-- 선택 창 -->
+  <section class="sec sec--raised clist" data-view="list">
+    <div class="hollow clist__hollow" aria-hidden="true">RECORD</div>
+    <header class="clist__head">
+      <div class="stitle">
+        <p class="stitle__en">CHARACTER</p>
+        <h1>캐릭터 기록</h1>
+        <p class="stitle__no mono">Select a record</p>
+      </div>
+      <p class="mono clist__count"><span class="gold" data-count>00</span> Records</p>
+    </header>
+    <ul class="strips clist__strips" data-strips></ul>
+  </section>
+
+  <!-- 일러스트 배치 창 -->
+  <section class="cview" data-view="detail" hidden>
+    <div class="cview__band" aria-hidden="true"></div>
+    <div class="cview__band cview__band--thin" aria-hidden="true"></div>
+    <div class="cview__dots" aria-hidden="true"></div>
+
+    <div class="cview__top">
+      <a class="cview__back mono" href="#">← 목록</a>
+      <p class="mono"><span class="gold" data-c-idx>01</span> / <span data-c-total>06</span></p>
+    </div>
+
+    <div class="cview__left">
+    <div class="cview__info">
+      <p class="mono gold" data-c-code>RSC-C01</p>
+      <p class="mono cview__kicker">The Record</p>
+      <h1 data-c-name>미등록</h1>
+      <p class="cview__title" data-c-title></p>
+      <dl class="cview__specs" data-c-specs></dl>
+    </div>
+    <div class="cview__body" data-c-body aria-live="polite"></div>
+    </div>
+
+    <figure class="cview__art">
+      <div class="cview__frame" data-c-art></div>
+      <div class="cview__en" data-c-en aria-hidden="true">UNREGISTERED</div>
+      <figcaption class="mono">Illustration <span class="gold" data-c-artno>01</span></figcaption>
+    </figure>
+
+    <div class="cview__side">
+      <div class="cview__tabs" role="tablist" aria-label="기록 구분">
+        <button role="tab" data-tab="profile" aria-selected="true">프로필</button>
+        <button role="tab" data-tab="ability" aria-selected="false">능력</button>
+        <button role="tab" data-tab="record" aria-selected="false">기록</button>
+      </div>
+      <div class="cview__nav">
+        <button class="rbtn" data-c-prev aria-label="이전 캐릭터"></button>
+        <span class="mono">Prev / Next</span>
+        <button class="rbtn" data-c-next aria-label="다음 캐릭터"></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/characters.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+/* RASYANCUT — 갤러리 창, 소설 창 */
+.sub__hollow { top: 4vh; right: -1vw; }
+.sub__head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: clamp(32px, 6vh, 64px); }
+.sub__head h1 { margin-top: 4px; font-size: clamp(26px, 3.4vw, 40px); font-weight: 900; line-height: 1.25; }
+.gpage, .npage { min-height: 100svh; }
+
+/* 갤러리: 비율이 서로 다른 빈 액자를 단으로 쌓는다 */
+.frames { position: relative; z-index: 1; columns: 4; column-gap: 12px; }
+.frames li { break-inside: avoid; margin-bottom: 12px; animation: frame-in .8s var(--ease) backwards; animation-delay: calc(var(--i) * 60ms + 350ms); }
+@keyframes frame-in { from { opacity: 0; translate: 0 32px; clip-path: inset(0 0 100% 0); } to { opacity: 1; translate: 0; clip-path: inset(0); } }
+.frames button { display: block; width: 100%; text-align: left; }
+.frames .slot { width: 100%; transition: border-color .3s; }
+.frames .cap { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px 4px; }
+.frames .cap strong { font-weight: 400; color: var(--ink-dim); font-size: 13px; }
+.frames button:hover .slot, .frames button:focus-visible .slot { border-color: var(--gold-300); }
+.frames button:hover .cap strong { color: var(--ink); }
+
+.lightbox {
+  position: fixed; inset: 0; z-index: 60; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px;
+  padding: 72px clamp(12px, 3vw, 48px) 32px; background: rgba(5, 5, 5, .96);
+  animation: lb-in .5s var(--ease);
+}
+@keyframes lb-in { from { clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%); } to { clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%); } }
+.lightbox figure { display: grid; justify-items: center; gap: 12px; min-width: 0; width: 100%; }
+.lightbox__slot { max-width: 100%; }
+.lightbox__slot img { width: 100%; height: 100%; object-fit: contain; }
+.lightbox.is-swap .lightbox__slot { animation: frame-in .5s var(--ease); }
+.lightbox figcaption { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 4px 20px; }
+.lightbox figcaption strong { font-weight: 600; }
+.lightbox__close { position: absolute; top: 12px; right: clamp(12px, 3vw, 48px); min-height: 44px; padding: 0 16px; border: 1px solid var(--line); color: var(--gold-300); transition: background .3s, color .3s; }
+.lightbox__close:hover { background: var(--gold-300); color: var(--void); }
+
+/* 소설 창: 준비 중 */
+.npage__empty { position: relative; z-index: 1; display: grid; justify-items: start; gap: 8px; max-width: 560px; padding: clamp(24px, 4vw, 48px); border: 1px solid var(--line); background: var(--obsidian); clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%); }
+.npage__msg { font-size: clamp(22px, 2.6vw, 32px); font-weight: 900; line-height: 1.4; }
+.npage__sub { color: var(--ink-dim); margin-bottom: 24px; }
+
+@media (max-width: 900px) {
+  .frames { columns: 2; }
+  .sub__head > .mono { display: none; }
+  .lightbox { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; padding-top: 68px; }
+  .lightbox figure { grid-column: 1 / -1; grid-row: 1; }
+  .lightbox [data-lb-prev] { grid-row: 2; justify-self: end; }
+  .lightbox [data-lb-next] { grid-row: 2; justify-self: start; }
+}

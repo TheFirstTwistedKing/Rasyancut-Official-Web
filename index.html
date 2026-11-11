@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RASYANCUT — 모든 창조물들의 성소</title>
+<meta name="description" content="라시안컷 공식 홈페이지">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/core.css">
+<link rel="stylesheet" href="assets/css/strips.css">
+<link rel="stylesheet" href="assets/css/home.css">
+</head>
+<body>
+<main class="page">
+
+  <!-- 01 HOME -->
+  <section class="sec home" id="home">
+    <canvas class="home__fx" aria-hidden="true"></canvas>
+    <div class="home__slash" aria-hidden="true"></div>
+    <p class="mono home__read">RSC // SANCTUARY — <span class="gold" data-clock>00:00:00</span></p>
+    <div class="home__title">
+      <p class="mono gold rv">Official Archive</p>
+      <h1 class="rv" style="--d:1">RASYANCUT</h1>
+      <p class="home__tag rv" style="--d:2">모든 창조물들의 성소</p>
+    </div>
+    <nav class="home__quick rv" style="--d:3" aria-label="바로가기">
+      <p class="mono gold">Index</p>
+      <ol data-quick></ol>
+    </nav>
+    <a class="home__down mono" href="#character">Scroll</a>
+  </section>
+
+  <!-- 02 CHARACTER -->
+  <section class="sec sec--raised chara" id="character">
+    <div class="hollow chara__hollow" aria-hidden="true">CHARACTER</div>
+    <header class="stitle rv">
+      <p class="stitle__en">CHARACTER</p>
+      <h2>캐릭터</h2>
+      <p class="stitle__no mono">Sec-02 / Record</p>
+    </header>
+    <ul class="strips chara__strips" data-strips></ul>
+    <a class="band rv" href="characters.html">
+      <span class="mono">RASYANCUT : Archive</span>
+      <strong>전체 캐릭터 보기</strong>
+      <i aria-hidden="true"></i>
+    </a>
+  </section>
+
+  <!-- 03 NATION -->
+  <section class="sec nation" id="nation">
+    <header class="stitle rv">
+      <p class="stitle__en">NATION</p>
+      <h2>국가 소개</h2>
+      <p class="stitle__no mono">Sec-03 / Model</p>
+    </header>
+    <div class="hud rv" style="--d:1">
+      <svg class="hud__ring" viewBox="0 0 600 600" aria-hidden="true">
+        <circle class="hud__ticks" cx="300" cy="300" r="286"/>
+        <circle class="hud__arc" cx="300" cy="300" r="268"/>
+        <circle cx="300" cy="300" r="244"/>
+      </svg>
+      <canvas class="hud__model" aria-label="국가 3D 모델. 끌어서 회전할 수 있습니다." role="img"></canvas>
+      <p class="mono hud__hint">Drag to rotate</p>
+    </div>
+    <div class="npanel rv" style="--d:2" aria-live="polite">
+      <p class="mono gold" data-n-code>RSC-N01</p>
+      <p class="npanel__en" data-n-en>UNCHARTED</p>
+      <div class="pill">
+        <button class="rbtn" data-n-prev aria-label="이전 국가"></button>
+        <p><span class="mono gold" data-n-count>1 / 4</span><strong data-n-name>미등록 국가</strong></p>
+        <button class="rbtn" data-n-next aria-label="다음 국가"></button>
+      </div>
+      <ol class="ticks" data-n-ticks></ol>
+      <p class="npanel__desc" data-n-desc></p>
+      <a class="btn btn--ghost" href="#map" data-n-map>지도에서 보기</a>
+    </div>
+  </section>
+
+  <!-- 04 MAP -->
+  <section class="sec sec--raised map" id="map">
+    <header class="stitle rv">
+      <p class="stitle__en">MAP</p>
+      <h2>지도</h2>
+      <p class="stitle__no mono">Sec-04 / Survey</p>
+    </header>
+    <div class="mapbox rv" style="--d:1">
+      <div class="mapview" data-map tabindex="0" aria-label="2D 지도. 끌어서 이동, 버튼 또는 Ctrl+휠로 확대·축소">
+        <div class="mapworld" data-world></div>
+      </div>
+      <p class="mono mapbox__read">X <span class="gold" data-mx>0000</span> · Y <span class="gold" data-my>0000</span> · Z <span class="gold" data-mz>1.00</span></p>
+      <div class="mapbox__ctl">
+        <button data-zoom="1" aria-label="확대">+</button>
+        <button data-zoom="-1" aria-label="축소">−</button>
+        <button data-zoom="0" aria-label="처음 위치로" class="mono">RST</button>
+      </div>
+      <p class="mono mapbox__hint">Ctrl + Wheel : Zoom</p>
+    </div>
+    <ol class="maplist rv" style="--d:2" data-maplist></ol>
+  </section>
+
+  <!-- 05 GAME -->
+  <section class="sec game" id="game">
+    <div class="hollow game__hollow" aria-hidden="true">// GAME</div>
+    <header class="stitle rv">
+      <p class="stitle__en">GAME</p>
+      <h2>게임 목록</h2>
+      <p class="stitle__no mono">Sec-05 / Download</p>
+    </header>
+    <div class="gview rv" style="--d:1">
+      <div class="slot gview__slot"><span>SCREENSHOT<br>EMPTY</span></div>
+      <div class="gview__side" aria-hidden="true"><b>GAME</b><span class="mono">RSC-G</span></div>
+      <div class="gview__cap">
+        <p class="mono gold" data-g-code>RSC-G01</p>
+        <h3 data-g-name>미등록</h3>
+        <p class="mono" data-g-meta>—</p>
+        <a class="btn is-off" data-g-dl aria-disabled="true">다운로드 준비 중</a>
+      </div>
+    </div>
+    <ol class="glist rv" style="--d:2" data-glist></ol>
+  </section>
+
+  <!-- 06 CLUE -->
+  <section class="sec sec--raised clue" id="clue">
+    <header class="stitle rv">
+      <p class="stitle__en">CLUE</p>
+      <h2>떡밥</h2>
+      <p class="stitle__no mono">Sec-06 / Sealed</p>
+      <p class="clue__lead">봉인된 기록입니다. 눌러서 해독을 시도할 수 있습니다.</p>
+    </header>
+    <ol class="clues" data-clues></ol>
+  </section>
+
+  <!-- 07 NOVEL -->
+  <section class="sec novel" id="novel">
+    <header class="stitle rv">
+      <p class="stitle__en">NOVEL</p>
+      <h2>소설</h2>
+      <p class="stitle__no mono">Sec-07 / Reading Room</p>
+      <p class="novel__lead">기록된 이야기를 읽는 곳으로 이어집니다.</p>
+      <a class="btn" href="novels.html">소설 창으로 이동</a>
+    </header>
+    <a class="gate rv" style="--d:1" href="novels.html" aria-label="소설 창으로 이동">
+      <span class="gate__l"></span><span class="gate__r"></span>
+      <span class="gate__seam"></span>
+      <span class="gate__txt mono">Enter<br>Reading Room</span>
+    </a>
+  </section>
+
+  <!-- 08 NOTICE -->
+  <section class="sec sec--raised notice" id="notice">
+    <div class="notice__tab rv" aria-hidden="true"><b>최신</b><span class="mono">RASYANCUT</span></div>
+    <header class="stitle rv">
+      <p class="stitle__en">NOTICE</p>
+      <h2>공지</h2>
+      <p class="stitle__no mono">Sec-08 / Patch Log</p>
+    </header>
+    <ol class="nlist" data-notices></ol>
+  </section>
+
+  <!-- 09 GALLERY -->
+  <section class="sec gal" id="gallery">
+    <header class="stitle rv">
+      <p class="stitle__en">GALLERY</p>
+      <h2>컨셉아트 · 일러스트</h2>
+      <p class="stitle__no mono">Sec-09 / Concept Art</p>
+    </header>
+    <ul class="galrow rv" style="--d:1" data-galrow></ul>
+    <a class="btn rv" style="--d:2" href="gallery.html">갤러리 창으로 이동</a>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="mono">RASYANCUT Official Archive</p>
+  <p class="mono">Sanctuary of All Creations</p>
+</footer>
+
+<noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/home.js"></script>
+</body>
+</html>
