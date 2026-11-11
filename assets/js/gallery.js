@@ -20,7 +20,7 @@
     var maxW = slot.parentNode.clientWidth, maxH = innerHeight * (innerWidth <= 900 ? .58 : .7), w = Math.min(maxW, maxH * ratio);
     slot.style.width = Math.round(w) + 'px'; slot.style.height = Math.round(w / ratio) + 'px';
     slot.innerHTML = a.image ? '<img src="' + esc(a.image) + '" alt="' + esc(a.title) + '">' : '<span>' + a.code + '<br>EMPTY</span>';
-    RSC.scramble($('[data-lb-code]'), a.code, 400);
+    RSC.scramble($('[data-lb-code]'), a.code, 800);
     $('[data-lb-title]').textContent = a.title || '제목 미등록';
     $('[data-lb-count]').textContent = a.id + ' / ' + String(D.length).padStart(2, '0');
     history.replaceState(null, '', '#a=' + a.id);

@@ -6,10 +6,10 @@
 
 /* 갤러리: 비율이 서로 다른 빈 액자를 단으로 쌓는다 */
 .frames { position: relative; z-index: 1; columns: 4; column-gap: 12px; }
-.frames li { break-inside: avoid; margin-bottom: 12px; animation: frame-in .8s var(--ease) backwards; animation-delay: calc(var(--i) * 60ms + 350ms); }
+.frames li { break-inside: avoid; margin-bottom: 12px; animation: frame-in 1.44s var(--ease) backwards; animation-delay: calc(var(--i) * 100ms + 600ms); }
 @keyframes frame-in { from { opacity: 0; translate: 0 32px; clip-path: inset(0 0 100% 0); } to { opacity: 1; translate: 0; clip-path: inset(0); } }
 .frames button { display: block; width: 100%; text-align: left; }
-.frames .slot { width: 100%; transition: border-color .3s; }
+.frames .slot { width: 100%; transition: border-color .42s; }
 .frames .cap { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px 4px; }
 .frames .cap strong { font-weight: 400; color: var(--ink-dim); font-size: 13px; }
 .frames button:hover .slot, .frames button:focus-visible .slot { border-color: var(--gold-300); }
@@ -18,16 +18,16 @@
 .lightbox {
   position: fixed; inset: 0; z-index: 60; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px;
   padding: 72px clamp(12px, 3vw, 48px) 32px; background: rgba(5, 5, 5, .96);
-  animation: lb-in .5s var(--ease);
+  animation: lb-in .9s var(--ease);
 }
 @keyframes lb-in { from { clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%); } to { clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%); } }
 .lightbox figure { display: grid; justify-items: center; gap: 12px; min-width: 0; width: 100%; }
 .lightbox__slot { max-width: 100%; }
 .lightbox__slot img { width: 100%; height: 100%; object-fit: contain; }
-.lightbox.is-swap .lightbox__slot { animation: frame-in .5s var(--ease); }
+.lightbox.is-swap .lightbox__slot { animation: frame-in .9s var(--ease); }
 .lightbox figcaption { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 4px 20px; }
 .lightbox figcaption strong { font-weight: 600; }
-.lightbox__close { position: absolute; top: 12px; right: clamp(12px, 3vw, 48px); min-height: 44px; padding: 0 16px; border: 1px solid var(--line); color: var(--gold-300); transition: background .3s, color .3s; }
+.lightbox__close { position: absolute; top: 12px; right: clamp(12px, 3vw, 48px); min-height: 44px; padding: 0 16px; border: 1px solid var(--line); color: var(--gold-300); transition: background .42s, color .42s; }
 .lightbox__close:hover { background: var(--gold-300); color: var(--void); }
 
 /* 소설 창: 준비 중 */

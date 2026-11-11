@@ -31,7 +31,7 @@
     var ch = D[i], art = $('[data-c-art]');
     $('[data-c-idx]').textContent = ch.id;
     $('[data-c-artno]').textContent = ch.id;
-    RSC.scramble($('[data-c-code]'), ch.code, 500);
+    RSC.scramble($('[data-c-code]'), ch.code, 900);
     $('[data-c-name]').textContent = ch.name;
     $('[data-c-title]').textContent = ch.quote || ch.title || '';
     $('[data-c-en]').textContent = ch.nameEn;

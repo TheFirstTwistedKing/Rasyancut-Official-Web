@@ -138,7 +138,7 @@
       c.globalCompositeOperation = 'lighter';
       for (var i = 0; i < N; i++) {
         var j = i * 3;
-        cur[j] += (tgt[j] - cur[j]) * .06; cur[j + 1] += (tgt[j + 1] - cur[j + 1]) * .06; cur[j + 2] += (tgt[j + 2] - cur[j + 2]) * .06;
+        cur[j] += (tgt[j] - cur[j]) * .028; cur[j + 1] += (tgt[j + 1] - cur[j + 1]) * .028; cur[j + 2] += (tgt[j + 2] - cur[j + 2]) * .028;
         var x = cur[j], y = cur[j + 1], z = cur[j + 2];
         var x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
         var y1 = y * cx - z1 * sx, z2 = y * sx + z1 * cx;
@@ -160,7 +160,7 @@
       idx = (i + D.nations.length) % D.nations.length;
       var n = D.nations[idx];
       shape(n.shape); if (reduce) { cur.set(tgt); draw(); }
-      RSC.scramble($('[data-n-code]'), n.code, 400);
+      RSC.scramble($('[data-n-code]'), n.code, 800);
       $('[data-n-en]').textContent = n.nameEn;
       $('[data-n-name]').textContent = n.name;
       $('[data-n-count]').textContent = (idx + 1) + ' / ' + D.nations.length;
@@ -212,7 +212,7 @@
       cancelAnimationFrame(anim);
       var r = size(), a = { x: st.x, y: st.y, z: st.z };
       z = Math.max(zmin, Math.min(zmax, z));
-      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = reduce ? 1 : 900;
+      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = reduce ? 1 : 1600;
       (function step(now) {
         var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
         st.z = a.z + (b.z - a.z) * e; st.x = a.x + (b.x - a.x) * e; st.y = a.y + (b.y - a.y) * e; apply();
@@ -273,7 +273,7 @@
     reset();
     return { select: select };
   })();
-  $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(nation.current(), true); }, 500); });
+  $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(nation.current(), true); }, 900); });
 
   /* ── 05 GAME ── */
   (function () {
@@ -284,8 +284,8 @@
     function show(i) {
       var gm = D.games[i], dl = $('[data-g-dl]');
       list.querySelectorAll('button').forEach(function (b, k) { b.classList.toggle('is-on', k === i); });
-      RSC.scramble($('[data-g-code]'), gm.code, 400);
-      RSC.scramble($('[data-g-name]'), gm.name, 500);
+      RSC.scramble($('[data-g-code]'), gm.code, 800);
+      RSC.scramble($('[data-g-name]'), gm.name, 900);
       $('[data-g-meta]').textContent = '장르 ' + gm.genre + ' · 플랫폼 ' + gm.platform;
       if (gm.url) { dl.href = gm.url; dl.classList.remove('is-off'); dl.removeAttribute('aria-disabled'); dl.textContent = '다운로드'; }
       else { dl.removeAttribute('href'); dl.classList.add('is-off'); dl.setAttribute('aria-disabled', 'true'); dl.textContent = '다운로드 준비 중'; }
@@ -308,7 +308,7 @@
       var li = b.parentNode, i = [].indexOf.call(box.children, li), open = li.classList.toggle('is-open');
       b.setAttribute('aria-expanded', open);
       b.querySelector('.state').textContent = open ? '해독' : '봉인';
-      if (open) RSC.scramble(b.querySelector('.body'), D.clues[i].text || '기록 없음 — 해독할 내용이 아직 등록되지 않았습니다.', 900);
+      if (open) RSC.scramble(b.querySelector('.body'), D.clues[i].text || '기록 없음 — 해독할 내용이 아직 등록되지 않았습니다.', 1600);
     });
     RSC.observe(box);
   })();
