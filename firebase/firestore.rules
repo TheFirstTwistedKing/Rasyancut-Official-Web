@@ -23,6 +23,45 @@ service cloud.firestore {
         && str(request.resource.data.name, 1, 20)
         && str(request.resource.data.photo, 0, 30000)
         && request.resource.data.updatedAt == request.time;
+
+      // 알림 설정: 본인만. 댓글 알림·공지 알림 켜기/끄기, 알림 끈 글 목록, 공지 읽은 위치
+      match /private/{doc} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if signedIn() && request.auth.uid == uid && doc == 'settings'
+          && request.resource.data.keys().hasOnly(['comments', 'notices', 'muted', 'siteSeen', 'annSeenAt'])
+          && (!('comments' in request.resource.data) || request.resource.data.comments is bool)
+          && (!('notices' in request.resource.data) || request.resource.data.notices is bool)
+          && (!('muted' in request.resource.data) || (request.resource.data.muted is list && request.resource.data.muted.size() <= 200))
+          && (!('siteSeen' in request.resource.data) || str(request.resource.data.siteSeen, 0, 200))
+          && (!('annSeenAt' in request.resource.data) || request.resource.data.annSeenAt is timestamp);
+      }
+
+      // 알림함: 다른 사람이 내 글에 댓글을 달 때 넣는다. 읽기·읽음 표시·삭제는 본인만.
+      match /notifs/{nid} {
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
+        allow create: if signedIn() && request.auth.uid != uid
+          && request.resource.data.keys().hasOnly(['type', 'pid', 'title', 'from', 'name', 'photo', 'body', 'createdAt', 'read'])
+          && request.resource.data.type == 'comment'
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.pid is string
+          && get(/databases/$(database)/documents/posts/$(request.resource.data.pid)).data.uid == uid
+          && str(request.resource.data.title, 0, 100) && str(request.resource.data.name, 0, 80)
+          && str(request.resource.data.photo, 0, 30000) && str(request.resource.data.body, 0, 80)
+          && request.resource.data.read == false && request.resource.data.createdAt == request.time;
+      }
+    }
+
+    // 커뮤니티 공지 알림 목록: 관리자가 공지 글을 쓸 때 함께 만든다.
+    match /announcements/{aid} {
+      allow read: if signedIn();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['pid', 'title', 'createdAt'])
+        && request.resource.data.pid == aid && str(request.resource.data.title, 1, 100)
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
     }
 
     match /posts/{pid} {

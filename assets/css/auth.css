@@ -55,3 +55,43 @@
 .aprof__name input { width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: rgba(10, 12, 13, .85); border: 1px solid var(--line); border-radius: 0; }
 .aprof__name input:focus { outline: 1px solid var(--gold-300); }
 .aprof__row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── 알림·설정 탭 ── */
+.acct { position: fixed; }
+.acct__dot { position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; display: grid; place-items: center;
+  background: #d9241a; color: #fff; font: 600 11px/1 var(--mono); font-style: normal; pointer-events: none; }
+.apanel__box { max-height: min(86svh, 720px); overflow-y: auto; overscroll-behavior: contain; }
+.atabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); }
+.atabs button { min-height: 44px; font-weight: 600; color: var(--ink-dim); transition: background .4s, color .4s; }
+.atabs button + button { border-left: 1px solid var(--line); }
+.atabs button[aria-selected="true"] { background: var(--gold-300); color: var(--void); }
+.atabs button b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 4px; padding: 0 5px; border-radius: 10px; background: #d9241a; color: #fff; font: 600 11px/1 var(--mono); }
+.apane { display: grid; gap: 12px; min-height: 160px; }
+.anotif__bar { display: flex; justify-content: space-between; align-items: center; }
+.anotif__bar button { min-height: 36px; padding: 0 10px; color: var(--gold-300); border: 1px solid var(--line); }
+.anotif { display: grid; border-top: 1px solid var(--line-soft); }
+.anotif li { position: relative; display: flex; align-items: stretch; border-bottom: 1px solid var(--line-soft); }
+.anotif a { flex: 1; min-width: 0; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; padding: 12px 4px; transition: background .3s; }
+.anotif a:hover { background: rgba(212, 167, 58, .07); }
+.anotif li.is-unread a { background: rgba(242, 210, 122, .06); }
+.anotif li.is-unread .anotif__ic::after { content: ""; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: #d9241a; }
+.anotif__ic { position: relative; width: 28px; height: 28px; border: 1px solid var(--gold-500); align-self: start; }
+.anotif__ic--comment::before { content: ""; position: absolute; inset: 7px 6px 9px; border: 1.5px solid var(--gold-300); border-radius: 2px; }
+.anotif__ic--notice::before { content: "!"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--gold-300); font: 700 15px/1 var(--mono); }
+.anotif__t { display: grid; gap: 2px; min-width: 0; font-size: 14px; line-height: 1.5; }
+.anotif__t em { font-style: normal; color: var(--gold-300); }
+.anotif__sub { color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.anotif__mute { flex: none; width: 52px; color: var(--ink-dim); border-left: 1px solid var(--line-soft); }
+.anotif__mute:hover { color: var(--gold-300); }
+.aset { display: grid; gap: 8px; }
+.aset__row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; padding: 8px 12px; border: 1px solid var(--line); cursor: pointer; }
+.aset__row > span { display: grid; }
+.aset__row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.aset__row i { position: relative; flex: none; width: 46px; height: 24px; border: 1px solid var(--gold-500); transition: background .3s; }
+.aset__row i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--ink-dim); transition: translate .3s var(--ease), background .3s; }
+.aset__row input:checked + i { background: rgba(242, 210, 122, .18); }
+.aset__row input:checked + i::after { translate: 22px 0; background: var(--gold-300); }
+.aset__row input:focus-visible + i { outline: 1px solid var(--gold-300); outline-offset: 2px; }
+.aset__h { margin-top: 8px; }
+.aset__muted li { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 40px; border-bottom: 1px solid var(--line-soft); }
+.aset__muted button { color: var(--gold-300); min-height: 36px; padding: 0 8px; }

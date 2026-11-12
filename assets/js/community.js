@@ -108,11 +108,12 @@
         '<div class="cact"><button class="clikebtn' + (liked ? ' is-on' : '') + '" data-c-like aria-pressed="' + liked + '">♥ <span>' + (p.likeCount || 0) + '</span></button>' +
           (mine ? '<a class="btn btn--ghost" href="#edit=' + id + '">수정</a>' : '') +
           ((mine || admin) ? '<button class="btn btn--ghost" data-c-del>삭제</button>' : '') +
-          (admin ? '<button class="btn btn--ghost" data-c-pin>' + (p.pinned ? '고정 해제' : '위에 고정') + '</button>' : '') + '</div>' +
+          (admin ? '<button class="btn btn--ghost" data-c-pin>' + (p.pinned ? '고정 해제' : '위에 고정') + '</button>' : '') +
+          (mine && RSC.notify ? '<button class="btn btn--ghost cnotif" data-c-mute>' + (RSC.notify.muted(id) ? '이 글 알림 켜기' : '이 글 알림 끄기') + '</button>' : '') + '</div>' +
         '<section class="ccom"><h3 class="mono">Comments <b class="gold">' + r[2].size + '</b></h3><ol>' + cms + '</ol>' +
           '<form data-c-cform><textarea name="body" maxlength="1000" rows="3" placeholder="댓글을 남겨 주세요" required></textarea><button class="btn">댓글 등록</button></form></section>' +
         '</article>');
-      view.dataset.pid = id; view.dataset.liked = liked ? '1' : '';
+      view.dataset.pid = id; view.dataset.liked = liked ? '1' : ''; view.dataset.owner = p.uid; view.dataset.title = p.title;
     }).catch(fail);
   }
 
@@ -168,6 +169,7 @@
       batch.set(ref, { cat: cat2, title: title, body: body, uid: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '',
         createdAt: F.serverTimestamp(), likeCount: 0, commentCount: 0, pinned: false, imageCount: pending.length });
       pending.forEach(function (d, i) { batch.set(F.doc(db, 'posts', ref.id, 'files', String(i)), { n: i, data: d }); });
+      if (cat2 === 'notice' && admin) batch.set(F.doc(db, 'announcements', ref.id), { pid: ref.id, title: title, createdAt: F.serverTimestamp() });   /* 공지 알림 */
       run = batch.commit().then(function () { return ref.id; });
     }
     run.then(function (pid) { posts = []; lastDoc = null; location.hash = 'p=' + pid; }).catch(function (err) { b.disabled = false; msg.textContent = '저장하지 못했습니다 (' + (err.code || err.message) + ')'; });
@@ -191,6 +193,8 @@
         posts.forEach(function (p) { if (p.id === pid) p.likeCount = (p.likeCount || 0) + (on ? -1 : 1); });
       }).catch(function (err) { btn.disabled = false; alert('좋아요를 저장하지 못했습니다 (' + (err.code || err.message) + ')'); });
     }
+    var mb = t.closest('[data-c-mute]');
+    if (mb) { mb.disabled = true; return RSC.notify.toggle(pid).then(function (on) { mb.disabled = false; mb.textContent = on ? '이 글 알림 켜기' : '이 글 알림 끄기'; }); }
     if (t.closest('[data-c-del]')) {
       if (!confirm('이 글을 삭제할까요? 되돌릴 수 없습니다.')) return;
       return F.deleteDoc(F.doc(db, 'posts', pid)).then(function () { posts = posts.filter(function (p) { return p.id !== pid; }); location.hash = ''; }).catch(fail);
@@ -224,6 +228,10 @@
       var batch = F.writeBatch(db), ref = F.doc(F.collection(db, 'posts', pid, 'comments'));
       batch.set(ref, { body: body, uid: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '', createdAt: F.serverTimestamp() });
       batch.update(F.doc(db, 'posts', pid), { commentCount: F.increment(1) });
+      var owner = view.dataset.owner;
+      if (owner && owner !== user.uid)               /* 글쓴이 알림함에 넣는다 (끄기 설정은 받는 쪽에서 거른다) */
+        batch.set(F.doc(F.collection(db, 'users', owner, 'notifs')), { type: 'comment', pid: pid, title: (view.dataset.title || '').slice(0, 100),
+          from: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '', body: body.slice(0, 80), createdAt: F.serverTimestamp(), read: false });
       batch.commit().then(function () { posts = []; lastDoc = null; renderPost(pid); }).catch(function (err) { b.disabled = false; alert('댓글을 저장하지 못했습니다 (' + (err.code || err.message) + ')'); });
     }
   });
