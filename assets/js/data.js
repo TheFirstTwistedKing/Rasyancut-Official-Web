@@ -57,7 +57,7 @@ window.RSC_DATA = {
     { name: '아스트랄리스', x: 1366, y: 88, kind: 'nation', color: '#5a2ee0' },
     { name: '소버린\n아일랜드', x: 1862, y: 92, kind: 'nation', color: '#3f8fbf' },
     { name: '코르녹시아', x: 1550, y: 228, kind: 'nation', color: '#8a5048' },
-    { name: '버미크루시아', x: 1500, y: 436, kind: 'nation', color: '#d9241a', rot: 38 },
+    { name: '버믹쿠루시아', x: 1500, y: 436, kind: 'nation', color: '#d9241a', rot: 38 },
     { name: '레스렉시온', x: 1830, y: 470, kind: 'nation', color: '#2d6e2a' },
     { name: '솔라리아', x: 1285, y: 745, kind: 'nation', color: '#a8935f' },
     { name: '루나시아', x: 1445, y: 705, kind: 'nation', color: '#5c4a6e' },
@@ -78,6 +78,14 @@ window.RSC_DATA = {
   }),
 
   notices: [
+    {
+      title: 'Patch v-2.9.1',
+      date: '2026.11.12',
+      tag: '공지',
+      body: [
+        '세계 지도의 국가 이름을 바로잡았습니다: 버미크루시아 → 버믹쿠루시아'
+      ]
+    },
     {
       title: 'Patch v-2.9.0',
       date: '2026.11.12',
