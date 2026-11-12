@@ -672,7 +672,10 @@
     }
   }
   function canScrollInside(dy) {
-    var s = secs[cur];
+    /* 넘치는 양이 48px 미만이면 '읽을 내용이 더 있다'고 보지 않고 바로 다음 화면으로 넘긴다
+       (여백·장식 몇 픽셀 때문에 휠을 두 번 굴려야 하는 일이 없게) */
+    var s = secs[cur], extra = s.scrollHeight - s.clientHeight;
+    if (extra < 48) return false;
     return dy > 0 ? s.scrollTop + s.clientHeight < s.scrollHeight - 2 : s.scrollTop > 2;
   }
   function overlayOpen() { return !!document.querySelector('.rpanel.is-open'); }

@@ -151,3 +151,5 @@ body {
 .is-deck .news__card ul { max-height: calc(100vh - var(--top) - 360px); min-height: 96px; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--gold-700) transparent; }
 /* 한 화면 모드에서는 카메라 오버레이가 시각을 보여주므로 홈의 시각 표시는 숨긴다 (중복 제거) */
 .is-deck .home__read { display: none; }
+/* 카메라 오버레이의 위쪽 글자는 홈 화면에서만 (다른 화면의 제목과 겹치지 않게) */
+.is-deck:not([data-slide="home"]) .camhud__tl, .is-deck:not([data-slide="home"]) .camhud__tr { opacity: 0; }
