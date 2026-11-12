@@ -53,6 +53,7 @@
              회전하는 고리는 매 프레임 선으로 그린다 — 칠하는 면적이 작아 회전 그림 붙이기보다 훨씬 가볍다.
        품질: 굵고 옅은 선을 겹쳐 빛 번짐, 고리를 따라 흐르는 빛, 궤도 불꽃, 레이더 스윕, 등장 연출, 층별 깊이감.
        느린 기기: 40프레임마다 평균 프레임 시간을 재서 33ms(30fps)를 넘으면 품질을 한 단계씩 낮춘다. */
+    var reduce = false;   /* 사용자 요청: 홈 마법진은 기기의 '애니메이션 줄이기' 설정과 관계없이 회전한다 */
     var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, px = 0, py = 0, lastT = 0, born = 0;
     var TAU = Math.PI * 2, SIL = '214, 220, 226', GOLD = '242, 210, 122', RW = 743, RH = 341;
     var c, U = 1, sc = 1, ox = 0, oy = 0, dpr = 1, hasFilter = 'filter' in document.createElement('canvas').getContext('2d');
@@ -184,36 +185,36 @@
     }
     /* 회전층: [중심 x, y, 감싸는 반지름, 회전 속도(rad/s), 시작 각, 빛 번짐, 그리기] */
     var PARTS = [
-      [X, Y, 136, .012, 0, 0, function () { poly(X, Y, 134, 7, -Math.PI / 2, SIL, .16); }],
-      [X, Y, 120, -.02, 0, 0, function () { dotRing(X, Y, 118, 90, .7, SIL, .35); }],
-      [X, Y, 79, .03, 0, 1, function () { dotRing(X, Y, 77, 110, .6, SIL, .8); }],
-      [X, Y, 101, -.025, 0, 0, function () { dotRing(X, Y, 100, 160, .45, SIL, .4); ticks(X, Y, 90, 72, 2, SIL, .25); }],
-      [X, Y, 82, -.02, 0, 0, function () { for (var p = 0; p < 8; p++) { var t = p / 8 * TAU; arc(X + Math.cos(t) * 78, Y + Math.sin(t) * 78, 50, t + Math.PI - .78, t + Math.PI + .78, SIL, .09); } }],
-      [X, Y, 116, -.05, 0, 0, function () { arc(X, Y, 113, 0, .55, SIL, .4, 1.6); arc(X, Y, 113, 3.3, 3.7, SIL, .4, 1.6); }],
+      [X, Y, 136, .06, 0, 0, function () { poly(X, Y, 134, 7, -Math.PI / 2, SIL, .16); }],
+      [X, Y, 120, -.1, 0, 0, function () { dotRing(X, Y, 118, 90, .7, SIL, .35); }],
+      [X, Y, 79, .16, 0, 1, function () { dotRing(X, Y, 77, 110, .6, SIL, .8); }],
+      [X, Y, 101, -.09, 0, 0, function () { dotRing(X, Y, 100, 160, .45, SIL, .4); ticks(X, Y, 90, 72, 2, SIL, .25); }],
+      [X, Y, 82, .05, 0, 0, function () { for (var p = 0; p < 8; p++) { var t = p / 8 * TAU; arc(X + Math.cos(t) * 78, Y + Math.sin(t) * 78, 50, t + Math.PI - .78, t + Math.PI + .78, SIL, .09); } }],
+      [X, Y, 116, .13, 0, 0, function () { arc(X, Y, 113, 0, .55, SIL, .4, 1.6); arc(X, Y, 113, 3.3, 3.7, SIL, .4, 1.6); }],
       /* 왼쪽 위: 겹친 불규칙 다각형 */
-      [85, 72, 50, .05, 0, 0, function () { poly(85, 72, 44, 6, 0, SIL, .38); st(SIL, .3); c.beginPath(); c.ellipse(85, 72, 41, 33, .4, 0, TAU); c.stroke(); }],
-      [85, 72, 50, -.07, .8, 0, function () { poly(85, 72, 42, 7, .3, SIL, .34); }],
-      [85, 72, 50, .09, 1.6, 0, function () { poly(85, 72, 40, 5, .1, SIL, .3); st(SIL, .26); c.beginPath(); c.ellipse(85, 72, 38, 30, -.5, 0, TAU); c.stroke(); }],
-      [85, 72, 50, -.11, 2.4, 0, function () { poly(85, 72, 46, 6, .5, SIL, .22); }],
+      [85, 72, 50, .16, 0, 0, function () { poly(85, 72, 44, 6, 0, SIL, .38); st(SIL, .3); c.beginPath(); c.ellipse(85, 72, 41, 33, .4, 0, TAU); c.stroke(); }],
+      [85, 72, 50, -.22, .8, 0, function () { poly(85, 72, 42, 7, .3, SIL, .34); }],
+      [85, 72, 50, .28, 1.6, 0, function () { poly(85, 72, 40, 5, .1, SIL, .3); st(SIL, .26); c.beginPath(); c.ellipse(85, 72, 38, 30, -.5, 0, TAU); c.stroke(); }],
+      [85, 72, 50, -.12, 2.4, 0, function () { poly(85, 72, 46, 6, .5, SIL, .22); }],
       /* 왼쪽 가운데 */
-      [160, 170, 64, .06, 0, 0, function () { arc(160, 170, 58, -2.6, -1.75, SIL, .45, 2.6); arc(160, 170, 58, 1.9, 2.5, SIL, .4, 2.6); }],
-      [160, 170, 46, -.04, 0, 0, function () { dotRing(160, 170, 45, 90, .45, SIL, .45); }],
+      [160, 170, 64, .22, 0, 0, function () { arc(160, 170, 58, -2.6, -1.75, SIL, .45, 2.6); arc(160, 170, 58, 1.9, 2.5, SIL, .4, 2.6); }],
+      [160, 170, 46, -.14, 0, 0, function () { dotRing(160, 170, 45, 90, .45, SIL, .45); }],
       /* 왼쪽 아래: 굵은 점 두 구간 + 가는 점선 */
-      [92, 277, 54, -.04, 0, 1, function () { dotRing(92, 277, 50, 8, 1.5, SIL, .85, 3.55, 4.35); dotRing(92, 277, 50, 8, 1.2, SIL, .7, 5.2, 6.0); }],
-      [92, 277, 56, .02, 0, 0, function () { dotRing(92, 277, 54, 120, .45, SIL, .4); }],
+      [92, 277, 54, -.18, 0, 1, function () { dotRing(92, 277, 50, 8, 1.5, SIL, .85, 3.55, 4.35); dotRing(92, 277, 50, 8, 1.2, SIL, .7, 5.2, 6.0); }],
+      [92, 277, 56, .08, 0, 0, function () { dotRing(92, 277, 54, 120, .45, SIL, .4); }],
       /* 가운데 아래: 오른쪽 굵은 호 + 점선 */
-      [357, 270, 52, .05, 0, 0, function () { arc(357, 270, 48, -1.1, 1.4, SIL, .45, 3); }],
-      [357, 270, 54, -.03, 0, 0, function () { dotRing(357, 270, 52, 70, .5, SIL, .4); }],
+      [357, 270, 52, -.2, 0, 0, function () { arc(357, 270, 48, -1.1, 1.4, SIL, .45, 3); }],
+      [357, 270, 54, .11, 0, 0, function () { dotRing(357, 270, 52, 70, .5, SIL, .4); }],
       /* 오른쪽 위: 기울어진 타원 모양 블록 점선 */
-      [645, 75, 36, .07, 0, 1, function () { c.save(); c.translate(645, 75); c.rotate(-.45); for (var i = 0; i < 12; i++) { var t = i / 12 * TAU; st(SIL, .8 - (i % 3) * .12, 3); c.beginPath(); c.ellipse(0, 0, 20, 9, 0, t, t + .28); c.stroke(); } c.restore(); }],
-      [645, 75, 34, -.03, 0, 0, function () { ticks(645, 75, 28, 24, 2.5, SIL, .25); }],
+      [645, 75, 36, .26, 0, 1, function () { c.save(); c.translate(645, 75); c.rotate(-.45); for (var i = 0; i < 12; i++) { var t = i / 12 * TAU; st(SIL, .8 - (i % 3) * .12, 3); c.beginPath(); c.ellipse(0, 0, 20, 9, 0, t, t + .28); c.stroke(); } c.restore(); }],
+      [645, 75, 34, -.12, 0, 0, function () { ticks(645, 75, 28, 24, 2.5, SIL, .25); }],
       /* 열쇠 고리: 촘촘한 점 테두리 */
-      [533, 125, 36, .04, 0, 0, function () { dotRing(533, 125, 33, 60, .6, SIL, .55); }],
+      [533, 125, 36, -.15, 0, 0, function () { dotRing(533, 125, 33, 60, .6, SIL, .55); }],
       /* 구슬 표식 고리: 점선 테 + 짧은 호 */
-      [612, 190, 56, -.05, 0, 0, function () { dotRing(612, 190, 52, 80, .5, SIL, .45); arc(612, 190, 52, .5, 1.1, SIL, .4, 1.4); arc(612, 190, 52, 3.6, 4.2, SIL, .4, 1.4); }],
+      [612, 190, 56, .16, 0, 0, function () { dotRing(612, 190, 52, 80, .5, SIL, .45); arc(612, 190, 52, .5, 1.1, SIL, .4, 1.4); arc(612, 190, 52, 3.6, 4.2, SIL, .4, 1.4); }],
       /* 갈고리 고리: 가는 연속 원(위쪽만 조금 끊김) */
-      [515, 258, 44, .03, 0, 0, function () { arc(515, 258, 40, -1.0, 4.4, SIL, .55, 1.3); }],
-      [683, 345, 80, .03, 0, 0, function () { ticks(683, 345, 73, 70, 3, SIL, .3); }]
+      [515, 258, 44, -.12, 0, 0, function () { arc(515, 258, 40, -1.0, 4.4, SIL, .55, 1.3); }],
+      [683, 345, 80, .07, 0, 0, function () { ticks(683, 345, 73, 70, 3, SIL, .3); }]
     ];
 
     /* ── 정지층: 별도 캔버스에 한 번만 (빛 번짐은 흐린 사본을 밝게 겹쳐서) ── */
@@ -238,6 +239,42 @@
       var gl = document.createElement('canvas'); gl.width = bg.width; gl.height = bg.height;
       c = gl.getContext('2d'); c.setTransform(dpr * sc, 0, 0, dpr * sc, dpr * (ox + PAD), dpr * (oy + PAD)); staticGlow(); glowify(gl);
       var bgc = bg.getContext('2d'); bgc.setTransform(1, 0, 0, 1, 0, 0); bgc.drawImage(gl, 0, 0);
+      /* 일식: 코로나 빛살 두 겹 + 다이아몬드 링 섬광 (한 번 그려 두고 매 프레임 돌려 붙인다) */
+      fx.corona = [0, 1].map(function (layer) {
+        var R = 132, size = Math.ceil(R * 2 * sc * dpr), cnv = document.createElement('canvas'); cnv.width = cnv.height = size;
+        c = cnv.getContext('2d'); c.setTransform(dpr * sc, 0, 0, dpr * sc, size / 2, size / 2); U = 1 / sc * 1.1;
+        if (!layer) {                                  /* 안쪽 코로나 빛무리 */
+          var gr = c.createRadialGradient(0, 0, 56, 0, 0, R);
+          gr.addColorStop(0, 'rgba(255,248,230,.95)'); gr.addColorStop(.05, 'rgba(255,236,190,.7)'); gr.addColorStop(.16, 'rgba(242,210,122,.32)');
+          gr.addColorStop(.42, 'rgba(212,167,58,.1)'); gr.addColorStop(1, 'rgba(212,167,58,0)');
+          c.fillStyle = gr; c.beginPath(); c.arc(0, 0, R, 0, TAU); c.fill();
+        }
+        var seed = layer ? 97 : 31, rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        c.lineCap = 'round';
+        for (var i = 0; i < (layer ? 90 : 150); i++) {   /* 코로나 빛살 (방향마다 길이가 다른 섬유) */
+          var a = rnd() * TAU, len = (layer ? 20 : 8) + Math.pow(rnd(), 2.2) * (layer ? 62 : 40), w = .4 + rnd() * (layer ? 1 : 1.8);
+          var lg = c.createLinearGradient(Math.cos(a) * 57, Math.sin(a) * 57, Math.cos(a) * (57 + len), Math.sin(a) * (57 + len));
+          var col = rnd() < .45 ? '242,210,122' : '236,240,244';
+          lg.addColorStop(0, 'rgba(' + col + ',' + (.35 + rnd() * .4) + ')'); lg.addColorStop(1, 'rgba(' + col + ',0)');
+          c.strokeStyle = lg; c.lineWidth = w * U; c.beginPath(); c.moveTo(Math.cos(a) * 57, Math.sin(a) * 57);
+          var bend = (rnd() - .5) * .18; c.quadraticCurveTo(Math.cos(a + bend) * (57 + len * .5), Math.sin(a + bend) * (57 + len * .5), Math.cos(a + bend * 1.6) * (57 + len), Math.sin(a + bend * 1.6) * (57 + len)); c.stroke();
+        }
+        glowify(cnv);
+        return { img: cnv, half: R * sc };
+      });
+      var fs = Math.ceil(80 * dpr), fl = document.createElement('canvas'); fl.width = fl.height = fs;
+      c = fl.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, fs / 2, fs / 2);
+      var fg = c.createRadialGradient(0, 0, 0, 0, 0, 40); fg.addColorStop(0, 'rgba(255,255,250,1)'); fg.addColorStop(.12, 'rgba(255,240,200,.85)'); fg.addColorStop(.4, 'rgba(242,210,122,.18)'); fg.addColorStop(1, 'rgba(242,210,122,0)');
+      c.fillStyle = fg; c.beginPath(); c.arc(0, 0, 40, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,250,235,.9)'; c.beginPath(); c.moveTo(-40, 0); c.lineTo(0, -1.2); c.lineTo(40, 0); c.lineTo(0, 1.2); c.fill(); c.beginPath(); c.moveTo(0, -26); c.lineTo(1, 0); c.lineTo(0, 26); c.lineTo(-1, 0); c.fill();
+      fx.flare = fl;
+      /* 달 원반 + 가장자리 빛 테: 회전하지 않으므로 한 장으로 */
+      var ms = Math.ceil(124 * sc * dpr), mc = document.createElement('canvas'); mc.width = mc.height = ms;
+      c = mc.getContext('2d'); c.setTransform(dpr * sc, 0, 0, dpr * sc, ms / 2, ms / 2);
+      var mg = c.createRadialGradient(-8, -10, 4, 0, 0, 57); mg.addColorStop(0, '#0d0a06'); mg.addColorStop(.85, '#040302'); mg.addColorStop(1, '#000');
+      c.fillStyle = mg; c.beginPath(); c.arc(0, 0, 57, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(255,246,220,.75)'; c.lineWidth = .9; c.beginPath(); c.arc(0, 0, 57.4, 0, TAU); c.stroke();
+      fx.moon = { img: mc, half: 62 * sc };
       /* 반짝이는 별 그림 (작아서 붙이기 부담이 없다) */
       var sz = Math.ceil(64 * dpr), sc2 = document.createElement('canvas'); sc2.width = sc2.height = sz;
       c = sc2.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, sz / 2, sz / 2); U = 1; star(0, 0, 26, .9); glowify(sc2); c.setTransform(dpr, 0, 0, dpr, sz / 2, sz / 2); star(0, 0, 17, 1, '255, 250, 240'); fx.star = sc2;   /* 금빛 번짐 + 흰 중심 */
@@ -255,8 +292,8 @@
       var w = g.w, h = g.h, s = reduce ? 0 : t / 1000, dt = lastT ? t - lastT : 16.7, k = Math.min(3, dt / 16.667); lastT = t;
       if (!born) born = t;
       /* 40프레임 평균이 33ms(30fps)를 넘으면 품질을 한 단계 낮춘다 (처음 1초 등장 연출 동안은 재지 않는다) */
-      /* 등장 직후 2.5초는 재지 않고, 40프레임 묶음이 두 번 연속 느릴 때만 낮춘다 (잠깐 끊긴 것으로 낮추지 않게) */
-      if (!reduce && t - born > 2500 && dt < 250) { acc += dt; if (++cnt >= 40) { bad = acc / cnt > 33 ? bad + 1 : 0; if (bad >= 2 && quality > 0) { quality--; bad = 0; build(); } acc = 0; cnt = 0; } }
+      /* 등장 직후 1.5초는 재지 않고, 20프레임 묶음이 두 번 연속 33ms를 넘거나 한 번이라도 60ms를 넘으면 품질을 한 단계 낮춘다 */
+      if (t - born > 1500 && dt < 1000) { acc += dt; if (++cnt >= 20) { bad = acc / cnt > 33 ? bad + 1 : 0; if ((bad >= 2 || acc / cnt > 60) && quality > 0) { quality--; bad = 0; build(); } acc = 0; cnt = 0; } }
       /* 최저 품질: 그림은 초당 30번만 새로 그리고(남는 프레임은 건너뜀) 배경층 이동도 멈춘다 */
       if (!quality && !reduce) { odd = !odd; if (odd) return; }
       var dd = quality ? dpr : 1;
@@ -276,6 +313,24 @@
       });
 
       var m = P(X, Y); m[0] += fxp; m[1] += fyp;
+      /* ── 일식 ── 코로나(밝게 더하기) → 검은 달 원반 → 가장자리 빛 테 → 다이아몬드 링 섬광 */
+      var breath = .86 + .14 * Math.sin(s * .9);
+      c.globalCompositeOperation = 'lighter';
+      fx.corona.forEach(function (co, i) {
+        if (i && quality < 2) return;
+        c.save(); c.translate(m[0], m[1]); c.rotate(i ? -s * .045 : s * .03); c.globalAlpha = ease * (i ? .75 + .25 * Math.sin(s * 1.3) : breath);
+        c.drawImage(co.img, -co.half, -co.half, co.half * 2, co.half * 2); c.restore();
+      });
+      c.globalAlpha = ease; c.globalCompositeOperation = 'source-over';
+      c.drawImage(fx.moon.img, m[0] - fx.moon.half, m[1] - fx.moon.half, fx.moon.half * 2, fx.moon.half * 2);
+      c.globalCompositeOperation = 'lighter';
+      if (quality) for (var bb = 0; bb < 7; bb++) {      /* 베일리 구슬: 가장자리에서 깜빡이는 빛 알갱이 */
+        var ba = bb * .9 + s * .03, bl = Math.max(0, Math.sin(s * 2.1 + bb * 1.7));
+        c.fillStyle = 'rgba(255,244,210,' + (bl * .8 * ease) + ')'; c.beginPath(); c.arc(m[0] + Math.cos(ba) * 57.5 * sc, m[1] + Math.sin(ba) * 57.5 * sc, (.8 + bl) * sc * .6, 0, TAU); c.fill();
+      }
+      var fa = -2.3 + s * .08, fsz = 34 * sc * (.75 + .25 * Math.sin(s * 1.7)) * ease;   /* 다이아몬드 링 */
+      c.globalAlpha = ease; c.drawImage(fx.flare, m[0] + Math.cos(fa) * 57.5 * sc - fsz / 2, m[1] + Math.sin(fa) * 57.5 * sc - fsz / 2, fsz, fsz);
+      c.globalCompositeOperation = 'source-over';
       c.globalCompositeOperation = 'lighter';
       /* 가운데 띠를 따라 흐르는 빛줄기 */
       if (!reduce && quality) for (var j = 0; j < 14; j++) {
