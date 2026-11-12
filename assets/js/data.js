@@ -43,6 +43,30 @@ window.RSC_DATA = {
     };
   }),
 
+  /* 세계 지도 (초안). 좌표는 지도 원본 2000×1125 기준, 실제 지도는 4배 크기로 그린다.
+     kind: nation(국가) · region(지도 끝에 걸친 땅) · sea(바다) · unknown(미정·미확인)
+     vert: 세로쓰기, rot: 기울기(도). 수도·행정구역·도시는 아직 없음 */
+  mapLabels: [
+    { name: '엘라렌', x: 603, y: 300, kind: 'nation', color: '#d9600c', vert: true, size: 34 },
+    { name: '인페르누스\n공화국', x: 752, y: 192, kind: 'nation', color: '#5a2f2a' },
+    { name: '스텔루비아', x: 880, y: 232, kind: 'nation', color: '#7b5fa0', rot: -58 },
+    { name: '추풍', x: 862, y: 392, kind: 'nation', color: '#8a6a42' },
+    { name: '미정', x: 1082, y: 132, kind: 'unknown', rot: -62 },
+    { name: '미정', x: 1150, y: 208, kind: 'unknown', rot: -75 },
+    { name: '겔루에테르누시아', x: 1110, y: 26, kind: 'region', color: '#2a5bd7' },
+    { name: '아스트랄리스', x: 1366, y: 88, kind: 'nation', color: '#5a2ee0' },
+    { name: '소버린\n아일랜드', x: 1862, y: 92, kind: 'nation', color: '#3f8fbf' },
+    { name: '코르녹시아', x: 1550, y: 228, kind: 'nation', color: '#8a5048' },
+    { name: '버미크루시아', x: 1500, y: 436, kind: 'nation', color: '#d9241a', rot: 38 },
+    { name: '레스렉시온', x: 1830, y: 470, kind: 'nation', color: '#2d6e2a' },
+    { name: '솔라리아', x: 1285, y: 745, kind: 'nation', color: '#a8935f' },
+    { name: '루나시아', x: 1445, y: 705, kind: 'nation', color: '#5c4a6e' },
+    { name: '스텔마레', x: 480, y: 845, kind: 'nation', color: '#4b56e8', vert: true },
+    { name: '글라시카\n에룰리아', x: 1015, y: 1078, kind: 'region', color: '#1fa9cc' },
+    { name: '???', x: 100, y: 112, kind: 'unknown', color: '#7a3a3a' },
+    { name: '유니온 오션', x: 1000, y: 600, kind: 'sea', color: '#5b8fc7' }
+  ],
+
   games: [1, 2, 3].map(function (n) {
     var id = String(n).padStart(2, '0');
     return { id: id, code: 'RSC-G' + id, name: '미등록', genre: '미정', platform: '미정', status: '준비 중', url: '', image: '' };
@@ -54,6 +78,17 @@ window.RSC_DATA = {
   }),
 
   notices: [
+    {
+      title: 'Patch v-2.9.0',
+      date: '2026.11.12',
+      tag: '공지',
+      body: [
+        '세계 지도 초안을 올렸습니다. 해안선과 등고선, 국경선(점선)을 선 그림으로 옮겨 아무리 확대해도 선명합니다.',
+        '국가와 지역 이름 18곳을 표시했습니다. 수도·행정구역·도시는 아직 없습니다.',
+        '지도가 아주 커져서 한 번에 다 보이지 않습니다. 끌어서 둘러보고, 왼쪽 아래 작은 전체 지도를 눌러 원하는 곳으로 이동할 수 있습니다.',
+        '지도 옆 국가 목록이나 지도 위 이름을 누르면 그 나라로 이동합니다.'
+      ]
+    },
     {
       title: 'Patch v-2.8.1',
       date: '2026.11.12',
