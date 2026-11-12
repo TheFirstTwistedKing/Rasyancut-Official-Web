@@ -18,7 +18,7 @@
 .is-deck .home__down { display: none; }
 .is-deck .chara { padding-bottom: 0; align-content: end; }
 .is-deck .mapview { height: min(56vh, 600px); }
-.is-deck .gate { height: min(60vh, 560px); }
+.is-deck .gate { width: min(100%, calc(min(60vh, 560px) * 1.214)); }
 
 /* 아래쪽 계기: 왼쪽 화면 번호, 오른쪽 '다음' (명조의 SCROLL) */
 .deckhud { display: none; }

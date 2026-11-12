@@ -9,14 +9,50 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/core.css?v=2.3.0">
-<link rel="stylesheet" href="assets/css/strips.css?v=2.3.0">
-<link rel="stylesheet" href="assets/css/home.css?v=2.3.0">
-<link rel="stylesheet" href="assets/css/deck.css?v=2.3.0">
-<link rel="stylesheet" href="assets/css/radio.css?v=2.3.0">
-<link rel="stylesheet" href="assets/css/military.css?v=2.3.0">
+<link rel="stylesheet" href="assets/css/core.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/strips.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/home.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/deck.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/radio.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/loader.css?v=2.4.0">
+<link rel="stylesheet" href="assets/css/military.css?v=2.4.0">
 </head>
 <body>
+<div class="boot" data-boot role="progressbar" aria-label="불러오는 중" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="boot__panel boot__panel--t"></div><div class="boot__panel boot__panel--b"></div>
+  <div class="boot__grid"></div>
+  <div class="boot__in">
+    <svg class="boot__mark" viewBox="0 0 40 40" fill="none" stroke="#f2d27a" stroke-width="1.2" aria-hidden="true"><path d="M20 2l18 18-18 18L2 20z"/><path d="M20 10l10 10-10 10-10-10z" stroke="#8f6a1c"/><circle cx="20" cy="20" r="3" fill="#f2d27a" stroke="none"/></svg>
+    <p class="boot__logo" aria-label="RASYANCUT"><span style="--i:0">R</span><span style="--i:1">A</span><span style="--i:2">S</span><span style="--i:3">Y</span><span style="--i:4">A</span><span style="--i:5">N</span><span style="--i:6">C</span><span style="--i:7">U</span><span style="--i:8">T</span></p>
+    <p class="boot__tag">SANCTUARY OF ALL CREATIONS</p>
+    <div class="boot__bar"><div class="boot__fill"></div></div>
+    <div class="boot__row"><span data-boot-step>INITIALIZING</span><span class="boot__pct"><b data-boot-pct>0</b><small>%</small></span></div>
+  </div>
+</div>
+<script>
+/* 로딩: 실제 진행(문서·글꼴·그림·스크립트)을 목표값으로 삼고, 표시값은 그 목표를 부드럽게 따라간다 */
+(function () {
+  var el = document.querySelector('[data-boot]'), fill = el.querySelector('.boot__fill'), pct = el.querySelector('[data-boot-pct]'), step = el.querySelector('[data-boot-step]');
+  var target = 8, shown = 0, t0 = performance.now(), MIN = 1800, done = false, steps = { dom: 0, fonts: 0, load: 0, app: 0 };
+  function bump() { target = 8 + steps.dom * 22 + steps.fonts * 25 + steps.load * 25 + steps.app * 20; }
+  function mark(k, label) { if (!steps[k]) { steps[k] = 1; step.textContent = label; bump(); } }
+  document.addEventListener('DOMContentLoaded', function () { mark('dom', 'DOCUMENT READY'); });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () { mark('fonts', 'TYPEFACE LOADED'); });
+  window.addEventListener('load', function () { mark('load', 'ASSETS LOADED'); mark('app', 'SIGIL ONLINE'); });
+  setTimeout(function () { ['dom', 'fonts', 'load', 'app'].forEach(function (k) { steps[k] = 1; }); bump(); }, 8000);   /* 무엇이 막혀도 8초 뒤엔 연다 */
+  (function tick(now) {
+    var el2 = Math.max(0, now - t0), cap = Math.min(target, 99 * Math.min(1, el2 / MIN) + (target >= 100 && el2 > MIN ? 1 : 0));
+    shown += (cap - shown) * .12; if (cap - shown < .4) shown = cap;
+    var v = Math.floor(shown); fill.style.setProperty('--p', v); pct.textContent = v; el.setAttribute('aria-valuenow', v);
+    if (v >= 100 && !done) {
+      done = true; step.textContent = 'ACCESS GRANTED';
+      setTimeout(function () { el.classList.add('is-done'); document.dispatchEvent(new Event('rsc:ready')); setTimeout(function () { el.remove(); }, 1800); }, 350);
+      return;
+    }
+    requestAnimationFrame(tick);
+  })(t0);
+})();
+</script>
 <main class="page">
 
   <!-- 01 HOME -->
@@ -150,12 +186,23 @@
       <a class="btn" href="novels.html">소설 창으로 이동</a>
     </header>
     <a class="gate rv" style="--d:1" href="novels.html" aria-label="소설 창으로 이동">
-      <span class="gate__in" aria-hidden="true"><span class="gate__word">열람</span><span class="mono">Enter Reading Room</span></span>
-      <span class="gate__l"><i></i></span><span class="gate__r"><i></i></span>
-      <svg class="gate__lock" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r="56"/><circle cx="60" cy="60" r="44" class="gate__ticks"/>
-        <path d="M60 22l38 38-38 38-38-38z"/><path d="M60 40l20 20-20 20-20-20z"/><circle cx="60" cy="60" r="4" class="gate__core"/>
+      <span class="gate__in" aria-hidden="true">
+        <span class="gate__rays"></span>
+        <span class="gate__word">열람</span><span class="mono">Enter Reading Room</span>
+        <i class="gate__mote" style="--x:22%;--d:0s"></i><i class="gate__mote" style="--x:38%;--d:1.4s"></i><i class="gate__mote" style="--x:55%;--d:.6s"></i><i class="gate__mote" style="--x:70%;--d:2.1s"></i><i class="gate__mote" style="--x:82%;--d:3s"></i><i class="gate__mote" style="--x:46%;--d:3.6s"></i>
+      </span>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="leaf" viewBox="0 0 340 560"><defs><linearGradient id="lf-metal" x1="0" x2="1"><stop offset="0" stop-color="#0b0907"/><stop offset=".55" stop-color="#15110b"/><stop offset="1" stop-color="#1d170e"/></linearGradient><pattern id="lf-grain" width="6" height="560" patternUnits="userSpaceOnUse"><path d="M3 0V560" stroke="#d4a73a" stroke-opacity=".05"/></pattern><linearGradient id="lf-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2d27a"/><stop offset=".5" stop-color="#b98a2c"/><stop offset="1" stop-color="#7a5a18"/></linearGradient></defs><rect width="340" height="560" fill="url(#lf-metal)"/><rect width="340" height="560" fill="url(#lf-grain)"/><g fill="none" stroke="#8f6a1c"><rect x="10" y="10" width="330" height="540" stroke-width="2"/><rect x="18" y="18" width="314" height="524" stroke-opacity=".5"/><path d="M44 40H316L328 52V508L316 520H44L32 508V52Z" stroke="#d4a73a" stroke-opacity=".55"/></g><path d="M60 160V96Q60 64 120 60H340" fill="none" stroke="#d4a73a" stroke-opacity=".45"/><path d="M76 160V104Q76 78 126 76H340" fill="none" stroke="#8f6a1c" stroke-opacity=".5" stroke-dasharray="2 5"/><path d="M340 120A150 150 0 0 0 340 420" fill="none" stroke="#d4a73a" stroke-width="1" stroke-opacity="0.35"/><path d="M340 138A132 132 0 0 0 340 402" fill="none" stroke="#d4a73a" stroke-width="2.5" stroke-opacity="0.75"/><path d="M340 146A124 124 0 0 0 340 394" fill="none" stroke="#d4a73a" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="3 6"/><path d="M340 174A96 96 0 0 0 340 366" fill="none" stroke="#d4a73a" stroke-width="1" stroke-opacity="0.55"/><path d="M340 210A60 60 0 0 0 340 330" fill="none" stroke="#d4a73a" stroke-width="1.2" stroke-opacity="0.6"/><path d="M340.0 408.0L340.0 418.0M328.0 407.5L327.5 412.5M316.0 405.9L315.2 410.8M304.3 403.3L303.0 408.1M292.8 399.7L291.1 404.4M281.7 395.1L279.6 399.6M271.0 389.5L266.0 398.2M260.8 383.0L258.0 387.1M251.3 375.7L248.1 379.5M242.4 367.6L238.9 371.1M234.3 358.7L230.5 361.9M227.0 349.2L222.9 352.0M220.5 339.0L211.8 344.0M214.9 328.3L210.4 330.4M210.3 317.2L205.6 318.9M206.7 305.7L201.9 307.0M204.1 294.0L199.2 294.8M202.5 282.0L197.5 282.5M202.0 270.0L192.0 270.0M202.5 258.0L197.5 257.5M204.1 246.0L199.2 245.2M206.7 234.3L201.9 233.0M210.3 222.8L205.6 221.1M214.9 211.7L210.4 209.6M220.5 201.0L211.8 196.0M227.0 190.8L222.9 188.0M234.3 181.3L230.5 178.1M242.4 172.4L238.9 168.9M251.3 164.3L248.1 160.5M260.8 157.0L258.0 152.9M271.0 150.5L266.0 141.8M281.7 144.9L279.6 140.4M292.8 140.3L291.1 135.6M304.3 136.7L303.0 131.9M316.0 134.1L315.2 129.2M328.0 132.5L327.5 127.5M340.0 132.0L340.0 122.0" stroke="#d4a73a" stroke-opacity=".6"/><path transform="translate(297.9 371.6) rotate(202.5)" d="M-5 -7L5 7M5 -7L-5 7" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(262.2 347.8) rotate(225.0)" d="M0 -8V8M-5 -3L5 3" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(238.4 312.1) rotate(247.5)" d="M-5 8V-8L5 0L-5 8" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(230.0 270.0) rotate(270.0)" d="M-5 -8H5L-5 8H5" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(238.4 227.9) rotate(292.5)" d="M0 -8L6 0L0 8L-6 0Z" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(262.2 192.2) rotate(315.0)" d="M-5 -8V8M5 -8V8M-5 0H5" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><path transform="translate(297.9 168.4) rotate(337.5)" d="M-6 6L0 -8L6 6M-3 0H3" fill="none" stroke="#f2d27a" stroke-opacity=".8" stroke-width="1.4"/><rect x="32" y="120" width="296" height="12" fill="url(#lf-gold)" opacity=".75"/><rect x="32" y="123" width="296" height="1" fill="#fff3c4" opacity=".35"/><path d="M10 106H54L66 126L54 146H10Z" fill="#1d170e" stroke="#d4a73a"/><circle cx="24" cy="126" r="4" fill="#0b0907" stroke="#f2d27a"/><rect x="32" y="420" width="296" height="12" fill="url(#lf-gold)" opacity=".75"/><rect x="32" y="423" width="296" height="1" fill="#fff3c4" opacity=".35"/><path d="M10 406H54L66 426L54 446H10Z" fill="#1d170e" stroke="#d4a73a"/><circle cx="24" cy="426" r="4" fill="#0b0907" stroke="#f2d27a"/><rect x="32" y="500" width="296" height="12" fill="url(#lf-gold)" opacity=".75"/><rect x="32" y="503" width="296" height="1" fill="#fff3c4" opacity=".35"/><path d="M10 486H54L66 506L54 526H10Z" fill="#1d170e" stroke="#d4a73a"/><circle cx="24" cy="506" r="4" fill="#0b0907" stroke="#f2d27a"/><g fill="#f2d27a" fill-opacity=".75"><circle cx="24" cy="40" r="2.2"/><circle cx="24" cy="68" r="2.2"/><circle cx="24" cy="96" r="2.2"/><circle cx="24" cy="124" r="2.2"/><circle cx="24" cy="152" r="2.2"/><circle cx="24" cy="180" r="2.2"/><circle cx="24" cy="208" r="2.2"/><circle cx="24" cy="236" r="2.2"/><circle cx="24" cy="264" r="2.2"/><circle cx="24" cy="292" r="2.2"/><circle cx="24" cy="320" r="2.2"/><circle cx="24" cy="348" r="2.2"/><circle cx="24" cy="376" r="2.2"/><circle cx="24" cy="404" r="2.2"/><circle cx="24" cy="432" r="2.2"/><circle cx="24" cy="460" r="2.2"/><circle cx="24" cy="488" r="2.2"/><circle cx="24" cy="516" r="2.2"/><circle cx="90" cy="126" r="2"/><circle cx="126" cy="126" r="2"/><circle cx="162" cy="126" r="2"/><circle cx="198" cy="126" r="2"/><circle cx="234" cy="126" r="2"/><circle cx="270" cy="126" r="2"/><circle cx="306" cy="126" r="2"/><circle cx="90" cy="426" r="2"/><circle cx="126" cy="426" r="2"/><circle cx="162" cy="426" r="2"/><circle cx="198" cy="426" r="2"/><circle cx="234" cy="426" r="2"/><circle cx="270" cy="426" r="2"/><circle cx="306" cy="426" r="2"/><circle cx="90" cy="506" r="2"/><circle cx="126" cy="506" r="2"/><circle cx="162" cy="506" r="2"/><circle cx="198" cy="506" r="2"/><circle cx="234" cy="506" r="2"/><circle cx="270" cy="506" r="2"/><circle cx="306" cy="506" r="2"/></g><g fill="none" stroke="#8f6a1c" stroke-opacity=".6"><path d="M70 440V492"/><path d="M90 440V492"/><path d="M110 440V492"/><path d="M130 440V492"/><path d="M150 440V492"/><path d="M170 440V492"/><path d="M190 440V492"/><path d="M210 440V492"/><path d="M230 440V492"/><path d="M250 440V492"/><path d="M270 440V492"/><path d="M290 440V492"/><path d="M310 440V492"/></g><path d="M196 456l12 10-12 10-12-10z M196 462l5 4-5 4-5-4z" fill="none" stroke="#d4a73a" stroke-opacity=".7"/><path d="M340 30H332L328 36L332 42H340M340 54H332L328 60L332 66H340M340 78H332L328 84L332 90H340M340 102H332L328 108L332 114H340M340 126H332L328 132L332 138H340M340 150H332L328 156L332 162H340M340 174H332L328 180L332 186H340M340 198H332L328 204L332 210H340M340 222H332L328 228L332 234H340M340 246H332L328 252L332 258H340M340 270H332L328 276L332 282H340M340 294H332L328 300L332 306H340M340 318H332L328 324L332 330H340M340 342H332L328 348L332 354H340M340 366H332L328 372L332 378H340M340 390H332L328 396L332 402H340M340 414H332L328 420L332 426H340M340 438H332L328 444L332 450H340M340 462H332L328 468L332 474H340M340 486H332L328 492L332 498H340M340 510H332L328 516L332 522H340M340 534H332L328 540L332 546H340" fill="#1d170e" stroke="#d4a73a" stroke-opacity=".7"/></symbol></svg>
+      <span class="gate__leaf gate__leaf--l" aria-hidden="true"><svg viewBox="0 0 340 560" preserveAspectRatio="xMaxYMid slice"><use href="#leaf"/></svg></span>
+      <span class="gate__leaf gate__leaf--r" aria-hidden="true"><svg viewBox="0 0 340 560" preserveAspectRatio="xMaxYMid slice"><use href="#leaf"/></svg></span>
+      <span class="gate__seam" aria-hidden="true"></span>
+      <svg class="gate__lock" viewBox="0 0 160 160" aria-hidden="true">
+        <g class="gate__ring gate__ring--a"><circle cx="80" cy="80" r="74"/><circle cx="80" cy="80" r="68" class="gate__dots"/></g>
+        <g class="gate__ring gate__ring--b"><path d="M80 18L142 80L80 142L18 80Z"/><path d="M80 34L126 80L80 126L34 80Z" class="gate__thin"/></g>
+        <g class="gate__ring gate__ring--c"><circle cx="80" cy="80" r="40" class="gate__ticks"/><path d="M80 44V58M80 102V116M44 80H58M102 80H116"/></g>
+        <circle cx="80" cy="80" r="26" class="gate__plate"/>
+        <path d="M80 66a7 7 0 0 1 4 12.7V92h-8V78.7A7 7 0 0 1 80 66z" class="gate__keyhole"/>
       </svg>
+      <svg class="gate__arch" viewBox="0 0 680 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 60V40Q340 -14 680 40V60"/><path d="M0 52V44Q340 0 680 44V52" class="gate__thin"/><path d="M326 4L340 0L354 4L350 22H330Z" class="gate__key"/></svg>
       <span class="gate__cap mono">Sec-07 · Door</span>
     </a>
   </section>
@@ -204,9 +251,9 @@
 </main>
 
 <noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
-<script src="assets/js/data.js?v=2.3.0"></script>
-<script src="assets/js/core.js?v=2.3.0"></script>
-<script src="assets/js/radio.js?v=2.3.0"></script>
-<script src="assets/js/home.js?v=2.3.0" data-page></script>
+<script src="assets/js/data.js?v=2.4.0"></script>
+<script src="assets/js/core.js?v=2.4.0"></script>
+<script src="assets/js/radio.js?v=2.4.0"></script>
+<script src="assets/js/home.js?v=2.4.0" data-page></script>
 </body>
 </html>
