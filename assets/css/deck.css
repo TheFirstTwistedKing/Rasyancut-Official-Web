@@ -163,3 +163,8 @@
 /* 한 화면 모드에서 '최신' 띠가 상단 메뉴 바로 아래에서 시작하도록 */
 .is-deck .notice__tab { margin-top: calc(clamp(16px, 4vh, 48px) * -1); }
 @media (prefers-reduced-motion: reduce) { .deckhud__next::after { animation: none !important; } }
+
+/* 홈: 배경층의 깊이감 여유(사방 24px)가 스크롤 공간이 되지 않게 */
+.is-deck .home { overflow: hidden; }
+/* 캐릭터: 금색 띠가 아래 화면 번호·SCROLL 표시를 가리지 않게 */
+.is-deck .chara { padding-bottom: clamp(64px, 9vh, 96px); }
