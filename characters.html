@@ -8,11 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/core.css?v=2.5.0">
-<link rel="stylesheet" href="assets/css/strips.css?v=2.5.0">
-<link rel="stylesheet" href="assets/css/characters.css?v=2.5.0">
-<link rel="stylesheet" href="assets/css/radio.css?v=2.5.0">
-<link rel="stylesheet" href="assets/css/military.css?v=2.5.0">
+<link rel="stylesheet" href="assets/css/core.css?v=2.6.0">
+<link rel="stylesheet" href="assets/css/strips.css?v=2.6.0">
+<link rel="stylesheet" href="assets/css/characters.css?v=2.6.0">
+<link rel="stylesheet" href="assets/css/radio.css?v=2.6.0">
+<link rel="stylesheet" href="assets/css/military.css?v=2.6.0">
 </head>
 <body data-nav="character">
 <main class="page">
@@ -28,7 +28,16 @@
       </div>
       <p class="mono clist__count"><span class="gold" data-count>00</span> Records</p>
     </header>
-    <ul class="strips clist__strips" data-strips></ul>
+    <nav class="cfac" aria-label="소속별 보기" data-fac></nav>
+    <div class="cring" data-ring tabindex="0" aria-roledescription="회전 목록" aria-label="캐릭터 목록. 좌우 화살표, 휠, 끌어서 돌릴 수 있습니다.">
+      <ul class="cring__track" data-strips></ul>
+      <button class="rbtn cring__btn cring__btn--l" data-ring-prev aria-label="이전 캐릭터"></button>
+      <button class="rbtn cring__btn cring__btn--r" data-ring-next aria-label="다음 캐릭터"></button>
+    </div>
+    <div class="cring__foot">
+      <p class="mono"><b class="gold" data-ring-no>01</b> / <span data-ring-total>30</span> · <span data-ring-fac>ALL</span></p>
+      <p class="mono cring__hint">Wheel · Drag · ← →</p>
+    </div>
   </section>
 
   <!-- 일러스트 배치 창 -->
@@ -75,9 +84,9 @@
 </main>
 
 <noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
-<script src="assets/js/data.js?v=2.5.0"></script>
-<script src="assets/js/core.js?v=2.5.0"></script>
-<script src="assets/js/radio.js?v=2.5.0"></script>
-<script src="assets/js/characters.js?v=2.5.0" data-page></script>
+<script src="assets/js/data.js?v=2.6.0"></script>
+<script src="assets/js/core.js?v=2.6.0"></script>
+<script src="assets/js/radio.js?v=2.6.0"></script>
+<script src="assets/js/characters.js?v=2.6.0" data-page></script>
 </body>
 </html>
