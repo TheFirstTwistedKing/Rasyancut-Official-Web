@@ -37,42 +37,112 @@
   tickClock(); var clockTimer = setInterval(tickClock, 1000); RSC.onLeave(function () { clearInterval(clockTimer); });
 
   (function homeFx() {
+    /* 마법진 HUD: 가운데 큰 고리(월계관·네 꼭지 별) + 주변 위성 고리들 + 점선 궤도 + 사선 연결선.
+       각 층이 서로 다른 속도·방향으로 돈다. 은회색 선에 금색 강조. 시간 기준으로 움직인다. */
     var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, px = 0, py = 0, lastT = 0;
+    var TAU = Math.PI * 2, SIL = '201, 207, 204', GOLD = '242, 210, 122';
+    /* 위성 고리: x·y는 화면 비율, r은 큰 고리 반지름 대비, kind는 모양 */
+    var SAT = [
+      { x: .08, y: .2, r: .34, kind: 0, sp: .07 }, { x: .2, y: .55, r: .28, kind: 1, sp: -.11 },
+      { x: .1, y: .86, r: .3, kind: 2, sp: .05 }, { x: .93, y: .16, r: .3, kind: 1, sp: .09 },
+      { x: .96, y: .52, r: .24, kind: 2, sp: -.06 }, { x: .9, y: .9, r: .36, kind: 3, sp: .04 },
+      { x: .5, y: .95, r: .26, kind: 0, sp: -.08 }, { x: .38, y: .14, r: .2, kind: 3, sp: .12 }
+    ];
     function seed() {
       g = fit(cv); dust = [];
-      var n = small.matches ? 36 : 80;
-      for (var i = 0; i < n; i++) dust.push({ x: Math.random(), y: Math.random(), s: .4 + Math.random() * 1.6, v: .008 + Math.random() * .03, p: Math.random() * 6.28 });
+      var n = small.matches ? 30 : 64;
+      for (var i = 0; i < n; i++) dust.push({ x: Math.random(), y: Math.random(), s: .4 + Math.random() * 1.4, v: .006 + Math.random() * .024, p: Math.random() * 6.28 });
     }
     seed(); addEventListener('resize', function () { seed(); if (reduce) draw(0); });
     addEventListener('pointermove', function (e) { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
-    function ring(c, r, a) { c.globalAlpha = a; c.beginPath(); c.arc(0, 0, r, 0, 6.2832); c.stroke(); }
+
+    function col(c, rgb, a) { c.strokeStyle = c.fillStyle = 'rgba(' + rgb + ',' + a + ')'; }
+    function circle(c, r, rgb, a, dash) { col(c, rgb, a); c.setLineDash(dash || []); c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke(); c.setLineDash([]); }
+    function arc(c, r, a0, a1, rgb, a, wdt) { col(c, rgb, a); c.lineWidth = wdt || 1; c.beginPath(); c.arc(0, 0, r, a0, a1); c.stroke(); c.lineWidth = 1; }
+    function ticks(c, r, n, len, rgb, a, every, longLen) {
+      col(c, rgb, a); c.beginPath();
+      for (var i = 0; i < n; i++) {
+        var ang = i / n * TAU, l = every && i % every === 0 ? longLen : len, ca = Math.cos(ang), sa = Math.sin(ang);
+        c.moveTo(ca * r, sa * r); c.lineTo(ca * (r + l), sa * (r + l));
+      }
+      c.stroke();
+    }
+    function dots(c, r, n, size, rgb, a) { col(c, rgb, a); for (var i = 0; i < n; i++) { var ang = i / n * TAU; c.fillRect(Math.cos(ang) * r - size / 2, Math.sin(ang) * r - size / 2, size, size); } }
+    function poly(c, r, n, rot, rgb, a) { col(c, rgb, a); c.beginPath(); for (var i = 0; i <= n; i++) { var ang = rot + i / n * TAU; c[i ? 'lineTo' : 'moveTo'](Math.cos(ang) * r, Math.sin(ang) * r); } c.stroke(); }
+    function star(c, x, y, s, rgb, a) {          /* 네 꼭지 별 */
+      col(c, rgb, a); c.beginPath();
+      c.moveTo(x, y - s); c.quadraticCurveTo(x, y, x + s * .32, y); c.quadraticCurveTo(x, y, x, y + s);
+      c.quadraticCurveTo(x, y, x - s * .32, y); c.quadraticCurveTo(x, y, x, y - s); c.fill();
+      c.beginPath(); c.moveTo(x - s * .8, y); c.quadraticCurveTo(x, y, x, y - s * .22); c.quadraticCurveTo(x, y, x + s * .8, y); c.quadraticCurveTo(x, y, x, y + s * .22); c.quadraticCurveTo(x, y, x - s * .8, y); c.fill();
+    }
+    function laurel(c, r, side, rgb, a) {        /* 아래에서 위로 올라가는 월계수 가지 (좌우 대칭) */
+      col(c, rgb, a); c.lineWidth = 1.2;
+      var a0 = Math.PI / 2 + side * .32, a1 = Math.PI / 2 + side * 2.35;
+      c.beginPath(); c.arc(0, 0, r, Math.min(a0, a1), Math.max(a0, a1)); c.stroke();
+      for (var i = 0; i < 13; i++) {
+        var t = i / 12, ang = a0 + (a1 - a0) * t, x = Math.cos(ang) * r, y = Math.sin(ang) * r, sz = r * (.075 - t * .03);
+        for (var o = -1; o <= 1; o += 2) {
+          c.save(); c.translate(x, y); c.rotate(ang + side * Math.PI / 2 + o * .55 * side);
+          c.beginPath(); c.ellipse(0, -sz * .9 * o, sz * .38, sz, 0, 0, TAU); c.stroke(); c.restore();
+        }
+      }
+      c.lineWidth = 1;
+    }
+    function satellite(c, sat, R, s) {
+      var r = R * sat.r, rot = s * sat.sp;
+      c.save(); c.rotate(rot);
+      circle(c, r, SIL, .35);
+      if (sat.kind === 0) { dots(c, r * 1.16, 48, 1.6, SIL, .45); arc(c, r * .82, 0, 2.2, GOLD, .55, 1.5); ticks(c, r * .62, 24, 4, SIL, .3); }
+      if (sat.kind === 1) { circle(c, r * .86, SIL, .18, [2, 5]); arc(c, r * 1.08, .4, 1.6, SIL, .6, 2); arc(c, r * 1.08, 3.6, 4.4, SIL, .6, 2); dots(c, r * .86, 3, 4, GOLD, .8); }
+      if (sat.kind === 2) { ticks(c, r * .9, 60, 5, SIL, .35, 5, 10); circle(c, r * .55, SIL, .25); poly(c, r * .55, 3, -rot * 2, SIL, .35); }
+      if (sat.kind === 3) { poly(c, r * 1.04, 6, 0, SIL, .3); arc(c, r * .74, -2.4, -.7, GOLD, .6, 2); circle(c, r * .36, SIL, .3, [1, 4]); }
+      c.restore();
+      c.save(); c.rotate(-rot * 1.6); dots(c, r * 1.32, 2, 3, SIL, .7); c.restore();   /* 궤도를 도는 점 */
+    }
+
     function draw(t) {
       var c = g.c, w = g.w, h = g.h, s = t / 1000, k = lastT ? Math.min(3, (t - lastT) / 16.667) : 1; lastT = t;
-      c.clearRect(0, 0, w, h);
+      c.clearRect(0, 0, w, h); c.lineWidth = 1;
       px += (mx - px) * (1 - Math.pow(.96, k)); py += (my - py) * (1 - Math.pow(.96, k));   /* 마우스를 천천히 따라온다 */
-      var cx = (small.matches ? .5 : .7) * w + px * -18, cy = (small.matches ? .34 : .44) * h + py * -18;
-      var R = Math.min(w, h) * (small.matches ? .4 : .42);
-      c.save(); c.translate(cx, cy); c.strokeStyle = '#d4a73a'; c.lineWidth = 1;
-      ring(c, R, .5); ring(c, R * .93, .18); ring(c, R * .62, .35); ring(c, R * .2, .6);
-      c.save(); c.rotate(s * .03);                       /* 12분할 방사선과 눈금 */
-      for (var i = 0; i < 72; i++) {
-        var major = i % 6 === 0;
-        c.globalAlpha = major ? .55 : .22; c.beginPath();
-        c.moveTo(0, -R * (major ? .62 : .96)); c.lineTo(0, -R * (major ? 1.06 : 1)); c.stroke(); c.rotate(6.2832 / 72);
-      }
+      var mob = small.matches, cx = (mob ? .5 : .66) * w + px * -18, cy = (mob ? .27 : .45) * h + py * -18;
+      var R = Math.min(w, h) * (mob ? .25 : .3);
+
+      /* 1) 사선 연결선과 위성 고리 (배경 층, 반대 방향으로 조금 움직임) */
+      c.save(); c.translate(px * 10, py * 10);
+      col(c, SIL, .1); c.beginPath(); c.moveTo(0, 0); c.lineTo(w, h); c.moveTo(w, 0); c.lineTo(0, h); c.stroke();
+      SAT.forEach(function (sat, i) {
+        if (mob && i % 2) return;
+        var x = sat.x * w, y = sat.y * h;
+        col(c, SIL, .08); c.setLineDash([3, 7]); c.beginPath(); c.moveTo(x, y); c.lineTo(cx - px * 10, cy - py * 10); c.stroke(); c.setLineDash([]);
+        c.save(); c.translate(x, y); satellite(c, sat, R, s); c.restore();
+      });
       c.restore();
-      for (var k = 0; k < 2; k++) {                      /* 맞물려 도는 두 마름모 */
-        c.save(); c.rotate((k ? -1 : 1) * s * .05 + k * .7854); c.globalAlpha = k ? .28 : .6;
-        var q = R * (k ? .62 : .8); c.strokeRect(-q / 1.4142, -q / 1.4142, q * 1.4142, q * 1.4142); c.restore();
-      }
-      c.save(); c.rotate(-s * .12); c.globalAlpha = .9; c.strokeStyle = '#f2d27a'; c.lineWidth = 3;   /* 떠도는 호 */
-      c.beginPath(); c.arc(0, 0, R * 1.12, 0, .9); c.stroke(); c.beginPath(); c.arc(0, 0, R * 1.12, 3.14, 3.6); c.stroke(); c.restore();
+
+      /* 2) 가운데 큰 고리 */
+      c.save(); c.translate(cx, cy);
+      c.save(); c.rotate(s * .015); poly(c, R * 1.62, 8, 0, SIL, .16); poly(c, R * 1.62, 8, Math.PI / 8, SIL, .08); c.restore();   /* 팔각 외곽 */
+      c.save(); c.rotate(-s * .03); dots(c, R * 1.38, 120, 1.6, SIL, .5); c.restore();                 /* 점선 궤도 */
+      c.save(); c.rotate(s * .05); ticks(c, R * 1.2, 96, 5, SIL, .38, 8, 14); c.restore();             /* 눈금 고리 */
+      c.save(); c.rotate(-s * .1); arc(c, R * 1.3, 0, .9, GOLD, .85, 2); arc(c, R * 1.3, 3.14, 3.7, GOLD, .85, 2); c.restore();  /* 떠도는 금 호 */
+      circle(c, R * 1.08, SIL, .55); circle(c, R * 1.03, SIL, .22);
+      c.save(); c.rotate(s * .02); laurel(c, R * .9, -1, SIL, .42); laurel(c, R * .9, 1, SIL, .42); c.restore();   /* 월계관 */
+      circle(c, R * .72, SIL, .45);
+      c.save(); c.rotate(-s * .04);                                                                    /* 안쪽 꽃잎 원 */
+      for (var p = 0; p < 6; p++) { c.save(); c.rotate(p / 6 * TAU); col(c, SIL, .12); c.beginPath(); c.arc(R * .36, 0, R * .36, 0, TAU); c.stroke(); c.restore(); }
       c.restore();
-      c.globalCompositeOperation = 'lighter';            /* 금가루 */
+      c.save(); c.rotate(s * .03 + Math.PI / 4); col(c, SIL, .25); var q = R * .72 / 1.4142; c.strokeRect(-q, -q, q * 2, q * 2); c.restore();
+      circle(c, R * .16, GOLD, .7);
+      star(c, -R * 1.2, 0, R * .11, GOLD, .95); star(c, R * 1.2, 0, R * .11, GOLD, .95);              /* 좌우 네 꼭지 별 */
+      col(c, GOLD, .9); c.lineWidth = 2;                                                               /* 아래 세 줄 표식 */
+      c.beginPath(); for (var b = -1; b <= 1; b++) { c.moveTo(b * R * .05, R * .98); c.lineTo(b * R * .05, R * (b ? 1.08 : 1.12)); } c.stroke(); c.lineWidth = 1;
+      c.restore();
+
+      /* 3) 금가루 */
+      c.globalCompositeOperation = 'lighter';
       for (var j = 0; j < dust.length; j++) {
         var d = dust[j]; d.y -= d.v * .016 * k; if (d.y < -.02) { d.y = 1.02; d.x = Math.random(); }
         var x = (d.x + Math.sin(s * .4 + d.p) * .012) * w, y = d.y * h;
-        c.globalAlpha = .25 + .55 * Math.abs(Math.sin(s * .8 + d.p)); c.fillStyle = d.s > 1.5 ? '#fff3c4' : '#d4a73a';
+        c.globalAlpha = .2 + .5 * Math.abs(Math.sin(s * .8 + d.p)); c.fillStyle = d.s > 1.4 ? '#fff3c4' : (j % 3 ? '#d4a73a' : '#c9cfcc');
         c.fillRect(x, y, d.s, d.s);
       }
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
