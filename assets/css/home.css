@@ -236,3 +236,21 @@
   .notice__tab .mono { writing-mode: horizontal-tb; }
   .foot { margin-left: 0; }
 }
+
+/* ── 홈: 장식 없이 일러스트 슬라이드 ── */
+.home__show { position: absolute; inset: 0; z-index: 0; background: #000; }
+.home__show img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;   /* 그림 비율 그대로 */
+  opacity: 0; transition: opacity 1s ease;
+}
+.home__show img.is-on { opacity: 1; }
+/* 글자가 밝은 그림 위에서도 읽히도록 왼쪽 아래만 살짝 어둡게 */
+.home__show::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top right, rgba(0, 0, 0, .72), rgba(0, 0, 0, .25) 45%, transparent 70%); }
+.home__title, .home__quick { position: relative; z-index: 1; }
+.home__title h1 { text-shadow: none; }
+.is-deck[data-slide="home"] .camhud { display: none; }
+@media (max-width: 900px) {
+  .home__show { inset: 0 0 auto 0; height: auto; aspect-ratio: 736 / 400; }
+  .home__show img { object-position: center top; }
+}

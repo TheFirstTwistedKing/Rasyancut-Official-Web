@@ -43,11 +43,12 @@
     return '<li><a href="#' + s[0] + '"><b>' + String(i + 2).padStart(2, '0') + '</b>' + s[1] + '</a></li>';
   }).join('');
 
-  var clock = $('[data-clock]');
+  var clock = $('[data-clock]') || document.createElement('span');
   function tickClock() { clock.textContent = new Date().toTimeString().slice(0, 8); }
   tickClock(); var clockTimer = setInterval(tickClock, 1000); RSC.onLeave(function () { clearInterval(clockTimer); });
 
   (function homeFx() {
+    if (!$('.home__fx')) return;   /* 홈 배경 마법진은 일러스트 슬라이드로 대체됨 */
     /* 마법진 HUD — 참고 이미지(743×341)의 배치를 같은 비율 좌표로 옮겼다.
        성능: 움직이지 않는 층은 별도 캔버스에 한 번만 그리고(진짜 빛 번짐 포함), 깊이감은 그 캔버스를 통째로 옮긴다(GPU 합성).
              회전하는 고리는 매 프레임 선으로 그린다 — 칠하는 면적이 작아 회전 그림 붙이기보다 훨씬 가볍다.
@@ -373,6 +374,17 @@
     RSC.homeFxQuality = function () { return quality; };
     RSC.on(document, 'rsc:ready', function () { born = 0; });   /* 로딩 화면이 걷히는 순간 마법진 등장 연출을 다시 시작 */   /* 점검용 */
     if (reduce) draw(0); else loop(cv, draw);
+  })();
+
+  /* ── 01 HOME: 임시 일러스트를 3초마다 순서대로 ── */
+  (function () {
+    var box = $('[data-show]'); if (!box) return;
+    var imgs = [].slice.call(box.querySelectorAll('img')), k = 0;
+    function next() {
+      imgs[k].classList.remove('is-on'); k = (k + 1) % imgs.length; imgs[k].classList.add('is-on');
+    }
+    var timer = setInterval(function () { if (!document.hidden) next(); }, 3000);
+    RSC.onLeave(function () { clearInterval(timer); });
   })();
 
   /* ── 02 CHARACTER ── */
