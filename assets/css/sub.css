@@ -2,7 +2,7 @@
 .sub__hollow { top: 4vh; right: -1vw; }
 .sub__head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: clamp(32px, 6vh, 64px); }
 .sub__head h1 { margin-top: 4px; font-size: var(--t-h2); font-weight: 900; line-height: 1.25; }
-.gpage, .npage { min-height: 100svh; }
+.gpage, .npage { min-height: calc(100svh - var(--top)); }
 
 /* 갤러리: 비율이 서로 다른 빈 액자를 단으로 쌓는다 */
 .frames { position: relative; z-index: 1; columns: 4; column-gap: 12px; }

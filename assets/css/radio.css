@@ -1,7 +1,7 @@
 /* RASYANCUT — 라디오: 오른쪽 위 탭 + 플레이리스트 창 */
 
 /* ── 탭: 평소엔 버튼만, 곡이 바뀌면 제목이 5초간 왼쪽으로 튀어나온다 ── */
-.radio { position: fixed; top: 24px; right: 0; z-index: 40; display: flex; align-items: stretch; height: 48px; }
+.radio { position: fixed; top: 12px; right: 0; z-index: 46; display: flex; align-items: stretch; height: 48px; }
 .radio__title {
   display: flex; align-items: center; max-width: 0; overflow: hidden; white-space: nowrap;
   background: var(--gold-300); color: var(--void);

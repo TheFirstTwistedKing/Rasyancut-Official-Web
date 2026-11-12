@@ -1,7 +1,7 @@
 /* RASYANCUT — 캐릭터 창: 선택 화면 + 일러스트 배치 화면 */
 
 /* ── 선택 화면 ───────────────────────────────── */
-.clist { min-height: 100svh; display: grid; align-content: center; gap: clamp(32px, 6vh, 64px); }
+.clist { min-height: calc(100svh - var(--top)); display: grid; align-content: center; gap: clamp(32px, 6vh, 64px); padding-block: clamp(32px, 7vh, 96px); }
 .clist__hollow { top: 4vh; right: -1vw; }
 .clist__head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
 .clist__head h1 { margin-top: 4px; font-size: var(--t-h2); font-weight: 900; line-height: 1.25; }
@@ -11,7 +11,7 @@
 
 /* ── 일러스트 배치 화면 ──────────────────────── */
 .cview {
-  position: relative; min-height: 100svh; overflow: hidden;
+  position: relative; min-height: calc(100svh - var(--top)); overflow: hidden;
   display: grid; grid-template-columns: minmax(260px, 30%) minmax(0, 1fr) minmax(220px, 26%);
   grid-template-rows: auto 1fr auto; gap: 0 clamp(16px, 2.5vw, 40px);
   padding: clamp(20px, 4vh, 40px) var(--pad) clamp(24px, 5vh, 48px);
@@ -59,7 +59,7 @@
 /* 가운데: 일러스트 자리 */
 .cview__art { grid-column: 2; grid-row: 2 / 4; z-index: 1; display: grid; grid-template-columns: auto auto; justify-content: center; align-content: center; gap: 12px 12px; min-height: 0; }
 .cview__frame {
-  position: relative; height: min(78vh, 760px); aspect-ratio: 9 / 16; max-width: 100%;
+  position: relative; height: min(calc(100svh - var(--top) - 200px), 720px); aspect-ratio: 9 / 16; max-width: 100%;
   clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px));
   background:
     repeating-linear-gradient(-45deg, transparent 0 13px, rgba(212, 167, 58, .09) 13px 14px),

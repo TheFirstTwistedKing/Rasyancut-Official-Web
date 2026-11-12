@@ -1,0 +1,165 @@
+/* RASYANCUT — 메인 화면: 명조식 한 화면 넘기기 + 구역별 새 배치 */
+
+/* ════ 한 화면씩 넘기기 (PC) ════ */
+.is-deck { overflow: hidden; scrollbar-gutter: auto; }
+.is-deck .page { position: fixed; inset: 0 0 0 var(--rail); margin: 0; padding: 0; }
+.is-deck .page > .sec {
+  position: absolute; inset: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; border: 0;
+  padding-top: calc(var(--top) + clamp(16px, 4vh, 48px)); padding-bottom: clamp(64px, 9vh, 96px);
+  align-content: center;
+  opacity: 0; visibility: hidden; scale: 1.03;
+  transition: opacity 1.3s var(--ease), scale 1.6s var(--ease), visibility 0s 1.3s;
+  scrollbar-width: thin; scrollbar-color: var(--gold-700) transparent;
+}
+.is-deck .page > .sec.is-cur { opacity: 1; visibility: visible; scale: 1; z-index: 2; transition: opacity 1.3s var(--ease), scale 1.6s var(--ease), visibility 0s; }
+.is-deck .page > .sec.is-out { visibility: visible; opacity: 0; scale: .985; z-index: 1; transition: opacity 1.1s var(--ease), scale 1.3s var(--ease), visibility 0s 1.1s; }
+.rv-reset .rv { transition: none !important; }
+.is-deck .home { padding-bottom: clamp(64px, 10vh, 112px); align-content: end; }
+.is-deck .home__down { display: none; }
+.is-deck .chara { padding-bottom: 0; align-content: end; }
+.is-deck .mapview { height: min(56vh, 600px); }
+.is-deck .gate { height: min(60vh, 560px); }
+
+/* 아래쪽 계기: 왼쪽 화면 번호, 오른쪽 '다음' (명조의 SCROLL) */
+.deckhud { display: none; }
+.is-deck .deckhud { display: block; }
+.deckhud__count {
+  position: fixed; left: calc(var(--rail) + var(--pad)); bottom: 24px; z-index: 30;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.deckhud__count b { font-size: var(--t-sub); font-weight: 700; }
+.deckhud__count span { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--gold-700); color: var(--ink); }
+.deckhud__next {
+  position: fixed; right: var(--pad); bottom: 16px; z-index: 30; min-height: 64px; padding: 0 8px 24px;
+  color: var(--gold-300); transition: color .6s;
+}
+.deckhud__next::after {
+  content: ""; position: absolute; left: 50%; bottom: 0; width: 1px; height: 22px; background: var(--gold-500);
+  transform-origin: top; animation: drop 1.8s var(--ease) infinite;
+}
+.deckhud__next:hover { color: var(--gold-100); }
+/* 넘길 때 화면을 가로지르는 금선 (테크니컬 전환) */
+.deckline {
+  position: fixed; left: var(--rail); right: 0; top: 50%; height: 1px; z-index: 60; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--gold-300) 30%, var(--gold-100) 50%, var(--gold-300) 70%, transparent);
+  opacity: 0; scale: 0 1;
+}
+.deckline.is-run { animation: deckline 1.2s var(--ease); }
+@keyframes deckline {
+  0% { opacity: 0; scale: 0 1; translate: 0 calc(var(--dir, 1) * 30vh); }
+  35% { opacity: 1; scale: 1 1; }
+  100% { opacity: 0; scale: 1 1; translate: 0 calc(var(--dir, 1) * -30vh); }
+}
+
+/* ════ 국가: 명조식 세로 문장 목록 ════ */
+.nemb { margin-top: 32px; display: grid; gap: 4px; justify-items: start; }
+.nemb button {
+  display: grid; grid-template-columns: 52px auto; align-items: center; gap: 12px; min-height: 56px; padding-right: 12px;
+  color: var(--ink-dim); transition: color .6s;
+}
+.nemb svg { width: 52px; height: 52px; padding: 8px; fill: none; stroke: currentColor; stroke-width: 1.2; border: 1px solid transparent; rotate: 0deg; transition: border-color .6s, rotate 1.2s var(--ease), background .6s; }
+.nemb .mono { color: inherit; }
+.nemb button:hover { color: var(--gold-300); }
+.nemb li.is-on button { color: var(--gold-100); }
+.nemb li.is-on svg { border-color: var(--gold-500); background: var(--basalt); rotate: 45deg; }
+.nemb li.is-on svg path { rotate: -45deg; transform-origin: 20px 20px; }
+
+/* ════ 게임: 큰 화면 + 다음 항목 미리보기 + 설명 띠 ════ */
+.gcar { position: relative; z-index: 1; min-width: 0; }
+.gcar__view { overflow: hidden; margin-right: calc(var(--pad) * -1); }
+.gcar__track { --gi: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 16px; translate: calc(var(--gi) * (-78% - 16px)) 0; transition: translate 1.3s var(--ease); }
+.gcar__item { display: grid; width: 100%; aspect-ratio: 16 / 7; text-align: center; opacity: .45; filter: grayscale(1); transition: opacity 1s, filter 1s, border-color .6s; }
+.gcar__item img { width: 100%; height: 100%; object-fit: cover; }
+.gcar__track li.is-on .gcar__item { opacity: 1; filter: none; border-color: var(--gold-500); cursor: default; }
+.gcar__track li:not(.is-on) .gcar__item:hover { opacity: .75; }
+.gcar__band {
+  margin-top: 16px; display: grid; grid-template-columns: minmax(180px, auto) minmax(0, 1fr) auto auto; gap: 16px 32px; align-items: center;
+  padding: 16px 0; border-block: 1px solid var(--line);
+  background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(212, 167, 58, .05) 7px 8px);
+}
+.gcar__name h3 { font-size: var(--t-h3); font-weight: 900; line-height: 1.2; }
+.gcar__meta { color: var(--ink-dim); }
+.gcar__nav { display: flex; align-items: center; gap: 12px; }
+
+/* ════ 공지: 명조 뉴스식 ════ */
+.notice { grid-template-columns: 84px minmax(0, 1fr); grid-template-rows: auto 1fr; }
+.notice__tab { grid-row: 1 / span 2; }
+.notice .stitle { position: relative; padding-bottom: 16px; border-bottom: 1px solid var(--gold-700); }
+.notice .stitle::after {           /* 제목 옆으로 길게 뻗는 겹선 (명조 NEWS 머리) */
+  content: ""; position: absolute; right: 0; bottom: 8px; width: 46%; height: 9px;
+  background: repeating-linear-gradient(var(--gold-700) 0 1px, transparent 1px 4px);
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: .7;
+}
+.news { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 0; min-height: 0; }
+.news__list li { border-bottom: 1px solid var(--line-soft); }
+.news__list button {
+  position: relative; width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center;
+  text-align: left; min-height: 64px; padding: 12px 16px 12px 0; transition: background .6s;
+}
+.news__list button::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: var(--gold-500); scale: 0 1; transform-origin: left; transition: scale .9s var(--ease); }
+.news__list li.is-on button::after { scale: 1 1; }
+.news__list li.is-on button { background: linear-gradient(90deg, rgba(212, 167, 58, .08), transparent); }
+.news__list button:hover strong { color: var(--gold-300); }
+.news__list strong { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .6s; }
+.news__tag { padding: 2px 12px; border: 1px solid var(--gold-700); border-radius: 999px; color: var(--gold-300); }
+.news__card {
+  position: relative; margin-left: 24px; padding: 24px 28px 48px; border: 1px solid var(--gold-500); background: var(--void);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+.news__card h3 { margin: 8px 0 16px; font-size: var(--t-h3); font-weight: 900; line-height: 1.25; }
+.news__card ul li { position: relative; padding: 4px 0 4px 20px; color: var(--ink-dim); }
+.news__card ul li:first-child { color: var(--ink); padding-left: 0; }
+.news__card ul li:not(:first-child)::before { content: ""; position: absolute; left: 2px; top: 1.05em; width: 8px; height: 1px; background: var(--gold-500); }
+.news__dots { position: absolute; left: 28px; bottom: 20px; display: flex; gap: 8px; }
+.news__dots li { width: 8px; height: 8px; border: 1px solid var(--gold-500); border-radius: 50%; }
+.news__dots li.is-on { background: var(--gold-300); border-color: var(--gold-300); }
+.news__card.is-swap > * { animation: body-swap .9s var(--ease) backwards; }
+.news__card.is-swap > :nth-child(2) { animation-delay: .08s; }
+.news__card.is-swap > :nth-child(3) { animation-delay: .16s; }
+@keyframes body-swap { from { opacity: 0; translate: 16px 0; } }
+
+/* ════ 갤러리: 넘김 화살표 ════ */
+.galfoot { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+.galnav { display: flex; gap: 12px; }
+
+/* ════ 마지막 화면 (명조의 끝 화면) ════ */
+.end { min-height: calc(100svh - var(--top)); display: grid; align-content: space-between; background: radial-gradient(ellipse 70% 60% at 70% 80%, #15110a, var(--void) 70%); }
+.end__hollow { right: -2vw; bottom: 8vh; }
+.end__poem { position: relative; z-index: 1; }
+.end__poem p { font-size: clamp(28px, 3.6vw, 52px); font-weight: 600; letter-spacing: .32em; line-height: 1.7; }
+.end__poem p + p { color: var(--gold-300); }
+.end__foot { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px 32px; align-items: center; border-top: 1px solid var(--line); padding-top: 24px; }
+.end__top { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); color: var(--gold-300); transition: background .6s, color .6s; }
+.end__top:hover { background: var(--gold-300); color: var(--void); }
+.is-deck .end__foot { margin-right: 120px; }   /* 오른쪽 아래 '다음' 버튼 자리 */
+
+/* ════ 반응형 ════ */
+@media (max-width: 1180px) {
+  .news { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .news__card { margin-left: 0; }
+  .gcar__band { grid-template-columns: minmax(0, 1fr) auto; }
+  .gcar__meta { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 900px) {
+  .nemb { grid-auto-flow: column; justify-content: start; gap: 8px; }
+  .nemb button { grid-template-columns: 44px; justify-items: center; gap: 0; padding: 0; }
+  .nemb svg { width: 44px; height: 44px; padding: 6px; }
+  .gcar__track { grid-auto-columns: 86%; translate: calc(var(--gi) * (-86% - 16px)) 0; }
+  .gcar__item { aspect-ratio: 4 / 3; }
+  .gcar__band { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .gcar__band .btn { justify-self: start; }
+  .notice { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+  .notice__tab { grid-row: auto; }
+  .notice .stitle::after { display: none; }
+  .news__list button { grid-template-columns: auto minmax(0, 1fr); padding-right: 0; }
+  .news__list button > .mono:last-child { grid-column: 2; }
+  .news__card { padding: 20px 20px 44px; }
+  .news__dots { left: 20px; }
+  .end { min-height: calc(100svh - var(--bar)); }
+  .end__poem p { letter-spacing: .2em; }
+  .end__top { margin-left: 0; }
+}
+/* 한 화면 모드에서 '최신' 띠가 상단 메뉴 바로 아래에서 시작하도록 */
+.is-deck .notice__tab { margin-top: calc(clamp(16px, 4vh, 48px) * -1); }
+@media (prefers-reduced-motion: reduce) { .deckhud__next::after { animation: none !important; } }

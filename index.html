@@ -9,10 +9,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/core.css?v=1.2.0">
-<link rel="stylesheet" href="assets/css/strips.css?v=1.2.0">
-<link rel="stylesheet" href="assets/css/home.css?v=1.2.0">
-<link rel="stylesheet" href="assets/css/radio.css?v=1.2.0">
+<link rel="stylesheet" href="assets/css/core.css?v=2.0.0">
+<link rel="stylesheet" href="assets/css/strips.css?v=2.0.0">
+<link rel="stylesheet" href="assets/css/home.css?v=2.0.0">
+<link rel="stylesheet" href="assets/css/deck.css?v=2.0.0">
+<link rel="stylesheet" href="assets/css/radio.css?v=2.0.0">
 </head>
 <body>
 <main class="page">
@@ -56,6 +57,7 @@
       <p class="stitle__en">NATION</p>
       <h2>국가 소개</h2>
       <p class="stitle__no mono">Sec-03 / Model</p>
+      <ol class="nemb" data-n-emb aria-label="국가 목록"></ol>
     </header>
     <div class="hud rv" style="--d:1">
       <svg class="hud__ring" viewBox="0 0 600 600" aria-hidden="true">
@@ -110,17 +112,15 @@
       <h2>게임 목록</h2>
       <p class="stitle__no mono">Sec-05 / Download</p>
     </header>
-    <div class="gview rv" style="--d:1">
-      <div class="slot gview__slot"><span>SCREENSHOT<br>EMPTY</span></div>
-      <div class="gview__side" aria-hidden="true"><b>GAME</b><span class="mono">RSC-G</span></div>
-      <div class="gview__cap">
-        <p class="mono gold" data-g-code>RSC-G01</p>
-        <h3 data-g-name>미등록</h3>
-        <p class="mono" data-g-meta>—</p>
+    <div class="gcar rv" style="--d:1">
+      <div class="gcar__view"><ol class="gcar__track" data-g-track></ol></div>
+      <div class="gcar__band">
+        <div class="gcar__name"><p class="mono gold" data-g-code>RSC-G01</p><h3 data-g-name>미등록</h3></div>
+        <p class="gcar__meta" data-g-meta>—</p>
         <a class="btn is-off" data-g-dl aria-disabled="true">다운로드 준비 중</a>
+        <div class="gcar__nav"><button class="rbtn" data-g-prev aria-label="이전 게임"></button><span class="mono" data-g-count>01 / 03</span><button class="rbtn" data-g-next aria-label="다음 게임"></button></div>
       </div>
     </div>
-    <ol class="glist rv" style="--d:2" data-glist></ol>
   </section>
 
   <!-- 06 CLUE -->
@@ -162,7 +162,10 @@
       <h2>공지</h2>
       <p class="stitle__no mono">Sec-08 / Patch Log</p>
     </header>
-    <ol class="nlist" data-notices></ol>
+    <div class="news rv" style="--d:1">
+      <ol class="news__list" data-notices></ol>
+      <article class="news__card" data-news-card aria-live="polite"></article>
+    </div>
   </section>
 
   <!-- 09 GALLERY -->
@@ -173,19 +176,31 @@
       <p class="stitle__no mono">Sec-09 / Concept Art</p>
     </header>
     <ul class="galrow rv" style="--d:1" data-galrow></ul>
-    <a class="btn rv" style="--d:2" href="gallery.html">갤러리 창으로 이동</a>
+    <div class="galfoot rv" style="--d:2">
+      <a class="btn" href="gallery.html">갤러리 창으로 이동</a>
+      <div class="galnav"><button class="rbtn" data-gal-prev aria-label="이전 작품들"></button><button class="rbtn" data-gal-next aria-label="다음 작품들"></button></div>
+    </div>
+  </section>
+
+  <!-- 10 END -->
+  <section class="sec end" id="end">
+    <div class="hollow end__hollow" aria-hidden="true">RASYANCUT</div>
+    <div class="end__poem rv">
+      <p>모든 창조물들의</p>
+      <p>성소</p>
+    </div>
+    <div class="end__foot rv" style="--d:1">
+      <p class="mono">RASYANCUT Official Archive</p>
+      <p class="mono">Sanctuary of All Creations</p>
+      <a class="mono end__top" href="#home">Back to Top</a>
+    </div>
   </section>
 </main>
 
-<footer class="foot">
-  <p class="mono">RASYANCUT Official Archive</p>
-  <p class="mono">Sanctuary of All Creations</p>
-</footer>
-
 <noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
-<script src="assets/js/data.js?v=1.2.0"></script>
-<script src="assets/js/core.js?v=1.2.0"></script>
-<script src="assets/js/radio.js?v=1.2.0"></script>
-<script src="assets/js/home.js?v=1.2.0" data-page></script>
+<script src="assets/js/data.js?v=2.0.0"></script>
+<script src="assets/js/core.js?v=2.0.0"></script>
+<script src="assets/js/radio.js?v=2.0.0"></script>
+<script src="assets/js/home.js?v=2.0.0" data-page></script>
 </body>
 </html>

@@ -159,8 +159,18 @@
     }
     loop(cv, draw);
 
-    var panel = $('.npanel'), ticks = $('[data-n-ticks]');
+    var panel = $('.npanel'), ticks = $('[data-n-ticks]'), emb = $('[data-n-emb]');
     ticks.innerHTML = D.nations.map(function () { return '<li></li>'; }).join('');
+    var GLYPH = [   /* 첨탑 · 고리 · 결정 · 돔 (3D 모델 형태와 짝) */
+      'M20 4l4 26h-8z M8 34h24 M12 34l2-8 M28 34l-2-8',
+      'M20 13a7 7 0 110 14 7 7 0 010-14z M4 20c0-4 7-7 16-7s16 3 16 7-7 7-16 7S4 24 4 20z',
+      'M20 3l9 17-9 17-9-17z M11 20h18 M20 3v34',
+      'M6 30a14 14 0 0128 0z M3 30h34 M10 30v4 M30 30v4 M20 16v-6'
+    ];
+    emb.innerHTML = D.nations.map(function (n, i) {
+      return '<li><button data-n-pick="' + i + '" aria-label="' + esc(n.name) + ' ' + n.id + '"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="' + GLYPH[n.shape % 4] + '"/></svg><span class="mono">' + n.id + '</span></button></li>';
+    }).join('');
+    emb.addEventListener('click', function (e) { var b = e.target.closest('[data-n-pick]'); if (b && +b.dataset.nPick !== idx) show(+b.dataset.nPick); });
     $('[data-n-prev]').innerHTML = RSC.chev(-1); $('[data-n-next]').innerHTML = RSC.chev(1);
     function show(i, quiet) {
       idx = (i + D.nations.length) % D.nations.length;
@@ -172,6 +182,7 @@
       $('[data-n-count]').textContent = (idx + 1) + ' / ' + D.nations.length;
       $('[data-n-desc]').textContent = n.desc || '이 국가의 기록은 아직 등록되지 않았습니다.';
       [].forEach.call(ticks.children, function (li, k) { li.classList.toggle('is-on', k === idx); });
+      [].forEach.call(emb.children, function (li, k) { li.classList.toggle('is-on', k === idx); });
       if (!quiet) { panel.classList.remove('is-swap'); void panel.offsetWidth; panel.classList.add('is-swap'); }
     }
     $('[data-n-prev]').addEventListener('click', function () { show(idx - 1); });
@@ -281,22 +292,29 @@
   })();
   $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(nation.current(), true); }, 900); });
 
-  /* ── 05 GAME ── */
+  /* ── 05 GAME: 큰 화면 + 다음 항목이 오른쪽에 살짝 보인다 ── */
   (function () {
-    var list = $('[data-glist]');
-    list.innerHTML = D.games.map(function (gm, i) {
-      return '<li><button data-game="' + i + '"><b>' + gm.id + '</b><strong>' + esc(gm.name) + '</strong><span class="mono">' + esc(gm.genre) + '</span><span class="mono">' + esc(gm.platform) + '</span><em>' + esc(gm.status) + '</em></button></li>';
+    var track = $('[data-g-track]'), gi = 0, N = D.games.length;
+    $('[data-g-prev]').innerHTML = RSC.chev(-1); $('[data-g-next]').innerHTML = RSC.chev(1);
+    track.innerHTML = D.games.map(function (gm, i) {
+      return '<li><button class="gcar__item slot" data-g-pick="' + i + '" aria-label="' + esc(gm.name) + ' ' + gm.id + '">' +
+        (gm.image ? '<img src="' + esc(gm.image) + '" alt="">' : '<span>' + gm.code + '<br>SCREENSHOT EMPTY</span>') + '</button></li>';
     }).join('');
     function show(i) {
-      var gm = D.games[i], dl = $('[data-g-dl]');
-      list.querySelectorAll('button').forEach(function (b, k) { b.classList.toggle('is-on', k === i); });
+      gi = (i + N) % N;
+      var gm = D.games[gi], dl = $('[data-g-dl]');
+      track.style.setProperty('--gi', gi);
+      [].forEach.call(track.children, function (li, k) { li.classList.toggle('is-on', k === gi); li.firstChild.tabIndex = k === gi ? -1 : 0; });
       RSC.scramble($('[data-g-code]'), gm.code, 800);
       RSC.scramble($('[data-g-name]'), gm.name, 900);
-      $('[data-g-meta]').textContent = '장르 ' + gm.genre + ' · 플랫폼 ' + gm.platform;
+      $('[data-g-meta]').textContent = '장르 ' + gm.genre + ' · 플랫폼 ' + gm.platform + ' · ' + gm.status;
+      $('[data-g-count]').textContent = String(gi + 1).padStart(2, '0') + ' / ' + String(N).padStart(2, '0');
       if (gm.url) { dl.href = gm.url; dl.classList.remove('is-off'); dl.removeAttribute('aria-disabled'); dl.textContent = '다운로드'; }
       else { dl.removeAttribute('href'); dl.classList.add('is-off'); dl.setAttribute('aria-disabled', 'true'); dl.textContent = '다운로드 준비 중'; }
     }
-    list.addEventListener('click', function (e) { var b = e.target.closest('[data-game]'); if (b) show(+b.dataset.game); });
+    $('[data-g-prev]').addEventListener('click', function () { show(gi - 1); });
+    $('[data-g-next]').addEventListener('click', function () { show(gi + 1); });
+    track.addEventListener('click', function (e) { var b = e.target.closest('[data-g-pick]'); if (b && +b.dataset.gPick !== gi) show(+b.dataset.gPick); });
     show(0);
   })();
 
@@ -319,17 +337,24 @@
     RSC.observe(box);
   })();
 
-  /* ── 08 NOTICE ── */
+  /* ── 08 NOTICE: 왼쪽 목록을 고르면 오른쪽 카드가 바뀐다 ── */
   (function () {
-    var box = $('[data-notices]');
-    box.innerHTML = D.notices.map(function (n, i) {
-      return '<li' + (i ? '' : ' class="is-open"') + '><button aria-expanded="' + !i + '"><span class="mono">// ' + esc(n.tag) + '</span><span class="mono gold">' + n.date + '</span><strong>' + esc(n.title) + '</strong><i></i></button>' +
-        '<div class="nbody"><ul>' + n.body.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div></li>';
+    var box = $('[data-notices]'), card = $('[data-news-card]'), ni = -1;
+    var list = D.notices.slice(0, 6);
+    box.innerHTML = list.map(function (n, i) {
+      return '<li><button data-news="' + i + '"><span class="news__tag mono">' + esc(n.tag) + '</span><strong>' + esc(n.title) + '</strong><span class="mono">' + n.date + '</span></button></li>';
     }).join('');
-    box.addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return;
-      b.setAttribute('aria-expanded', b.parentNode.classList.toggle('is-open'));
-    });
+    function show(i) {
+      if (i === ni) return; ni = i;
+      var n = list[i];
+      [].forEach.call(box.children, function (li, k) { li.classList.toggle('is-on', k === i); li.firstChild.setAttribute('aria-pressed', k === i); });
+      card.innerHTML = '<p class="mono"><span class="gold">// ' + esc(n.tag) + '</span> · ' + n.date + '</p><h3>' + esc(n.title) + '</h3>' +
+        '<ul>' + n.body.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' +
+        '<ol class="news__dots" aria-hidden="true">' + list.map(function (_, k) { return '<li' + (k === i ? ' class="is-on"' : '') + '></li>'; }).join('') + '</ol>';
+      card.classList.remove('is-swap'); void card.offsetWidth; card.classList.add('is-swap');
+    }
+    box.addEventListener('click', function (e) { var b = e.target.closest('[data-news]'); if (b) show(+b.dataset.news); });
+    show(0);
   })();
 
   /* ── 09 GALLERY ── */
@@ -337,12 +362,111 @@
     return '<li style="aspect-ratio:' + a.ratio + '"><a href="gallery.html#a=' + a.id + '" aria-label="작품 ' + a.id + '"><div class="slot"><span>' + a.code + '<br>EMPTY</span></div></a></li>';
   }).join('');
 
+  (function () {
+    var row = $('[data-galrow]');
+    $('[data-gal-prev]').innerHTML = RSC.chev(-1); $('[data-gal-next]').innerHTML = RSC.chev(1);
+    function step(d) { row.scrollBy({ left: d * row.clientWidth * .8, behavior: reduce ? 'auto' : 'smooth' }); }
+    $('[data-gal-prev]').addEventListener('click', function () { step(-1); });
+    $('[data-gal-next]').addEventListener('click', function () { step(1); });
+  })();
+
   RSC.observe();
+
+  /* ── 명조식 한 화면씩 넘기기 (PC, 화면이 충분히 클 때) ──
+     휠·키보드·레일·해시로 구역을 바꾼다. 구역 안이 화면보다 길면 먼저 안에서 스크롤한다. */
+  var secs = [].slice.call(document.querySelectorAll('.page > .sec[id]'));
+  var deckMQ = matchMedia('(min-width: 901px) and (min-height: 620px)');
+  var deck = false, cur = 0, busy = false, root = document.documentElement;
+  var EN = { home: 'Home', character: 'Character', nation: 'Nation', map: 'Map', game: 'Game', clue: 'Clue', novel: 'Novel', notice: 'Notice', gallery: 'Gallery', end: 'End' };
+
+  var hud = document.createElement('div');
+  hud.className = 'deckhud';
+  hud.innerHTML = '<p class="mono deckhud__count"><b class="gold" data-d-no>01</b> / ' + String(secs.length).padStart(2, '0') + '<span data-d-name>Home</span></p>' +
+    '<button class="deckhud__next mono" data-d-next>Scroll</button><i class="deckline" aria-hidden="true"></i>';
+  document.body.appendChild(hud);
+  RSC.onLeave(function () { root.classList.remove('is-deck'); });
+
+  function indexOf(id) { for (var k = 0; k < secs.length; k++) if (secs[k].id === id) return k; return -1; }
+  function replay(sec) {               /* 들어오는 화면의 등장 연출을 다시 재생 */
+    var rv = sec.querySelectorAll('.rv');
+    sec.classList.add('rv-reset'); rv.forEach(function (el) { el.classList.remove('is-in'); });
+    void sec.offsetWidth; sec.classList.remove('rv-reset');
+    requestAnimationFrame(function () { rv.forEach(function (el) { el.classList.add('is-in'); }); });
+  }
+  function mark() {
+    var id = secs[cur].id;
+    RSC.setNav(id === 'end' ? '' : id);
+    $('[data-d-no]').textContent = String(cur + 1).padStart(2, '0');
+    $('[data-d-name]').textContent = EN[id] || id;
+    $('[data-d-next]').textContent = cur === secs.length - 1 ? 'Top' : 'Scroll';
+    if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+  }
+  function goTo(i, instant) {
+    i = Math.max(0, Math.min(secs.length - 1, i));
+    if (!deck || i === cur && !instant || busy && !instant) return;
+    var prev = secs[cur], next = secs[i];
+    secs.forEach(function (s) { s.classList.remove('is-cur', 'is-out'); s.setAttribute('aria-hidden', 'true'); s.inert = true; });
+    if (!instant && prev !== next) { prev.classList.add('is-out'); setTimeout(function () { prev.classList.remove('is-out'); }, 1400); }
+    next.classList.add('is-cur'); next.removeAttribute('aria-hidden'); next.inert = false; next.scrollTop = 0;
+    root.style.setProperty('--dir', i >= cur ? 1 : -1);
+    cur = i; replay(next); mark();
+    if (!instant) {
+      var line = hud.querySelector('.deckline'); line.classList.remove('is-run'); void line.offsetWidth; line.classList.add('is-run');
+      busy = true; setTimeout(function () { busy = false; }, 1200);
+    }
+  }
+  function setDeck(on) {
+    if (on === deck) return;
+    deck = on; root.classList.toggle('is-deck', on);
+    if (on) { var k = indexOf(location.hash.slice(1)); goTo(k < 0 ? 0 : k, true); }
+    else {
+      secs.forEach(function (s) { s.classList.remove('is-cur', 'is-out'); s.removeAttribute('aria-hidden'); s.inert = false; });
+      var t = secs[cur]; if (t) t.scrollIntoView();
+    }
+  }
+  function canScrollInside(dy) {
+    var s = secs[cur];
+    return dy > 0 ? s.scrollTop + s.clientHeight < s.scrollHeight - 2 : s.scrollTop > 2;
+  }
+  function overlayOpen() { return !!document.querySelector('.rpanel.is-open'); }
+
+  addEventListener('wheel', function (e) {
+    if (!deck || e.ctrlKey || overlayOpen() || Math.abs(e.deltaX) > Math.abs(e.deltaY) || !e.deltaY) return;
+    if (canScrollInside(e.deltaY)) return;            /* 구역 안 스크롤이 먼저 */
+    e.preventDefault();
+    if (!busy) goTo(cur + (e.deltaY > 0 ? 1 : -1));
+  }, { passive: false });
+  addEventListener('keydown', function (e) {
+    if (!deck || overlayOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
+    var t = e.target;
+    if (t.closest && t.closest('input, textarea, select, [contenteditable], .mapview')) return;
+    var d = { PageDown: 1, ArrowDown: 1, ' ': 1, PageUp: -1, ArrowUp: -1 }[e.key];
+    if (e.key === ' ' && t.closest && t.closest('button, a')) return;
+    if (e.key === 'Home') { e.preventDefault(); return goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); return goTo(secs.length - 1); }
+    if (!d || canScrollInside(d)) return;
+    e.preventDefault(); goTo(cur + d);
+  });
+  RSC.on(document, 'click', function (e) {          /* 레일·바로가기·#링크 → 해당 화면으로 */
+    if (!deck || e.defaultPrevented) return;
+    var a = e.target.closest('a[href*="#"]'); if (!a) return;
+    var url = new URL(a.href, location.href), k = indexOf(url.hash.slice(1));
+    if (k < 0 || url.pathname.replace(/index\.html$/, '') !== location.pathname.replace(/index\.html$/, '')) return;
+    e.preventDefault(); goTo(k);
+  });
+  addEventListener('hashchange', function () { var k = indexOf(location.hash.slice(1)); if (deck && k >= 0) goTo(k); });
+  $('[data-d-next]').addEventListener('click', function () { goTo(cur === secs.length - 1 ? 0 : cur + 1); });
+  /* '지도에서 보기'는 지도 화면으로 넘긴 뒤 위치를 옮긴다 */
+  $('[data-n-map]').addEventListener('click', function (e) { if (deck) { e.preventDefault(); goTo(indexOf('map')); } });
+  function onMQ(e) { setDeck(e.matches); }
+  deckMQ.addEventListener('change', onMQ);
+  RSC.onLeave(function () { deckMQ.removeEventListener('change', onMQ); });
+  setDeck(deckMQ.matches);
 
   /* 현재 구역 추적: 레일 표시 + 주소 해시 */
   var spy = new IntersectionObserver(function (es) {
     es.forEach(function (en) {
-      if (!en.isIntersecting) return;
+      if (!en.isIntersecting || deck) return;
       RSC.setNav(en.target.id);
       if (location.hash !== '#' + en.target.id) history.replaceState(null, '', '#' + en.target.id);
     });
