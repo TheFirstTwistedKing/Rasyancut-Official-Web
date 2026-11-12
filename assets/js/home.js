@@ -509,7 +509,7 @@
     var mini = $('[data-mini]'), miniBox = $('[data-mini-box]'), miniImg = $('[data-mini-img]');
 
     world.style.width = W + 'px'; world.style.height = H + 'px';
-    world.innerHTML = '<img class="mapart" alt="" data-art width="' + W + '" height="' + H + '" decoding="async">' +
+    world.innerHTML = '<img class="mapart" alt="" draggable="false" data-art width="' + W + '" height="' + H + '" decoding="async">' +
       L.map(function (l, i) {
         var t = esc(l.name).replace(/\\n|\n/g, '<br>');
         return '<button class="mlab mlab--' + l.kind + (l.vert ? ' is-vert' : '') + '" data-lab="' + i + '" style="left:' + l.x * K + 'px;top:' + l.y * K + 'px;' +
@@ -566,6 +566,7 @@
 
     view.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.mlab')) return;
+      if (e.pointerType === 'mouse') e.preventDefault();   /* 끌 때 주변 글자가 선택되지 않게 */
       cancelAnimationFrame(anim);
       ptr.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { view.setPointerCapture(e.pointerId); } catch (_) {} view.classList.add('is-drag');
       if (ptr.size === 2) { var p = Array.from(ptr.values()); pinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); }

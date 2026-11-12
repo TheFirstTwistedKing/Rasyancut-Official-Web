@@ -291,3 +291,7 @@
   .mapmini { width: 120px; }
   .maplist { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* 지도를 끌어도 글자·그림이 선택되거나 끌려 나오지 않게 */
+.mapbox, .mapbox * { -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+.mapview.is-drag, .mapview.is-drag * { cursor: grabbing; }
