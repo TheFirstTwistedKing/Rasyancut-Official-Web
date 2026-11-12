@@ -1,0 +1,36 @@
+/* RASYANCUT — 첫 진입 로딩 화면: 글자 로고 + 칸 나뉜 진행 막대 + 퍼센트 */
+.boot {
+  position: fixed; inset: 0; z-index: 200; display: grid; place-items: center;
+  background: radial-gradient(ellipse 60% 50% at 50% 45%, #15100a, #050403 70%);
+  color: #e6e3da; overflow: hidden;
+}
+.boot__panel { position: absolute; left: 0; right: 0; height: 50%; background: inherit; background: #050403; transition: translate 1.3s cubic-bezier(.7, 0, .2, 1); }
+.boot__panel--t { top: 0; border-bottom: 1px solid transparent; }
+.boot__panel--b { bottom: 0; border-top: 1px solid transparent; }
+.boot__grid { position: absolute; inset: 0; opacity: .5;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M0 .5H32M.5 0V32' stroke='rgb(201,207,204)' stroke-opacity='.05'/%3E%3C/svg%3E"); }
+.boot__in { position: relative; z-index: 2; display: grid; justify-items: center; gap: 28px; width: min(560px, 84vw); transition: opacity .7s, scale 1.2s cubic-bezier(.4, .05, .2, 1); }
+.boot__mark { width: 44px; height: 44px; animation: boot-spin 6s linear infinite; }
+@keyframes boot-spin { to { rotate: 360deg; } }
+.boot__logo { display: flex; font-family: "Noto Serif KR", serif; font-weight: 900; font-size: clamp(40px, 9vw, 92px); letter-spacing: .08em; line-height: 1; margin-right: -.08em; }
+.boot__logo span { opacity: 0; translate: 0 .3em; filter: blur(8px); animation: boot-letter 1s cubic-bezier(.2, .7, .1, 1) forwards; animation-delay: calc(var(--i) * 80ms + 150ms); }
+@keyframes boot-letter { to { opacity: 1; translate: 0; filter: blur(0); } }
+.boot__tag { font-family: "Barlow Condensed", sans-serif; font-size: 13px; letter-spacing: .5em; color: #f2d27a; margin-right: -.5em; opacity: 0; animation: boot-fade .9s 1s forwards; }
+@keyframes boot-fade { to { opacity: 1; } }
+.boot__bar { position: relative; width: 100%; height: 14px; border: 1px solid rgba(201, 207, 204, .3); padding: 2px; }
+.boot__bar::before, .boot__bar::after { content: ""; position: absolute; top: -6px; width: 1px; height: 24px; background: #f2d27a; }
+.boot__bar::before { left: -8px; } .boot__bar::after { right: -8px; }
+.boot__fill { height: 100%; width: calc(var(--p, 0) * 1%);
+  background: repeating-linear-gradient(90deg, #f2d27a 0 6px, transparent 6px 9px); box-shadow: none; transition: width .15s linear; }
+.boot__fill::after { content: ""; display: block; float: right; width: 2px; height: 100%; background: #fff6dc; }
+.boot__row { width: 100%; display: flex; justify-content: space-between; align-items: baseline; font-family: "Barlow Condensed", sans-serif; letter-spacing: .22em; font-size: 12px; color: #8f9592; }
+.boot__pct { font-size: 28px; font-weight: 600; color: #f2d27a; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.boot__pct small { font-size: 14px; margin-left: 2px; }
+/* 끝: 글자가 커지며 사라지고 위아래 판이 갈라져 열린다 */
+.boot.is-done .boot__in { opacity: 0; scale: 1.08; }
+.boot.is-done .boot__panel--t { translate: 0 -100%; transition-delay: .35s; }
+.boot.is-done .boot__panel--b { translate: 0 100%; transition-delay: .35s; }
+.boot.is-done { background: transparent; pointer-events: none; transition: background 0s .35s; }
+.boot.is-done .boot__grid { opacity: 0; transition: opacity .4s; }
+.boot.is-done .boot__panel--t { border-bottom-color: rgba(242, 210, 122, .7); }
+.boot.is-done .boot__panel--b { border-top-color: rgba(242, 210, 122, .7); }

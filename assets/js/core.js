@@ -150,7 +150,7 @@
         document.querySelectorAll('script[data-page]').forEach(function (sc) { sc.remove(); });
         var before = document.querySelector('.wipe');
         [].slice.call(doc.body.children).forEach(function (el) {
-          if (el.tagName !== 'SCRIPT' && el.tagName !== 'NOSCRIPT') document.body.insertBefore(document.adoptNode(el), before);
+          if (el.tagName !== 'SCRIPT' && el.tagName !== 'NOSCRIPT' && !el.hasAttribute('data-boot')) document.body.insertBefore(document.adoptNode(el), before);
         });
         document.title = doc.title;
         if (doc.body.dataset.nav) document.body.dataset.nav = doc.body.dataset.nav; else delete document.body.dataset.nav;

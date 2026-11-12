@@ -370,7 +370,8 @@
       }
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     }
-    RSC.homeFxQuality = function () { return quality; };   /* 점검용 */
+    RSC.homeFxQuality = function () { return quality; };
+    RSC.on(document, 'rsc:ready', function () { born = 0; });   /* 로딩 화면이 걷히는 순간 마법진 등장 연출을 다시 시작 */   /* 점검용 */
     if (reduce) draw(0); else loop(cv, draw);
   })();
 
@@ -385,7 +386,7 @@
   /* ── 03 NATION: 점 입자 3D 모델 ── */
   var nation = (function () {
     var cv = $('.hud__model'), g = fit(cv), N = small.matches ? 1500 : 3200;
-    var SPIN = reduce ? 0 : .004;                    /* 기준 회전 속도(60fps 한 프레임당) */
+    var SPIN = .004;                                  /* 사용자 요청: 애니메이션 줄이기 설정과 관계없이 천천히 돈다 */                    /* 기준 회전 속도(60fps 한 프레임당) */
     var cur = new Float32Array(N * 3), tgt = new Float32Array(N * 3), idx = 0, rotY = .6, rotX = -.28, vel = SPIN, drag = null, last = 0;
     var rnd = Math.random, PI2 = 6.2832;
     var SHAPES = [
@@ -445,9 +446,12 @@
         var f = 1 / (1 + z2 * .32), px = ox + x1 * S * f, py = oy - y1 * S * f;
         var a = .22 + (1 - (z2 + 1.2) / 2.4) * .7;
         c.globalAlpha = a < .08 ? .08 : a > 1 ? 1 : a;
-        c.fillStyle = i % 9 === 0 ? '#fff3c4' : '#d4a73a';
-        var sz = f * (i % 9 === 0 ? 1.9 : 1.3);
+        /* 금빛 배경 위에서도 보이도록: 밝은 상아·은색 입자 + 앞쪽일수록 밝게 */
+        var hi = i % 9 === 0;
+        c.fillStyle = hi ? '#fffaf0' : (i % 3 ? '#f6dc96' : '#e3e8ec');
+        var sz = f * (hi ? 2.2 : 1.6);
         c.fillRect(px, py, sz, sz);
+        if (hi) { c.globalAlpha *= .22; c.fillRect(px - sz, py - sz, sz * 3, sz * 3); }
       }
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
     }

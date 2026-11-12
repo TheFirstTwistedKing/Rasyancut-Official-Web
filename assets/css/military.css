@@ -162,3 +162,7 @@ html::before {
 .home__slash { z-index: 0; }
 .home__fx:not(.home__fx--bg) { z-index: 1; }
 .home__title, .home__quick { z-index: 2; }
+/* 국가 3D 모델: 금빛 배경에 묻히지 않도록 원형 계기 안을 어둡게 */
+.hud::before { content: ""; position: absolute; inset: 6%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(3, 3, 2, .92) 0%, rgba(3, 3, 2, .82) 55%, rgba(3, 3, 2, 0) 72%); }
+.hud__model { z-index: 1; }
