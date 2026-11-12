@@ -43,3 +43,15 @@
   .radio { right: 56px; }
   body.menu-open .acct { visibility: hidden; }
 }
+
+/* 계정 설정: 프로필 수정 */
+.aprof { display: grid; gap: 14px; }
+.aprof__pic { display: flex; align-items: center; gap: 16px; cursor: pointer; width: max-content; }
+.aprof__pic input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.aprof__pic img, .aprof__pic .apanel__ph { width: 72px; height: 72px; border-radius: 50%; border: 1px solid var(--gold-300); object-fit: cover; display: grid; place-items: center; }
+.aprof__pic .mono { color: var(--gold-300); border-bottom: 1px solid var(--gold-700); }
+.aprof__pic:hover .mono { color: var(--gold-100); }
+.aprof__name { display: grid; gap: 6px; }
+.aprof__name input { width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: rgba(10, 12, 13, .85); border: 1px solid var(--line); border-radius: 0; }
+.aprof__name input:focus { outline: 1px solid var(--gold-300); }
+.aprof__row { display: flex; flex-wrap: wrap; gap: 8px; }

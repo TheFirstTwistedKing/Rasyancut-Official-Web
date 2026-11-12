@@ -1,0 +1,99 @@
+rules_version = '2';
+// RASYANCUT 커뮤니티 데이터베이스 규칙
+// Firebase 콘솔 > Firestore Database > 규칙(Rules) 탭에 이 파일 내용을 그대로 붙여 넣고 [게시]를 누른다.
+// 원칙: 로그인한 사람만 읽고 쓴다. 자기 글·댓글만 고치거나 지운다. 관리자(admins/{uid} 문서가 있는 계정)는 모든 글·댓글 삭제와 고정이 가능하다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function cats() { return ['notice', 'free', 'theory', 'fanart', 'qna']; }
+
+    // 관리자 표시: 콘솔에서만 만든다. 본인 것만 읽을 수 있다.
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // 계정 설정: 표시 이름(1~20자)과 프로필 사진(160px 압축 이미지 또는 구글 사진 주소). 본인만 쓴다.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'photo', 'updatedAt'])
+        && str(request.resource.data.name, 1, 20)
+        && str(request.resource.data.photo, 0, 30000)
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /posts/{pid} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['cat', 'title', 'body', 'uid', 'name', 'photo', 'createdAt', 'likeCount', 'commentCount', 'pinned', 'imageCount'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.cat in cats() && (request.resource.data.cat != 'notice' || isAdmin())
+        && str(request.resource.data.title, 1, 100) && str(request.resource.data.body, 1, 5000)
+        && str(request.resource.data.name, 0, 80) && str(request.resource.data.photo, 0, 30000)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.likeCount == 0 && request.resource.data.commentCount == 0
+        && request.resource.data.pinned == false
+        && request.resource.data.imageCount is int && request.resource.data.imageCount >= 0 && request.resource.data.imageCount <= 4;
+
+      allow update: if signedIn() && (
+        // 글쓴이: 분류·제목·내용 수정
+        (resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cat', 'title', 'body', 'updatedAt'])
+          && request.resource.data.cat in cats() && (request.resource.data.cat != 'notice' || isAdmin())
+          && str(request.resource.data.title, 1, 100) && str(request.resource.data.body, 1, 5000)
+          && request.resource.data.updatedAt == request.time)
+        // 좋아요 수: 내 좋아요 표시를 함께 만들거나 지울 때만 ±1
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+          && ((request.resource.data.likeCount == resource.data.likeCount + 1
+                && !exists(/databases/$(database)/documents/posts/$(pid)/likes/$(request.auth.uid))
+                && existsAfter(/databases/$(database)/documents/posts/$(pid)/likes/$(request.auth.uid)))
+            || (request.resource.data.likeCount == resource.data.likeCount - 1
+                && exists(/databases/$(database)/documents/posts/$(pid)/likes/$(request.auth.uid))
+                && !existsAfter(/databases/$(database)/documents/posts/$(pid)/likes/$(request.auth.uid)))))
+        // 댓글 수: ±1
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount'])
+          && (request.resource.data.commentCount == resource.data.commentCount + 1
+              || request.resource.data.commentCount == resource.data.commentCount - 1))
+        // 관리자: 고정
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pinned']) && request.resource.data.pinned is bool)
+      );
+
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+
+      match /comments/{cid} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['body', 'uid', 'name', 'photo', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && str(request.resource.data.body, 1, 1000) && str(request.resource.data.name, 0, 80) && str(request.resource.data.photo, 0, 30000)
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
+
+      match /likes/{uid} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow create: if signedIn() && request.auth.uid == uid && request.resource.data.keys().hasOnly(['at']);
+        allow delete: if signedIn() && request.auth.uid == uid;
+        allow update: if false;
+      }
+
+      // 첨부 이미지 (압축된 데이터, 장당 약 300KB 이하). 글을 만든 사람만, 글과 함께 만든다.
+      match /files/{fid} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && getAfter(/databases/$(database)/documents/posts/$(pid)).data.uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['n', 'data'])
+          && request.resource.data.n is int && request.resource.data.n >= 0 && request.resource.data.n < 4
+          && request.resource.data.data is string && request.resource.data.data.size() <= 420000
+          && request.resource.data.data.matches('^data:image/(webp|jpeg|png);base64,.*');
+        allow update: if false;
+        allow delete: if signedIn() && (get(/databases/$(database)/documents/posts/$(pid)).data.uid == request.auth.uid || isAdmin());
+      }
+    }
+  }
+}
