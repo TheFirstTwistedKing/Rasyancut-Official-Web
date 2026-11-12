@@ -3,7 +3,13 @@
   'use strict';
   var RSC = window.RSC = window.RSC || {};
   var reduce = RSC.reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var onHome = /(^|\/)(index\.html)?$/.test(location.pathname);
+  /* 페이지별 스크립트가 거는 전역 이벤트는 페이지를 떠날 때 한꺼번에 해제한다 */
+  var ctl = new AbortController();
+  RSC.on = function (target, type, fn, opt) {
+    var o = typeof opt === 'object' && opt ? Object.assign({}, opt) : {}; o.signal = ctl.signal;
+    target.addEventListener(type, fn, o);
+  };
+  RSC.onLeave = function (fn) { ctl.signal.addEventListener('abort', fn); };
 
   var NAV = [
     ['home', '홈', 'HOME', 'M12 2l10 10-10 10L2 12z M12 7l5 5-5 5-5-5z'],
@@ -20,7 +26,7 @@
     '<path d="M20 2l18 18-18 18L2 20z"/><path d="M20 10l10 10-10 10-10-10z" stroke="#8f6a1c"/>' +
     '<path d="M20 2v36M2 20h36" stroke="#8f6a1c" stroke-width=".6"/><circle cx="20" cy="20" r="3" fill="#f2d27a" stroke="none"/></svg>';
 
-  function href(id) { return (onHome ? '' : 'index.html') + '#' + id; }
+  function href(id) { return 'index.html#' + id; }
 
   /* 크롬 삽입 */
   var rail = document.createElement('aside');
@@ -49,6 +55,7 @@
   wipe.setAttribute('aria-hidden', 'true');
   wipe.innerHTML = '<i></i><i></i><i></i>';
 
+  [rail, bar, menu, wipe].forEach(function (el) { el.setAttribute('data-keep', ''); });
   document.body.prepend(rail, bar, menu);
   document.body.append(wipe);
 
@@ -80,14 +87,100 @@
   /* 같은 페이지 안에서 화면을 바꿀 때: 덮고 → 바꾸고 → 연다 */
   RSC.wipe = function (swap) { cover(function () { swap(); open(); }); };
 
+  /* ── 페이지 이동: 문서를 통째로 바꾸지 않고 본문만 갈아 끼운다 ──
+     문서가 유지되므로 라디오가 끊기지 않는다. 실패하면 일반 이동으로 돌아간다. */
+  function norm(path) { return path.replace(/index\.html$/, ''); }
+  function bare(src) { return new URL(src, location.href).pathname; }
+  var loaded = {}, current = norm(location.pathname), busy = false;
+  document.querySelectorAll('script[src]').forEach(function (sc) { loaded[bare(sc.src)] = true; });
+
+  function addScript(src) {
+    return new Promise(function (res) {
+      var sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = res; document.body.appendChild(sc);
+    });
+  }
+  function swap(url, push) {
+    return fetch(url.pathname + url.search, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      if (!doc.querySelector('main.page')) throw new Error('not a site page');
+
+      /* 새 페이지에 필요한 스타일을 먼저 받아 둔다 */
+      var have = {};
+      document.querySelectorAll('link[rel=stylesheet]').forEach(function (l) { have[bare(l.href)] = true; });
+      var css = [].filter.call(doc.querySelectorAll('link[rel=stylesheet]'), function (l) {
+        return !have[bare(new URL(l.getAttribute('href'), url).href)];
+      }).map(function (l) {
+        return new Promise(function (res) {
+          var n = document.createElement('link'); n.rel = 'stylesheet'; n.href = new URL(l.getAttribute('href'), url).href;
+          n.onload = n.onerror = res; document.head.appendChild(n);
+        });
+      });
+
+      return Promise.all(css).then(function () {
+        ctl.abort(); ctl = new AbortController();          /* 이전 페이지의 전역 이벤트·타이머 해제 */
+        setMenu(false);
+        [].slice.call(document.body.children).forEach(function (el) {
+          if (!el.hasAttribute('data-keep') && el.tagName !== 'SCRIPT') el.remove();
+        });
+        document.querySelectorAll('script[data-page]').forEach(function (sc) { sc.remove(); });
+        var before = document.querySelector('.wipe');
+        [].slice.call(doc.body.children).forEach(function (el) {
+          if (el.tagName !== 'SCRIPT' && el.tagName !== 'NOSCRIPT') document.body.insertBefore(document.adoptNode(el), before);
+        });
+        document.title = doc.title;
+        if (doc.body.dataset.nav) document.body.dataset.nav = doc.body.dataset.nav; else delete document.body.dataset.nav;
+        if (push) history.pushState(null, '', url.href);
+        current = norm(url.pathname);
+        RSC.setNav(document.body.dataset.nav || 'home');
+        scrollTo(0, 0);
+
+        /* 스크립트: 공통은 한 번만, 페이지 전용(data-page)은 올 때마다 다시 실행 */
+        var chain = Promise.resolve();
+        doc.querySelectorAll('script[src]').forEach(function (sc) {
+          var src = new URL(sc.getAttribute('src'), url).href, key = bare(src), page = sc.hasAttribute('data-page');
+          if (!page && loaded[key]) return;
+          chain = chain.then(function () {
+            loaded[key] = true;
+            return addScript(src).then(function () { if (page) document.body.lastElementChild.setAttribute('data-page', ''); });
+          });
+        });
+        return chain.then(function () {
+          RSC.observe();
+          if (url.hash) {
+            var t = document.getElementById(url.hash.slice(1));
+            if (t) { var sb = document.documentElement.style.scrollBehavior; document.documentElement.style.scrollBehavior = 'auto'; t.scrollIntoView(); document.documentElement.style.scrollBehavior = sb; }
+          }
+        });
+      });
+    });
+  }
+  function go(url, push) {
+    if (busy) return; busy = true;
+    cover(function () {
+      swap(url, push).then(function () { busy = false; open(); }, function () { location.href = url.href; });
+    });
+  }
+
   document.addEventListener('click', function (e) {
     var a = e.target.closest('a[href]');
-    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank') return;
+    if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank') return;
     var url = new URL(a.href, location.href);
     if (url.origin !== location.origin) return;
-    if (url.pathname === location.pathname) return;       // 같은 페이지 해시 이동은 기본 동작
+    if (norm(url.pathname) === current) {                 // 같은 페이지: 해시 이동만
+      if (url.pathname !== location.pathname) { e.preventDefault(); location.hash = url.hash; }
+      return;
+    }
     e.preventDefault();
-    cover(function () { location.href = a.href; });
+    go(url, true);
+  });
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('popstate', function () {       // 뒤로·앞으로 가기
+    if (norm(location.pathname) === current) return;
+    ctl.abort(); ctl = new AbortController();           /* 주소가 이미 바뀌었으므로 이전 페이지의 동작을 즉시 멈춘다 */
+    go(new URL(location.href), false);
   });
   window.addEventListener('pageshow', open);
 

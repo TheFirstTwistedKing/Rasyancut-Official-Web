@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var D = window.RSC_DATA.gallery, RSC = window.RSC, esc = RSC.esc;
+  var addEventListener = function (t, f, o) { RSC.on(window, t, f, o); };   /* 페이지를 떠나면 자동 해제 */
   var $ = function (s) { return document.querySelector(s); };
   var lb = $('[data-lb]'), cur = -1, last = null;
 

@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var D = window.RSC_DATA.characters, RSC = window.RSC, esc = RSC.esc;
+  var addEventListener = function (t, f, o) { RSC.on(window, t, f, o); };   /* 페이지를 떠나면 자동 해제 */
   var $ = function (s) { return document.querySelector(s); };
   var list = $('[data-view="list"]'), view = $('[data-view="detail"]');
   var EMBLEM = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l17 17-17 17L3 20z"/><path d="M20 12l8 8-8 8-8-8z"/></svg>';

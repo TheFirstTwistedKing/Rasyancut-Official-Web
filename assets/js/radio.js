@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   var RSC = window.RSC, esc = RSC.esc;
+  if (RSC.radio) return; RSC.radio = true;
   var SHOW_MS = 5000;
   var tracks = [], cur = -1, url = '', hideTimer = 0, db = null;
   var audio = new Audio(); audio.preload = 'metadata';
@@ -31,6 +32,7 @@
           '<button class="rbtn" data-r-next aria-label="다음 곡">' + ico('next') + '</button>' +
           '<label class="rctl__vol"><span class="mono">Vol</span><input type="range" min="0" max="100" value="80" aria-label="음량" data-r-vol></label></div>' +
       '</div></section>';
+  tab.setAttribute('data-keep', ''); panel.setAttribute('data-keep', '');   /* 페이지가 바뀌어도 남는다 */
   document.body.append(tab, panel);
 
   var $ = function (s) { return document.querySelector(s); };

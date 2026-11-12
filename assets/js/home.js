@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var D = window.RSC_DATA, RSC = window.RSC, esc = RSC.esc, reduce = RSC.reduce;
+  var addEventListener = function (t, f, o) { RSC.on(window, t, f, o); };   /* 페이지를 떠나면 자동 해제 */
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var small = matchMedia('(max-width: 900px)');
   var EMBLEM = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l17 17-17 17L3 20z"/><path d="M20 12l8 8-8 8-8-8z"/></svg>';
@@ -15,7 +16,8 @@
       cancelAnimationFrame(raf);
       if (on) raf = requestAnimationFrame(tick);
     }).observe(el);
-    document.addEventListener('visibilitychange', function () { if (document.hidden) { on = false; cancelAnimationFrame(raf); } });
+    RSC.on(document, 'visibilitychange', function () { if (document.hidden) { on = false; cancelAnimationFrame(raf); } });
+    RSC.onLeave(function () { on = false; cancelAnimationFrame(raf); });
   }
   function fit(cv) {
     var dpr = Math.min(devicePixelRatio || 1, 2), r = cv.getBoundingClientRect();
@@ -32,7 +34,7 @@
 
   var clock = $('[data-clock]');
   function tickClock() { clock.textContent = new Date().toTimeString().slice(0, 8); }
-  tickClock(); setInterval(tickClock, 1000);
+  tickClock(); var clockTimer = setInterval(tickClock, 1000); RSC.onLeave(function () { clearInterval(clockTimer); });
 
   (function homeFx() {
     var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, px = 0, py = 0, lastT = 0;
@@ -345,5 +347,6 @@
       if (location.hash !== '#' + en.target.id) history.replaceState(null, '', '#' + en.target.id);
     });
   }, { rootMargin: '-45% 0px -50% 0px' });
-  setTimeout(function () { document.querySelectorAll('.sec[id]').forEach(function (s) { spy.observe(s); }); }, 600);
+  var spyTimer = setTimeout(function () { document.querySelectorAll('.sec[id]').forEach(function (s) { spy.observe(s); }); }, 600);
+  RSC.onLeave(function () { clearTimeout(spyTimer); spy.disconnect(); });
 })();
