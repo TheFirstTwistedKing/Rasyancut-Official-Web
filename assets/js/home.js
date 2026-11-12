@@ -384,7 +384,14 @@
   hud.innerHTML = '<p class="mono deckhud__count"><b class="gold" data-d-no>01</b> / ' + String(secs.length).padStart(2, '0') + '<span data-d-name>Home</span></p>' +
     '<button class="deckhud__next mono" data-d-next>Scroll</button><i class="deckline" aria-hidden="true"></i>';
   document.body.appendChild(hud);
-  RSC.onLeave(function () { root.classList.remove('is-deck'); });
+  var cam = document.createElement('div');      /* 밀리터리 카메라 오버레이 (한 화면 모드) */
+  cam.className = 'camhud'; cam.setAttribute('aria-hidden', 'true');
+  cam.innerHTML = '<p class="camhud__tl">RSC // ARCHIVE FEED · TC <span data-clock2>00:00:00</span></p><p class="camhud__tr">SIG <i></i></p>';
+  hud.appendChild(cam);
+  var cl2 = cam.querySelector('[data-clock2]');
+  var camTimer = setInterval(function () { cl2.textContent = new Date().toTimeString().slice(0, 8); }, 1000);
+  RSC.onLeave(function () { clearInterval(camTimer); });
+  RSC.onLeave(function () { root.classList.remove('is-deck'); delete root.dataset.slide; });
 
   function indexOf(id) { for (var k = 0; k < secs.length; k++) if (secs[k].id === id) return k; return -1; }
   function replay(sec) {               /* 들어오는 화면의 등장 연출을 다시 재생 */
@@ -395,6 +402,7 @@
   }
   function mark() {
     var id = secs[cur].id;
+    root.dataset.slide = id;
     RSC.setNav(id === 'end' ? '' : id);
     $('[data-d-no]').textContent = String(cur + 1).padStart(2, '0');
     $('[data-d-name]').textContent = EN[id] || id;

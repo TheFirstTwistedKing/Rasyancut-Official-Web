@@ -1,0 +1,149 @@
+/* RASYANCUT — 밀리터리 HUD 테마 (배치는 건드리지 않고 겉모습만 바꾼다)
+   검정·금 = 라시안컷 정체성 / 건메탈 바탕·격자·회색 계측선·사선 무늬·모서리 브래킷 = 밀리터리 HUD */
+:root {
+  --void: #0a0c0d;           /* 건메탈 검정 */
+  --obsidian: #101315;
+  --basalt: #181c1f;
+  --ink: #e6e3da;
+  --ink-dim: #8f9592;        /* 차가운 회색 */
+  --hud: #c9cfcc;            /* 계측선·조준선 */
+  --line: rgba(201, 207, 204, .2);
+  --line-soft: rgba(201, 207, 204, .08);
+  --mono: "Barlow Condensed", "Noto Serif KR", sans-serif;
+  --hatch: repeating-linear-gradient(-45deg, rgba(242, 210, 122, .22) 0 2px, transparent 2px 6px);
+  --hatch-hud: repeating-linear-gradient(-45deg, rgba(201, 207, 204, .14) 0 1px, transparent 1px 6px);
+  /* 네 모서리 브래킷 (background 레이어로 쓴다) */
+  --c: var(--gold-500);
+  --corners:
+    linear-gradient(var(--c) 0 0) left top / 16px 1px no-repeat, linear-gradient(var(--c) 0 0) left top / 1px 16px no-repeat,
+    linear-gradient(var(--c) 0 0) right top / 16px 1px no-repeat, linear-gradient(var(--c) 0 0) right top / 1px 16px no-repeat,
+    linear-gradient(var(--c) 0 0) left bottom / 16px 1px no-repeat, linear-gradient(var(--c) 0 0) left bottom / 1px 16px no-repeat,
+    linear-gradient(var(--c) 0 0) right bottom / 16px 1px no-repeat, linear-gradient(var(--c) 0 0) right bottom / 1px 16px no-repeat;
+}
+
+/* ── 바탕: 화면 가장자리가 어두운 격자판 ── */
+html { background: var(--void); }
+body {
+  background:
+    radial-gradient(ellipse 90% 80% at 55% 45%, transparent 45%, rgba(0, 0, 0, .55)),
+    linear-gradient(rgba(201, 207, 204, .045) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(201, 207, 204, .045) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--void);
+  background-attachment: fixed;
+}
+.mono, .stitle__en, .slot > span, .pin span, .rail__foot, .bar__mark { font-variant-numeric: tabular-nums; }
+.mono { font-size: 12px; letter-spacing: .22em; font-weight: 500; }
+.sec--raised { background: rgba(16, 19, 21, .72); }
+.nation { background: radial-gradient(ellipse 60% 70% at 46% 50%, rgba(212, 167, 58, .07), transparent 70%); }
+.end { background: radial-gradient(ellipse 70% 60% at 70% 80%, rgba(212, 167, 58, .08), transparent 70%); }
+.hollow { -webkit-text-stroke-color: rgba(201, 207, 204, .12); font-family: var(--mono); font-weight: 600; }
+.game__hollow { -webkit-text-stroke-color: rgba(201, 207, 204, .2); }
+
+/* ── 레일·상단: 회색 계측선, 금은 현재 위치만 ── */
+.rail { background: rgba(16, 19, 21, .94); border-right-color: var(--line); }
+.rail__mark { border-bottom-color: var(--line); }
+.rail__nav a.is-on { background: var(--hatch-hud), var(--basalt); }
+.rail__foot { letter-spacing: .5em; font-size: 12px; }
+.topnav a { font-family: var(--mono); font-size: 15px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; }
+.bar { background: var(--obsidian); border-bottom-color: var(--line); }
+
+/* ── 섹션 제목: 사선 무늬 막대 + 좁은 글꼴 ── */
+.stitle__en { font-size: 15px; letter-spacing: .38em; font-weight: 600; }
+.stitle__en::before {
+  width: 56px; height: 12px; clip-path: none;
+  background: repeating-linear-gradient(-45deg, var(--gold-300) 0 2px, transparent 2px 5px);
+  border: 1px solid var(--gold-500);
+}
+.stitle__no::before { background-image: radial-gradient(var(--hud) .8px, transparent 1.2px); opacity: .6; }
+
+/* ── 버튼: 직각 상자 + 사선 무늬, 비활성은 X로 지운 상자 ── */
+.btn {
+  clip-path: none; position: relative; color: var(--gold-300);
+  background: var(--hatch), rgba(16, 19, 21, .9);
+  border: 1px solid var(--gold-500); padding: 0 24px 0 18px;
+  transition: background .6s, color .6s, translate .6s var(--ease);
+}
+.btn::before { background: var(--gold-300); }
+.btn::after {            /* 오른쪽 위 계측 눈금 */
+  content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px;
+  border-top: 1px solid var(--gold-300); border-right: 1px solid var(--gold-300);
+}
+.btn:hover { background: var(--gold-300); color: var(--void); translate: 4px 0; }
+.btn:hover::before { background: var(--void); }
+.btn:hover::after { border-color: var(--void); }
+.btn--ghost { color: var(--ink); border-color: var(--line); background: var(--hatch-hud), rgba(16, 19, 21, .9); }
+.btn--ghost::before { background: var(--hud); }
+.btn--ghost::after { border-color: var(--hud); }
+.btn--ghost:hover { background: var(--ink); color: var(--void); }
+.btn[disabled], .btn.is-off {
+  color: var(--ink-dim); border-color: var(--line);
+  background:
+    linear-gradient(to top right, transparent calc(50% - .5px), rgba(201, 207, 204, .35) 50%, transparent calc(50% + .5px)),
+    linear-gradient(to bottom right, transparent calc(50% - .5px), rgba(201, 207, 204, .35) 50%, transparent calc(50% + .5px)),
+    rgba(16, 19, 21, .9);
+}
+.btn[disabled]::after, .btn.is-off::after { border-color: var(--ink-dim); }
+.rbtn { border-color: var(--line); color: var(--gold-300); background: rgba(10, 12, 13, .8); }
+.rbtn:hover { border-color: var(--gold-300); }
+
+/* ── 프레임: 카메라 오버레이처럼 네 모서리 브래킷 ── */
+.slot { background: var(--corners), var(--hatch-hud), var(--obsidian); border-color: var(--line-soft); }
+.slot::before, .slot::after { display: none; }
+.slot > span { color: var(--gold-300); font-size: 13px; letter-spacing: .32em; }
+.mapbox, .home__quick, .npage__empty, .news__card, .rpanel .rdrop { background: var(--corners), rgba(10, 12, 13, .88); border-color: var(--line); }
+.news__card { clip-path: none; }
+.npage__empty { clip-path: none; }
+.cview__frame { clip-path: none; background: var(--corners), var(--hatch-hud), var(--obsidian); }
+.cview__frame::before { border-color: var(--line); }
+.cview__frame::after { width: 72px; height: 72px; border: 1px solid var(--line); border-radius: 50%;
+  background: linear-gradient(var(--gold-500), var(--gold-500)) 50% 0 / 1px 100% no-repeat, linear-gradient(var(--gold-500), var(--gold-500)) 0 50% / 100% 1px no-repeat; }
+
+/* ── 조준점: 지도 핀, 국가 HUD ── */
+.pin::before { rotate: 0deg; width: 16px; height: 16px; border-radius: 50%; border-color: var(--gold-300);
+  background: radial-gradient(var(--gold-300) 2px, transparent 2.5px), rgba(10, 12, 13, .9); }
+.pin::after { rotate: 0deg; width: 16px; height: 16px; border-radius: 50%; }
+.pin.is-on::before, .pin:hover::before { background: radial-gradient(var(--void) 2px, transparent 2.5px), var(--gold-300); }
+.pin span { border-left-color: var(--gold-300); background: rgba(10, 12, 13, .92); border: 1px solid var(--line); border-left: 2px solid var(--gold-300); font-size: 12px; }
+.hud__ring { stroke: var(--hud); }
+.hud__ring .hud__ticks { stroke: var(--hud); opacity: .5; }
+.hud__compass { fill: var(--gold-300); stroke: none; font-family: var(--mono); font-size: 18px; letter-spacing: .1em; }
+.hud__cross { stroke: var(--line); stroke-dasharray: 4 6; }
+
+/* ── 진행 막대: 칸으로 나뉜 사선 무늬 ── */
+.ticks li { height: 8px; width: 30px; background: transparent; border: 1px solid var(--line); }
+.ticks li.is-on { background: repeating-linear-gradient(-45deg, var(--gold-300) 0 2px, transparent 2px 4px); border-color: var(--gold-300); }
+.pill { border-radius: 0; background: var(--hatch-hud), rgba(10, 12, 13, .9); border-color: var(--line); }
+.news__tag { border-radius: 0; border-color: var(--line); color: var(--gold-300); }
+.news__dots li { border-radius: 0; width: 14px; height: 4px; }
+.cview__nav { border-radius: 0; background: var(--hatch-hud), var(--void); border-color: var(--line); }
+.rctl input[type=range]::-webkit-slider-runnable-track { height: 6px; background: linear-gradient(90deg, transparent var(--p, 0%), rgba(10, 12, 13, .9) var(--p, 0%)), repeating-linear-gradient(90deg, var(--gold-300) 0 2px, transparent 2px 4px); border: 1px solid var(--line); }
+.rctl input[type=range]::-webkit-slider-thumb { margin-top: -4px; rotate: 0deg; width: 4px; height: 14px; }
+
+/* ── 금색 면: 은은한 사선 무늬로 장비 표식처럼 ── */
+.band, .notice__tab, .gview__side { background-image: repeating-linear-gradient(-45deg, rgba(10, 12, 13, .07) 0 2px, transparent 2px 7px); }
+.cview__band { background: repeating-linear-gradient(-45deg, #f2d27a 0 3px, #e6c46c 3px 7px); }
+
+/* ── 캐릭터 깃발: 회색 사선, 금선은 경계에만 ── */
+.strip { background: var(--hatch-hud), linear-gradient(180deg, var(--basalt), #121518); }
+.strip__no { font-size: 26px; font-weight: 600; }
+
+/* ── 한 화면 모드: 카메라 오버레이 (네 모서리 + 기록 표시) ── */
+.camhud { display: none; }
+.is-deck .camhud { display: block; position: fixed; inset: calc(var(--top) + 8px) 16px 16px calc(var(--rail) + 16px); z-index: 20; pointer-events: none;
+  --c: var(--hud); background: var(--corners); opacity: .55; }
+.camhud__tl, .camhud__tr { position: absolute; top: 12px; font-family: var(--mono); font-size: 12px; letter-spacing: .22em; color: var(--hud); }
+.camhud__tl { left: 24px; }
+.camhud__tl::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; background: var(--gold-300); vertical-align: 1px; animation: blink 1.6s steps(2) infinite; }
+.camhud__tr { right: 24px; display: flex; align-items: center; gap: 8px; }
+.camhud__tr i { width: 56px; height: 6px; border: 1px solid var(--hud); background: repeating-linear-gradient(90deg, var(--hud) 0 2px, transparent 2px 4px) 0 0 / 72% 100% no-repeat; }
+@keyframes blink { 50% { opacity: 0; } }
+.deckhud__count b { font-family: var(--mono); font-size: 26px; font-weight: 600; }
+
+/* ── 라디오 ── */
+.radio__btn { background: rgba(16, 19, 21, .94); border-color: var(--line); }
+.rpanel__box { border-left-color: var(--line); background: var(--hatch-hud), var(--obsidian); }
+
+@media (prefers-reduced-motion: reduce) { .camhud__tl::before { animation: none !important; } }
+@media (max-width: 900px) { .mono { font-size: 12px; } }
+/* 공지 화면의 '최신' 띠와 겹치지 않게 기록 표시를 숨긴다 */
+.is-deck[data-slide="notice"] .camhud__tl { opacity: 0; }

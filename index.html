@@ -8,12 +8,13 @@
 <meta name="theme-color" content="#050505">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/core.css?v=2.0.0">
-<link rel="stylesheet" href="assets/css/strips.css?v=2.0.0">
-<link rel="stylesheet" href="assets/css/home.css?v=2.0.0">
-<link rel="stylesheet" href="assets/css/deck.css?v=2.0.0">
-<link rel="stylesheet" href="assets/css/radio.css?v=2.0.0">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/core.css?v=2.1.0">
+<link rel="stylesheet" href="assets/css/strips.css?v=2.1.0">
+<link rel="stylesheet" href="assets/css/home.css?v=2.1.0">
+<link rel="stylesheet" href="assets/css/deck.css?v=2.1.0">
+<link rel="stylesheet" href="assets/css/radio.css?v=2.1.0">
+<link rel="stylesheet" href="assets/css/military.css?v=2.1.0">
 </head>
 <body>
 <main class="page">
@@ -64,6 +65,11 @@
         <circle class="hud__ticks" cx="300" cy="300" r="286"/>
         <circle class="hud__arc" cx="300" cy="300" r="268"/>
         <circle cx="300" cy="300" r="244"/>
+        <path class="hud__cross" d="M300 40v90M300 470v90M40 300h90M470 300h90"/>
+        <text class="hud__compass" x="300" y="34" text-anchor="middle">N</text>
+        <text class="hud__compass" x="300" y="582" text-anchor="middle">S</text>
+        <text class="hud__compass" x="582" y="306" text-anchor="middle">E</text>
+        <text class="hud__compass" x="18" y="306" text-anchor="middle">W</text>
       </svg>
       <canvas class="hud__model" aria-label="국가 3D 모델. 끌어서 회전할 수 있습니다." role="img"></canvas>
       <p class="mono hud__hint">Drag to rotate</p>
@@ -198,9 +204,9 @@
 </main>
 
 <noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
-<script src="assets/js/data.js?v=2.0.0"></script>
-<script src="assets/js/core.js?v=2.0.0"></script>
-<script src="assets/js/radio.js?v=2.0.0"></script>
-<script src="assets/js/home.js?v=2.0.0" data-page></script>
+<script src="assets/js/data.js?v=2.1.0"></script>
+<script src="assets/js/core.js?v=2.1.0"></script>
+<script src="assets/js/radio.js?v=2.1.0"></script>
+<script src="assets/js/home.js?v=2.1.0" data-page></script>
 </body>
 </html>
