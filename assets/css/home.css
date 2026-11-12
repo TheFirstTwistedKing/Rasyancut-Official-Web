@@ -259,3 +259,35 @@
 .home__quick-wide { grid-column: 1 / -1; }
 .home__quick-wide a { color: var(--gold-300); }
 .home__quick-wide .mono { margin-left: auto; }
+
+/* ── 세계 지도 ── */
+.mapworld {
+  border: 0;
+  background: radial-gradient(ellipse 72% 66% at 50% 50%, #f3f1ec 62%, #dcd9d2 82%, #a9a6a0 100%);
+}
+.mapart { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.mlab {
+  position: absolute; translate: -50% -50%; rotate: var(--r, 0deg); white-space: nowrap; text-align: center;
+  font-family: var(--serif); font-weight: 900; font-size: var(--s, 104px); line-height: 1.1; letter-spacing: .06em;
+  color: var(--c, #1b1d3a); padding: .1em .2em; transition: color .4s, text-shadow .4s;
+  text-shadow: 0 0 .12em #f3f1ec, 0 0 .12em #f3f1ec;
+}
+.mlab.is-vert { writing-mode: vertical-rl; letter-spacing: .12em; }
+.mlab--region { font-size: var(--s, 88px); font-weight: 600; letter-spacing: .14em; }
+.mlab--unknown { font-size: var(--s, 64px); font-weight: 600; color: var(--c, #8c8c8c); }
+.mlab--sea { font-size: var(--s, 210px); font-weight: 400; font-style: italic; letter-spacing: .4em; opacity: .85; pointer-events: none; }
+.mlab:hover, .mlab.is-on { text-shadow: 0 0 .12em #f3f1ec, 0 0 .5em rgba(242, 210, 122, .9); }
+.mlab.is-on::after { content: ""; position: absolute; left: 10%; right: 10%; bottom: -.15em; height: .08em; background: currentColor; }
+.mlab.is-vert.is-on::after { left: auto; right: -.15em; top: 10%; bottom: 10%; width: .08em; height: auto; }
+/* 미니맵 */
+.mapmini { position: absolute; left: 12px; bottom: 12px; width: 200px; aspect-ratio: 2000 / 1125; padding: 0; overflow: hidden;
+  background: #efece4; border: 1px solid var(--gold-500); box-shadow: none; cursor: crosshair; }
+.mapmini img { width: 100%; height: 100%; display: block; opacity: .85; }
+.mapmini i { position: absolute; border: 1.5px solid #d9241a; background: rgba(217, 36, 26, .08); pointer-events: none; }
+.mapbox__hint { left: auto; right: 72px; }
+.maplist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.maplist button { grid-template-columns: auto 1fr; min-height: 44px; }
+@media (max-width: 900px) {
+  .mapmini { width: 120px; }
+  .maplist { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

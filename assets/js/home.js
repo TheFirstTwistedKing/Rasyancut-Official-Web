@@ -501,35 +501,44 @@
     return { current: function () { return idx; } };
   })();
 
-  /* ── 04 MAP: 끌어서 이동, 확대·축소 ── */
+  /* ── 04 MAP: 세계 지도 (원본 2000×1125를 4배로). 끌어서 이동, 확대·축소, 미니맵 ── */
   var map = (function () {
-    var view = $('[data-map]'), world = $('[data-world]'), W = 2400, H = 1600;
-    var st = { x: 0, y: 0, z: 1 }, zmin = .3, zmax = 3, ptr = new Map(), pinch = 0, anim = 0, sel = -1;
+    var view = $('[data-map]'), world = $('[data-world]'), K = 4, W = 2000 * K, H = 1125 * K;
+    var st = { x: 0, y: 0, z: .3 }, zmin = .1, zmax = 1.4, ptr = new Map(), pinch = 0, anim = 0, sel = -1;
+    var L = D.mapLabels || [], SRC = 'assets/img/map/world.svg?v=1';
+    var mini = $('[data-mini]'), miniBox = $('[data-mini-box]'), miniImg = $('[data-mini-img]');
 
-    var svg = '<svg viewBox="0 0 2400 1600" stroke="#8f6a1c" stroke-width="1" aria-hidden="true">' +
-      [180, 360, 540, 720].map(function (r) { return '<circle cx="1200" cy="800" r="' + r + '" opacity=".' + (r > 400 ? 25 : 45) + '" stroke-dasharray="' + (r % 360 ? '2 10' : 'none') + '"/>'; }).join('') +
-      '<path d="M0 1600L2400 0M1200 0v1600M0 800h2400" opacity=".3"/>' +
-      '<path d="M1200 770l30 30-30 30-30-30z" stroke="#f2d27a"/>' +
-      '<rect x="120" y="120" width="2160" height="1360" stroke-dasharray="14 10" opacity=".5"/></svg>';
-    var labels = '';
-    for (var gx = 0; gx < 6; gx++) for (var gy = 0; gy < 4; gy++) labels += '<span class="grid-no" style="left:' + (gx * 400 + 8) + 'px;top:' + (gy * 400 + 6) + 'px">' + 'ABCDEF'[gx] + (gy + 1) + '</span>';
-    world.innerHTML = svg + labels + D.nations.map(function (n, i) {
-      return '<button class="pin" data-pin="' + i + '" style="left:' + n.map[0] + 'px;top:' + n.map[1] + 'px" aria-label="' + esc(n.name) + ' ' + n.id + '"><span>' + n.code + '</span></button>';
-    }).join('');
-    $('[data-maplist]').innerHTML = D.nations.map(function (n, i) {
-      return '<li><button data-loc="' + i + '"><span class="mono gold">' + n.id + '</span><strong>' + esc(n.name) + '</strong><span class="mono">X ' + n.map[0] + ' · Y ' + n.map[1] + '</span></button></li>';
+    world.style.width = W + 'px'; world.style.height = H + 'px';
+    world.innerHTML = '<img class="mapart" alt="" data-art width="' + W + '" height="' + H + '" decoding="async">' +
+      L.map(function (l, i) {
+        var t = esc(l.name).replace(/\\n|\n/g, '<br>');
+        return '<button class="mlab mlab--' + l.kind + (l.vert ? ' is-vert' : '') + '" data-lab="' + i + '" style="left:' + l.x * K + 'px;top:' + l.y * K + 'px;' +
+          (l.color ? '--c:' + l.color + ';' : '') + (l.rot ? '--r:' + l.rot + 'deg;' : '') + (l.size ? '--s:' + l.size * K + 'px;' : '') + '">' + t + '</button>';
+      }).join('');
+    /* 큰 지도 그림은 지도 화면에 가까워졌을 때 불러온다 */
+    var art = world.querySelector('[data-art]');
+    new IntersectionObserver(function (es, ob) { if (es[0].isIntersecting || es[0].target.closest('.sec.is-cur')) { art.src = SRC; miniImg.src = SRC; ob.disconnect(); } }, { rootMargin: '600px' }).observe(view);
+    setTimeout(function () { if (!art.src) { art.src = SRC; miniImg.src = SRC; } }, 4000);
+
+    var named = L.map(function (l, i) { return [l, i]; }).filter(function (p) { return p[0].kind === 'nation'; });
+    $('[data-maplist]').innerHTML = named.map(function (p, k) {
+      return '<li><button data-loc="' + p[1] + '"><span class="mono gold">' + String(k + 1).padStart(2, '0') + '</span><strong>' + esc(p[0].name.replace(/\\n|\n/g, ' ')) + '</strong></button></li>';
     }).join('');
 
     function size() { return view.getBoundingClientRect(); }
     function apply() {
-      var r = size();
-      zmin = Math.max(r.width / W, r.height / H);
+      var r = size(); if (!r.width) return;
+      zmin = Math.max(r.width / W, r.height / H);            /* 가장 멀리서도 화면을 꽉 채운다 (전체가 한눈에 들어오지는 않음) */
       st.z = Math.max(zmin, Math.min(zmax, st.z));
       st.x = Math.min(0, Math.max(r.width - W * st.z, st.x));
       st.y = Math.min(0, Math.max(r.height - H * st.z, st.y));
-      world.style.transform = 'translate(' + st.x + 'px,' + st.y + 'px) scale(' + st.z + ')';
+      world.style.transform = 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(4) + ')';
       world.style.setProperty('--z', st.z);
-      $('[data-mz]').textContent = st.z.toFixed(2);
+      $('[data-mz]').textContent = (st.z / zmin).toFixed(1) + 'x';
+      /* 미니맵의 현재 영역 */
+      var mw = mini.clientWidth, mh = mini.clientHeight;
+      miniBox.style.left = (-st.x / st.z / W * mw) + 'px'; miniBox.style.top = (-st.y / st.z / H * mh) + 'px';
+      miniBox.style.width = (r.width / st.z / W * mw) + 'px'; miniBox.style.height = (r.height / st.z / H * mh) + 'px';
     }
     function zoomAt(cx, cy, z) {
       z = Math.max(zmin, Math.min(zmax, z));
@@ -539,31 +548,32 @@
       cancelAnimationFrame(anim);
       var r = size(), a = { x: st.x, y: st.y, z: st.z };
       z = Math.max(zmin, Math.min(zmax, z));
-      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = 1600;
+      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = 1400;
       (function step(now) {
         var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
         st.z = a.z + (b.z - a.z) * e; st.x = a.x + (b.x - a.x) * e; st.y = a.y + (b.y - a.y) * e; apply();
         if (p < 1) anim = requestAnimationFrame(step);
       })(t0);
     }
-    function reset() { var r = size(); st.z = Math.max(r.width / W, r.height / H); st.x = (r.width - W * st.z) / 2; st.y = (r.height - H * st.z) / 2; apply(); }
+    /* 처음에는 바다 한가운데를 가깝게: 주변 나라는 직접 끌어서 찾아본다 */
+    function reset() { var r = size(); if (!r.width) return; st.z = zmin * 2.4; st.x = r.width / 2 - 1000 * K * st.z; st.y = r.height / 2 - 600 * K * st.z; apply(); }
     function select(i, move) {
       sel = i;
-      document.querySelectorAll('[data-pin]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.pin === i); });
+      world.querySelectorAll('[data-lab]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.lab === i); });
       document.querySelectorAll('[data-loc]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.loc === i); });
-      if (move) { var n = D.nations[i]; fly(n.map[0], n.map[1], Math.max(1.4, zmin)); }
+      if (move && L[i]) fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45));
     }
 
     view.addEventListener('pointerdown', function (e) {
-      if (e.target.closest('.pin')) return;
+      if (e.target.closest('.mlab')) return;
       cancelAnimationFrame(anim);
-      ptr.set(e.pointerId, { x: e.clientX, y: e.clientY }); view.setPointerCapture(e.pointerId); view.classList.add('is-drag');
+      ptr.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { view.setPointerCapture(e.pointerId); } catch (_) {} view.classList.add('is-drag');
       if (ptr.size === 2) { var p = Array.from(ptr.values()); pinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); }
     });
     view.addEventListener('pointermove', function (e) {
       var r = size();
-      $('[data-mx]').textContent = String(Math.round((e.clientX - r.left - st.x) / st.z)).padStart(4, '0');
-      $('[data-my]').textContent = String(Math.round((e.clientY - r.top - st.y) / st.z)).padStart(4, '0');
+      $('[data-mx]').textContent = String(Math.round((e.clientX - r.left - st.x) / st.z / K)).padStart(4, '0');
+      $('[data-my]').textContent = String(Math.round((e.clientY - r.top - st.y) / st.z / K)).padStart(4, '0');
       var p = ptr.get(e.pointerId); if (!p) return;
       if (ptr.size === 1) { st.x += e.clientX - p.x; st.y += e.clientY - p.y; apply(); }
       p.x = e.clientX; p.y = e.clientY;
@@ -576,12 +586,12 @@
     function end(e) { ptr.delete(e.pointerId); pinch = 0; if (!ptr.size) view.classList.remove('is-drag'); }
     view.addEventListener('pointerup', end); view.addEventListener('pointercancel', end);
     view.addEventListener('wheel', function (e) {
-      if (!e.ctrlKey && !e.metaKey) return;           /* 페이지 스크롤을 가로채지 않는다 */
+      if (!e.ctrlKey && !e.metaKey) return;           /* 페이지(화면 넘김)를 가로채지 않는다 */
       e.preventDefault(); var r = size();
       zoomAt(e.clientX - r.left, e.clientY - r.top, st.z * Math.exp(-e.deltaY * .0022));
     }, { passive: false });
     view.addEventListener('keydown', function (e) {
-      var k = { ArrowLeft: [60, 0], ArrowRight: [-60, 0], ArrowUp: [0, 60], ArrowDown: [0, -60] }[e.key];
+      var k = { ArrowLeft: [80, 0], ArrowRight: [-80, 0], ArrowUp: [0, 80], ArrowDown: [0, -80] }[e.key];
       if (k) { e.preventDefault(); st.x += k[0]; st.y += k[1]; apply(); }
       if (e.key === '+' || e.key === '=') { var r = size(); zoomAt(r.width / 2, r.height / 2, st.z * 1.3); }
       if (e.key === '-') { var r2 = size(); zoomAt(r2.width / 2, r2.height / 2, st.z / 1.3); }
@@ -594,13 +604,17 @@
         fly(cxw, cyw, st.z * (d > 0 ? 1.5 : 1 / 1.5));
       });
     });
-    world.addEventListener('click', function (e) { var p = e.target.closest('[data-pin]'); if (p) select(+p.dataset.pin, true); });
+    world.addEventListener('click', function (e) { var p = e.target.closest('[data-lab]'); if (p) select(+p.dataset.lab, true); });
     $('[data-maplist]').addEventListener('click', function (e) { var p = e.target.closest('[data-loc]'); if (p) select(+p.dataset.loc, true); });
-    addEventListener('resize', apply);
+    mini.addEventListener('click', function (e) {
+      var r = mini.getBoundingClientRect();
+      fly((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H, st.z);
+    });
+    watch(view, function () { if (st.z === .3) reset(); else apply(); });
     reset();
     return { select: select };
   })();
-  $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(nation.current(), true); }, 900); });
+  $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(-1, false); }, 900); });
 
   /* ── 05 GAME: 큰 화면 + 다음 항목이 오른쪽에 살짝 보인다 ── */
   (function () {
