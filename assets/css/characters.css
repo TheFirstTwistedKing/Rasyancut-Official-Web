@@ -143,3 +143,6 @@
   .cview__tabs button::after { display: none; }
   .cview__tabs button:hover, .cview__tabs button[aria-selected="true"] { padding-left: 8px; }
 }
+
+/* 오른쪽 위 라디오 탭과 겹치지 않게 번호 표시를 안쪽으로 */
+@media (min-width: 901px) { .cview__top p { margin-right: 96px; } }
