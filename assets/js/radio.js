@@ -120,8 +120,8 @@
   /* ── 창 열고 닫기 ── */
   function setOpen(o) {
     panel.classList.toggle('is-open', o);
-    document.body.style.overflow = o ? 'hidden' : '';
-    if (o) panel.querySelector('.rpanel__close').focus(); else opener.focus();
+    /* 뒤 화면의 스크롤바는 건드리지 않는다(없애면 화면 폭이 바뀌어 요소가 밀린다). 스크롤은 아래에서 따로 막는다. */
+    (o ? panel.querySelector('.rpanel__close') : opener).focus({ preventScroll: true });
   }
   opener.addEventListener('click', function () { setOpen(true); });
   panel.addEventListener('click', function (e) {
@@ -134,6 +134,10 @@
     }
   });
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && panel.classList.contains('is-open')) setOpen(false); });
+  /* 창이 열려 있는 동안 뒤 화면이 굴러가지 않게: 목록 안에서의 스크롤만 허용 */
+  function block(e) { if (!e.target.closest('.rlist')) e.preventDefault(); }
+  panel.addEventListener('wheel', block, { passive: false });
+  panel.addEventListener('touchmove', block, { passive: false });
   $('[data-r-toggle]').addEventListener('click', function () {
     if (cur < 0) return play(0);
     if (audio.paused) audio.play().then(function () { announce(tracks[cur].name); }); else audio.pause();

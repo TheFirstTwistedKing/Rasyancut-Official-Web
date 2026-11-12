@@ -35,7 +35,7 @@
   tickClock(); setInterval(tickClock, 1000);
 
   (function homeFx() {
-    var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, lastT = 0;
+    var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, px = 0, py = 0, lastT = 0;
     function seed() {
       g = fit(cv); dust = [];
       var n = small.matches ? 36 : 80;
@@ -47,7 +47,8 @@
     function draw(t) {
       var c = g.c, w = g.w, h = g.h, s = t / 1000, k = lastT ? Math.min(3, (t - lastT) / 16.667) : 1; lastT = t;
       c.clearRect(0, 0, w, h);
-      var cx = (small.matches ? .5 : .7) * w + mx * -18, cy = (small.matches ? .34 : .44) * h + my * -18;
+      px += (mx - px) * (1 - Math.pow(.96, k)); py += (my - py) * (1 - Math.pow(.96, k));   /* 마우스를 천천히 따라온다 */
+      var cx = (small.matches ? .5 : .7) * w + px * -18, cy = (small.matches ? .34 : .44) * h + py * -18;
       var R = Math.min(w, h) * (small.matches ? .4 : .42);
       c.save(); c.translate(cx, cy); c.strokeStyle = '#d4a73a'; c.lineWidth = 1;
       ring(c, R, .5); ring(c, R * .93, .18); ring(c, R * .62, .35); ring(c, R * .2, .6);

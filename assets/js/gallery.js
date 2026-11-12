@@ -26,8 +26,11 @@
     history.replaceState(null, '', '#a=' + a.id);
     if (swap) { lb.classList.remove('is-swap'); void lb.offsetWidth; lb.classList.add('is-swap'); }
   }
-  function open(i) { last = document.activeElement; lb.hidden = false; document.body.style.overflow = 'hidden'; show(i); $('[data-lb-close]').focus(); }
-  function close() { lb.hidden = true; document.body.style.overflow = ''; cur = -1; history.replaceState(null, '', location.pathname); if (last) last.focus(); }
+  function open(i) { last = document.activeElement; lb.hidden = false; show(i); $('[data-lb-close]').focus({ preventScroll: true }); }
+  function close() { lb.hidden = true; cur = -1; history.replaceState(null, '', location.pathname); if (last) last.focus({ preventScroll: true }); }
+  function block(e) { e.preventDefault(); }
+  lb.addEventListener('wheel', block, { passive: false });
+  lb.addEventListener('touchmove', block, { passive: false });
 
   $('[data-frames]').addEventListener('click', function (e) { var b = e.target.closest('[data-open]'); if (b) open(+b.dataset.open); });
   $('[data-lb-close]').addEventListener('click', close);
