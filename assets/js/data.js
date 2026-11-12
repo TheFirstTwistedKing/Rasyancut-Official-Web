@@ -55,6 +55,14 @@ window.RSC_DATA = {
 
   notices: [
     {
+      title: 'Patch v-2.7.1',
+      date: '2026.11.12',
+      tag: '공지',
+      body: [
+        '로그인 서비스 설정값을 연결했습니다. 구글 로그인 버튼을 누를 수 있습니다.'
+      ]
+    },
+    {
       title: 'Patch v-2.7.0',
       date: '2026.11.12',
       tag: '공지',
