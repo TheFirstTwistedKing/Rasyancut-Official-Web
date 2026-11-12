@@ -254,3 +254,8 @@
   .home__show { inset: 0 0 auto 0; height: auto; aspect-ratio: 736 / 400; }
   .home__show img { object-position: center top; }
 }
+
+/* 바로가기의 커뮤니티 입구 (별도 페이지라 한 줄 전체) */
+.home__quick-wide { grid-column: 1 / -1; }
+.home__quick-wide a { color: var(--gold-300); }
+.home__quick-wide .mono { margin-left: auto; }

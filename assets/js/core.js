@@ -21,12 +21,14 @@
     ['novel', '소설', 'NOVEL', 'M4 4h6a2 2 0 012 2v14a2 2 0 00-2-2H4z M20 4h-6a2 2 0 00-2 2v14a2 2 0 012-2h6z'],
     ['notice', '공지', 'NOTICE', 'M4 5h16v11H9l-5 4z M8 9h8 M8 12h5'],
     ['gallery', '갤러리', 'GALLERY', 'M3 5h18v14H3z M3 16l5-5 4 4 3-3 6 6']
-  ];
+  ,
+    ['community', '커뮤니티', 'COMMUNITY', 'M4 5h11v8H8l-4 3z M9 16v2h7l4 3V10h-3']];
   var MARK = '<svg viewBox="0 0 40 40" fill="none" stroke="#f2d27a" stroke-width="1.2" aria-hidden="true">' +
     '<path d="M20 2l18 18-18 18L2 20z"/><path d="M20 10l10 10-10 10-10-10z" stroke="#8f6a1c"/>' +
     '<path d="M20 2v36M2 20h36" stroke="#8f6a1c" stroke-width=".6"/><circle cx="20" cy="20" r="3" fill="#f2d27a" stroke="none"/></svg>';
 
-  function href(id) { return 'index.html#' + id; }
+  var PAGE_LINK = { community: 'community.html' };   /* 메인 화면 구역이 아닌 별도 페이지 */
+  function href(id) { return PAGE_LINK[id] || 'index.html#' + id; }
 
   /* 크롬 삽입 */
   var rail = document.createElement('aside');
