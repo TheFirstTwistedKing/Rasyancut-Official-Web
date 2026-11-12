@@ -37,112 +37,190 @@
   tickClock(); var clockTimer = setInterval(tickClock, 1000); RSC.onLeave(function () { clearInterval(clockTimer); });
 
   (function homeFx() {
-    /* 마법진 HUD: 가운데 큰 고리(월계관·네 꼭지 별) + 주변 위성 고리들 + 점선 궤도 + 사선 연결선.
-       각 층이 서로 다른 속도·방향으로 돈다. 은회색 선에 금색 강조. 시간 기준으로 움직인다. */
+    /* 마법진 HUD — 참고 이미지(743×341)의 배치를 같은 비율 좌표로 옮겼다.
+       모든 좌표·크기는 참고 이미지 기준 단위이고, 화면에 맞춰 통째로 확대한다. */
     var cv = $('.home__fx'), g = fit(cv), dust = [], mx = 0, my = 0, px = 0, py = 0, lastT = 0;
-    var TAU = Math.PI * 2, SIL = '201, 207, 204', GOLD = '242, 210, 122';
-    /* 위성 고리: x·y는 화면 비율, r은 큰 고리 반지름 대비, kind는 모양 */
-    var SAT = [
-      { x: .08, y: .2, r: .34, kind: 0, sp: .07 }, { x: .2, y: .55, r: .28, kind: 1, sp: -.11 },
-      { x: .1, y: .86, r: .3, kind: 2, sp: .05 }, { x: .93, y: .16, r: .3, kind: 1, sp: .09 },
-      { x: .96, y: .52, r: .24, kind: 2, sp: -.06 }, { x: .9, y: .9, r: .36, kind: 3, sp: .04 },
-      { x: .5, y: .95, r: .26, kind: 0, sp: -.08 }, { x: .38, y: .14, r: .2, kind: 3, sp: .12 }
-    ];
+    var TAU = Math.PI * 2, SIL = '214, 220, 226', GOLD = '242, 210, 122', RW = 743, RH = 341;
+    var c, U = 1;                                   /* U: 화면 1px에 해당하는 참고 단위 */
     function seed() {
       g = fit(cv); dust = [];
-      var n = small.matches ? 30 : 64;
+      var n = small.matches ? 28 : 60;
       for (var i = 0; i < n; i++) dust.push({ x: Math.random(), y: Math.random(), s: .4 + Math.random() * 1.4, v: .006 + Math.random() * .024, p: Math.random() * 6.28 });
     }
     seed(); addEventListener('resize', function () { seed(); if (reduce) draw(0); });
     addEventListener('pointermove', function (e) { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
 
-    function col(c, rgb, a) { c.strokeStyle = c.fillStyle = 'rgba(' + rgb + ',' + a + ')'; }
-    function circle(c, r, rgb, a, dash) { col(c, rgb, a); c.setLineDash(dash || []); c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke(); c.setLineDash([]); }
-    function arc(c, r, a0, a1, rgb, a, wdt) { col(c, rgb, a); c.lineWidth = wdt || 1; c.beginPath(); c.arc(0, 0, r, a0, a1); c.stroke(); c.lineWidth = 1; }
-    function ticks(c, r, n, len, rgb, a, every, longLen) {
-      col(c, rgb, a); c.beginPath();
-      for (var i = 0; i < n; i++) {
-        var ang = i / n * TAU, l = every && i % every === 0 ? longLen : len, ca = Math.cos(ang), sa = Math.sin(ang);
-        c.moveTo(ca * r, sa * r); c.lineTo(ca * (r + l), sa * (r + l));
-      }
+    function st(rgb, a, w) { c.strokeStyle = c.fillStyle = 'rgba(' + rgb + ',' + a + ')'; c.lineWidth = (w || 1) * U; }
+    function ring(x, y, r, rgb, a, w, dash) { st(rgb, a, w); c.setLineDash(dash ? dash.map(function (d) { return d * U; }) : []); c.beginPath(); c.arc(x, y, r, 0, TAU); c.stroke(); c.setLineDash([]); }
+    function arc(x, y, r, a0, a1, rgb, a, w) { st(rgb, a, w); c.beginPath(); c.arc(x, y, r, a0, a1); c.stroke(); }
+    function dotRing(x, y, r, n, size, rgb, a, a0, a1) {
+      st(rgb, a); a0 = a0 || 0; a1 = a1 === undefined ? TAU : a1;
+      for (var i = 0; i < n; i++) { var t = a0 + (a1 - a0) * i / n; c.beginPath(); c.arc(x + Math.cos(t) * r, y + Math.sin(t) * r, size, 0, TAU); c.fill(); }
+    }
+    function ticks(x, y, r, n, len, rgb, a, rot) {
+      st(rgb, a); c.beginPath();
+      for (var i = 0; i < n; i++) { var t = rot + i / n * TAU, ca = Math.cos(t), sa = Math.sin(t); c.moveTo(x + ca * r, y + sa * r); c.lineTo(x + ca * (r + len), y + sa * (r + len)); }
       c.stroke();
     }
-    function dots(c, r, n, size, rgb, a) { col(c, rgb, a); for (var i = 0; i < n; i++) { var ang = i / n * TAU; c.fillRect(Math.cos(ang) * r - size / 2, Math.sin(ang) * r - size / 2, size, size); } }
-    function poly(c, r, n, rot, rgb, a) { col(c, rgb, a); c.beginPath(); for (var i = 0; i <= n; i++) { var ang = rot + i / n * TAU; c[i ? 'lineTo' : 'moveTo'](Math.cos(ang) * r, Math.sin(ang) * r); } c.stroke(); }
-    function star(c, x, y, s, rgb, a) {          /* 네 꼭지 별 */
-      col(c, rgb, a); c.beginPath();
-      c.moveTo(x, y - s); c.quadraticCurveTo(x, y, x + s * .32, y); c.quadraticCurveTo(x, y, x, y + s);
-      c.quadraticCurveTo(x, y, x - s * .32, y); c.quadraticCurveTo(x, y, x, y - s); c.fill();
-      c.beginPath(); c.moveTo(x - s * .8, y); c.quadraticCurveTo(x, y, x, y - s * .22); c.quadraticCurveTo(x, y, x + s * .8, y); c.quadraticCurveTo(x, y, x, y + s * .22); c.quadraticCurveTo(x, y, x - s * .8, y); c.fill();
+    function line(x1, y1, x2, y2, rgb, a, w) { st(rgb, a, w); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+    function star(x, y, s, a) {                     /* 네 꼭지 별 + 빛 */
+      st(GOLD, a);
+      c.beginPath(); c.moveTo(x, y - s); c.quadraticCurveTo(x, y, x + s * .28, y); c.quadraticCurveTo(x, y, x, y + s); c.quadraticCurveTo(x, y, x - s * .28, y); c.quadraticCurveTo(x, y, x, y - s); c.fill();
+      c.beginPath(); c.moveTo(x - s * 1.1, y); c.quadraticCurveTo(x, y, x, y - s * .2); c.quadraticCurveTo(x, y, x + s * 1.1, y); c.quadraticCurveTo(x, y, x, y + s * .2); c.quadraticCurveTo(x, y, x - s * 1.1, y); c.fill();
     }
-    function laurel(c, r, side, rgb, a) {        /* 아래에서 위로 올라가는 월계수 가지 (좌우 대칭) */
-      col(c, rgb, a); c.lineWidth = 1.2;
-      var a0 = Math.PI / 2 + side * .32, a1 = Math.PI / 2 + side * 2.35;
-      c.beginPath(); c.arc(0, 0, r, Math.min(a0, a1), Math.max(a0, a1)); c.stroke();
-      for (var i = 0; i < 13; i++) {
-        var t = i / 12, ang = a0 + (a1 - a0) * t, x = Math.cos(ang) * r, y = Math.sin(ang) * r, sz = r * (.075 - t * .03);
-        for (var o = -1; o <= 1; o += 2) {
-          c.save(); c.translate(x, y); c.rotate(ang + side * Math.PI / 2 + o * .55 * side);
-          c.beginPath(); c.ellipse(0, -sz * .9 * o, sz * .38, sz, 0, 0, TAU); c.stroke(); c.restore();
-        }
+    function leaf(x, y, dir, len, a) {               /* dir 방향으로 뻗는 가는 잎 */
+      c.save(); c.translate(x, y); c.rotate(dir + Math.PI / 2); st(SIL, a);
+      c.beginPath(); c.ellipse(0, -len / 2, len * .22, len / 2, 0, 0, TAU); c.fill(); c.restore();
+    }
+    function wreath(x, y, r, side, a) {             /* 아래에서 바깥쪽으로 올라가는 월계수 가지 (side -1 왼쪽, 1 오른쪽) */
+      var a0 = Math.PI / 2 - side * .5, a1 = Math.PI / 2 - side * 2.15;
+      arc(x, y, r, Math.min(a0, a1), Math.max(a0, a1), SIL, a * .7, 1.1);
+      for (var i = 0; i < 14; i++) {
+        var t = a0 + (a1 - a0) * i / 13, lx = x + Math.cos(t) * r, ly = y + Math.sin(t) * r, len = 10 - i * .38;
+        var grow = t - side * Math.PI / 2;            /* 가지가 자라는 방향 */
+        leaf(lx, ly, grow + side * .62, len, a);      /* 바깥쪽 잎 */
+        leaf(lx, ly, grow - side * .62, len * .78, a * .8);   /* 안쪽 잎 */
       }
-      c.lineWidth = 1;
     }
-    function satellite(c, sat, R, s) {
-      var r = R * sat.r, rot = s * sat.sp;
-      c.save(); c.rotate(rot);
-      circle(c, r, SIL, .35);
-      if (sat.kind === 0) { dots(c, r * 1.16, 48, 1.6, SIL, .45); arc(c, r * .82, 0, 2.2, GOLD, .55, 1.5); ticks(c, r * .62, 24, 4, SIL, .3); }
-      if (sat.kind === 1) { circle(c, r * .86, SIL, .18, [2, 5]); arc(c, r * 1.08, .4, 1.6, SIL, .6, 2); arc(c, r * 1.08, 3.6, 4.4, SIL, .6, 2); dots(c, r * .86, 3, 4, GOLD, .8); }
-      if (sat.kind === 2) { ticks(c, r * .9, 60, 5, SIL, .35, 5, 10); circle(c, r * .55, SIL, .25); poly(c, r * .55, 3, -rot * 2, SIL, .35); }
-      if (sat.kind === 3) { poly(c, r * 1.04, 6, 0, SIL, .3); arc(c, r * .74, -2.4, -.7, GOLD, .6, 2); circle(c, r * .36, SIL, .3, [1, 4]); }
+
+    /* ── 각 구성 요소 (참고 이미지 좌표) ── */
+    function mainSigil(s) {
+      var X = 358, Y = 125;
+      /* 뒤로 얽힌 큰 원들과 칠각 외곽 */
+      /* 고리 뒤의 옅은 원판 (참고 이미지의 밝은 테두리 영역) */
+      var halo = c.createRadialGradient(X, Y, 60, X, Y, 104);
+      halo.addColorStop(0, 'rgba(' + SIL + ',0)'); halo.addColorStop(.55, 'rgba(' + SIL + ',.07)'); halo.addColorStop(1, 'rgba(' + SIL + ',0)');
+      c.fillStyle = halo; c.beginPath(); c.arc(X, Y, 104, 0, TAU); c.fill();
+      /* 얽힌 큰 원과 긴 선들 */
+      ring(X - 14, Y + 4, 112, SIL, .14); ring(X - 26, Y + 10, 104, SIL, .1); ring(X + 6, Y - 4, 124, SIL, .1);
+      ring(X - 40, Y + 30, 120, SIL, .07); ring(X + 30, Y + 24, 116, SIL, .07); ring(X - 8, Y - 20, 98, SIL, .08);
+      line(285, 0, 430, 300, SIL, .09); line(430, 0, 290, 300, SIL, .09); line(250, 40, 250, 230, SIL, .1); line(468, 40, 468, 230, SIL, .1);
+      c.save(); c.translate(X, Y); c.rotate(s * .012);
+      st(SIL, .16); c.beginPath(); for (var i = 0; i <= 7; i++) { var t = -Math.PI / 2 + i / 7 * TAU; c[i ? 'lineTo' : 'moveTo'](Math.cos(t) * 134, Math.sin(t) * 134); } c.stroke();
       c.restore();
-      c.save(); c.rotate(-rot * 1.6); dots(c, r * 1.32, 2, 3, SIL, .7); c.restore();   /* 궤도를 도는 점 */
+      dotRing(X, Y, 118, 90, .7, SIL, .35, s * -.02, s * -.02 + TAU);
+      /* 본체 고리 */
+      ring(X, Y, 87, SIL, .45); dotRing(X, Y, 82, 120, .55, SIL, .7, s * .03, s * .03 + TAU);
+      ring(X, Y, 79, SIL, .16, 5); ring(X, Y, 81.5, SIL, .8, 1.3); ring(X, Y, 76.5, SIL, .9, 1.6); dotRing(X, Y, 79, 140, .45, SIL, .55, -s * .02, -s * .02 + TAU); ring(X, Y, 59, SIL, .22);
+      /* 안쪽: 해 모양 선 */
+      c.save(); c.translate(X, Y); c.rotate(-s * .02);
+      for (var p = 0; p < 6; p++) { var t2 = p / 6 * TAU; arc(Math.cos(t2) * 40, Math.sin(t2) * 40, 40, 0, TAU, SIL, .045); }
+      c.restore();
+      line(X - 64, Y, X + 64, Y, SIL, .08); ring(X, Y, 30, SIL, .1);
+      /* 위쪽 작은 삼각 표식 */
+      st(SIL, .8); c.beginPath(); c.moveTo(X - 66, Y - 38); c.lineTo(X - 62, Y - 33); c.lineTo(X - 69, Y - 33); c.fill();
+      c.beginPath(); c.moveTo(X + 66, Y - 38); c.lineTo(X + 62, Y - 33); c.lineTo(X + 69, Y - 33); c.fill();
+      /* 월계관 + 아래 표식 */
+      wreath(X, Y, 68, -1, .9); wreath(X, Y, 68, 1, .9);
+      st(GOLD, .95, 1.6); c.beginPath(); for (var b = -1; b <= 1; b++) { c.moveTo(X + b * 4, Y + 55); c.lineTo(X + b * 4, Y + (b ? 65 : 68)); } c.stroke();
+      [-1, 1].forEach(function (d) {
+        st(SIL, .92); c.beginPath(); c.moveTo(X + d * 10, Y + 62);
+        c.quadraticCurveTo(X + d * 26, Y + 66, X + d * 44, Y + 50); c.quadraticCurveTo(X + d * 30, Y + 60, X + d * 14, Y + 58); c.closePath(); c.fill();
+        st(SIL, .7, 1.1); c.beginPath(); c.moveTo(X + d * 18, Y + 55); c.quadraticCurveTo(X + d * 34, Y + 52, X + d * 47, Y + 40); c.stroke();
+      });
+      /* 좌우 별 (반짝임) */
+      var tw = .75 + .25 * Math.sin(s * 1.6);
+      c.save(); c.shadowColor = 'rgba(' + GOLD + ',.9)'; c.shadowBlur = 8; star(256, 121, 13 * tw, .98); star(459, 121, 13 * tw, .98); c.restore();
+      /* 떠도는 금 호 */
+      c.save(); c.translate(X, Y); c.rotate(-s * .08); arc(0, 0, 96, 0, .7, GOLD, .7, 1.6); arc(0, 0, 96, 3.3, 3.75, GOLD, .7, 1.6); c.restore();
+    }
+    function scribble(s) {                           /* 왼쪽 위: 겹친 기울어진 고리들 */
+      var X = 85, Y = 72;
+      for (var i = 0; i < 4; i++) { c.save(); c.translate(X, Y); c.rotate(s * (.05 + i * .02) * (i % 2 ? -1 : 1) + i * .8);
+        st(SIL, .35); c.beginPath(); c.ellipse(0, 0, 42 - i * 3, 34 - i * 2, 0, 0, TAU); c.stroke();
+        st(SIL, .22); c.beginPath(); for (var k = 0; k <= 6; k++) { var t = k / 6 * TAU; c[k ? 'lineTo' : 'moveTo'](Math.cos(t) * 38, Math.sin(t) * 38); } c.stroke(); c.restore(); }
+      dotRing(X, Y, 42, 14, 1.4, SIL, .85, .2, 1.7);    /* 오른쪽 아래 굵은 점 줄 */
+      dotRing(X, Y, 42, 8, 1.1, SIL, .6, 3.4, 4.6);
+    }
+    function leftMid(s) {
+      var X = 160, Y = 170;
+      ring(X, Y, 52, SIL, .3); ring(X, Y, 47, SIL, .18, 1, [1, 3]);
+      c.save(); c.translate(X, Y); c.rotate(s * .06); arc(0, 0, 58, -.6, .9, SIL, .5, 1.4); arc(0, 0, 58, 2.4, 3.2, SIL, .5, 1.4); c.restore();
+      ticks(X, Y, 40, 36, 3, SIL, .25, -s * .04);
+      ring(175, 82, 5, SIL, .5); ring(196, 141, 1.8, SIL, .7);
+      dotRing(X, Y, 62, 5, 1.2, SIL, .6, -1.2 + s * .1, .3 + s * .1);
+    }
+    function leftBottom(s) {
+      var X = 92, Y = 277;
+      ring(X, Y, 50, SIL, .22, 1, [1, 3]); ring(X, Y, 44, SIL, .15);
+      c.save(); c.translate(X, Y); c.rotate(-s * .05); dotRing(0, 0, 50, 16, 1.5, SIL, .85, 3.5, 5.3); c.restore();
+      [[45, 277], [132, 277], [152, 277]].forEach(function (d) { st(SIL, .85); c.beginPath(); c.moveTo(d[0] - 4, d[1]); c.lineTo(d[0], d[1] - 3); c.lineTo(d[0] + 4, d[1]); c.lineTo(d[0], d[1] + 3); c.fill(); });
+      ticks(X, Y, 54, 60, 2.5, SIL, .2, s * .02);
+    }
+    function bottomRing(s) {                         /* 가운데 아래: 문자 고리 */
+      var X = 357, Y = 270;
+      ring(X, Y, 47, SIL, .4); ring(X, Y, 42, SIL, .22, 1, [1, 3]);
+      c.save(); c.translate(X, Y); c.rotate(s * .07); arc(0, 0, 53, .3, 1.5, SIL, .55, 1.4); arc(0, 0, 53, 3.6, 4.2, SIL, .55, 1.4); c.restore();
+      dotRing(X, Y, 58, 48, .6, SIL, .4, -s * .03, -s * .03 + TAU);
+      st(SIL, .95, 2.2); c.beginPath(); c.moveTo(X + 4, Y - 14); c.quadraticCurveTo(X - 6, Y - 6, X + 2, Y + 2); c.quadraticCurveTo(X + 8, Y + 8, X - 2, Y + 16); c.stroke();
+      st(SIL, .95, 1.4); c.beginPath(); c.moveTo(X - 6, Y - 2); c.lineTo(X + 6, Y - 6); c.stroke();
+      ring(X - 60, Y + 0, 2, SIL, .8);
+    }
+    function rightTop(s) {                           /* 오른쪽 위: 소용돌이 빗금 */
+      var X = 645, Y = 75;
+      ring(X, Y, 38, SIL, .2); arc(X, Y, 48, 2.6, 4.2, SIL, .35); arc(X, Y, 52, .1, 1.2, SIL, .3);
+      c.save(); c.translate(X, Y); c.rotate(s * .09);
+      for (var arm = 0; arm < 2; arm++) for (var i = 0; i < 7; i++) { var t = arm * Math.PI + i * .42, r = 9 + i * 3.4; st(SIL, .8 - i * .05, 3); c.beginPath(); c.arc(0, 0, r, t, t + .26); c.stroke(); }
+      ticks(0, 0, 30, 24, 3, SIL, .25, 0);
+      c.restore();
+      dotRing(X, Y, 44, 6, .9, SIL, .6, 0, TAU);
+    }
+    function rightUpper(s) {                         /* 열쇠 표식이 있는 고리 */
+      var X = 533, Y = 125;
+      ring(X, Y, 32, SIL, .3); ring(X, Y, 27, SIL, .18, 1, [1, 3]); dotRing(X, Y, 38, 30, .55, SIL, .4, s * .04, s * .04 + TAU);
+      ring(551, 157, 4.5, SIL, .8, 1.4); line(554, 161, 566, 176, SIL, .8, 1.4); line(560, 168, 564, 165, SIL, .8, 1.2);
+    }
+    function rightMid(s) {                           /* 양옆 구슬 표식 고리 */
+      var X = 612, Y = 190;
+      ring(X, Y, 47, SIL, .3); ring(X, Y, 42, SIL, .15);
+      c.save(); c.translate(X, Y); c.rotate(-s * .05); arc(0, 0, 52, .5, 1.2, SIL, .45); arc(0, 0, 52, 3.6, 4.4, SIL, .45); c.restore();
+      [[566, 190, 1], [659, 190, -1]].forEach(function (b) { arc(b[0], b[1], 5, Math.PI / 2 * b[2] + Math.PI / 2, Math.PI / 2 * b[2] + Math.PI * 1.5, SIL, .9, 1.4); ring(b[0] + 1.5 * b[2], b[1], 2, SIL, .9); });
+      [[566, 218], [660, 162]].forEach(function (d) { st(SIL, .6); c.fillRect(d[0] - 2.5, d[1] - 2.5, 5, 5); });
+    }
+    function rightLow(s) {                           /* 끊긴 고리 + 갈고리 문양 */
+      var X = 515, Y = 258;
+      c.save(); c.translate(X, Y); c.rotate(s * .05); arc(0, 0, 40, -1.2, 1.4, SIL, .5, 1.6); arc(0, 0, 40, 1.9, 4.7, SIL, .5, 1.6); arc(0, 0, 34, 0, 5.5, SIL, .18); c.restore();
+      st(SIL, .85, 1.6); c.beginPath(); c.moveTo(478, 255); c.quadraticCurveTo(472, 245, 480, 240); c.moveTo(547, 262); c.quadraticCurveTo(552, 272, 545, 276); c.stroke();
+    }
+    function cornerGauge(s) {                        /* 오른쪽 아래 구석: 부채꼴 계기 + 안테나 막대 */
+      var X = 690, Y = 345;
+      for (var r = 52; r <= 92; r += 5) dotRing(X, Y, r, 40 + r / 2, .55, SIL, .42, Math.PI, TAU);
+      arc(X, Y, 62, Math.PI * 1.05, Math.PI * 1.95, SIL, .5); arc(X, Y, 40, Math.PI, TAU, SIL, .35);
+      ticks(X, Y, 96, 40, 4, SIL, .3, s * .03);
+      st(SIL, .85, 1.6); c.beginPath(); [676, 683, 690].forEach(function (x, i) { c.moveTo(x, 290); c.lineTo(x, i === 1 ? 238 : 248); }); c.stroke();
+      st(SIL, .5); c.beginPath(); c.moveTo(655, 300); c.lineTo(655, 270); c.lineTo(668, 262); c.lineTo(712, 262); c.lineTo(725, 270); c.lineTo(725, 300); c.stroke();
+      ring(683, 284, 5, GOLD, .8, 1.4); ring(620, 310, 4, SIL, .6);
+    }
+    function connectors() {                          /* 사선과 교차 표식 */
+      line(100, 30, 335, 278, SIL, .16); line(232, 82, 118, 170, SIL, .2); line(160, 20, 300, 35, SIL, .06);
+      line(615, 30, 382, 278, SIL, .16); line(498, 88, 600, 180, SIL, .2);
+      st(SIL, .6); c.beginPath(); c.arc(180, 120, 1.8, 0, TAU); c.arc(533, 120, 1.8, 0, TAU); c.fill();
+      line(250, 300, 470, 300, SIL, .1); line(250, 300, 250, 290, SIL, .1);
+      [[175, 222], [300, 230], [400, 248], [455, 240], [212, 245], [440, 285]].forEach(function (d) { st(SIL, .5); c.beginPath(); c.arc(d[0], d[1], 1.2, 0, TAU); c.fill(); });
     }
 
     function draw(t) {
-      var c = g.c, w = g.w, h = g.h, s = t / 1000, k = lastT ? Math.min(3, (t - lastT) / 16.667) : 1; lastT = t;
-      c.clearRect(0, 0, w, h); c.lineWidth = 1;
-      px += (mx - px) * (1 - Math.pow(.96, k)); py += (my - py) * (1 - Math.pow(.96, k));   /* 마우스를 천천히 따라온다 */
-      var mob = small.matches, cx = (mob ? .5 : .66) * w + px * -18, cy = (mob ? .27 : .45) * h + py * -18;
-      var R = Math.min(w, h) * (mob ? .25 : .3);
-
-      /* 1) 사선 연결선과 위성 고리 (배경 층, 반대 방향으로 조금 움직임) */
-      c.save(); c.translate(px * 10, py * 10);
-      col(c, SIL, .1); c.beginPath(); c.moveTo(0, 0); c.lineTo(w, h); c.moveTo(w, 0); c.lineTo(0, h); c.stroke();
-      SAT.forEach(function (sat, i) {
-        if (mob && i % 2) return;
-        var x = sat.x * w, y = sat.y * h;
-        col(c, SIL, .08); c.setLineDash([3, 7]); c.beginPath(); c.moveTo(x, y); c.lineTo(cx - px * 10, cy - py * 10); c.stroke(); c.setLineDash([]);
-        c.save(); c.translate(x, y); satellite(c, sat, R, s); c.restore();
-      });
+      var w = g.w, h = g.h, s = t / 1000, k = lastT ? Math.min(3, (t - lastT) / 16.667) : 1; lastT = t;
+      c = g.c; c.setTransform(Math.min(devicePixelRatio || 1, 2), 0, 0, Math.min(devicePixelRatio || 1, 2), 0, 0);
+      c.clearRect(0, 0, w, h);
+      px += (mx - px) * (1 - Math.pow(.96, k)); py += (my - py) * (1 - Math.pow(.96, k));
+      /* PC: 참고 이미지 전체를 화면 폭에 맞춘다. 휴대폰: 가운데 고리 주변(가로 380 단위)만 확대 */
+      var mob = small.matches, sc, ox, oy;
+      if (mob) { sc = w / 380; ox = w / 2 - 358 * sc; oy = h * .27 - 125 * sc; }
+      else { sc = Math.min(w / RW, h / RH); ox = (w - RW * sc) / 2; oy = (h - RH * sc) / 2 - h * .04; }
+      U = 1 / sc * (mob ? 1 : 1.15);
+      c.save(); c.translate(ox + px * -14, oy + py * -14); c.scale(sc, sc);
+      connectors();
+      scribble(s); leftMid(s); leftBottom(s); bottomRing(s);
+      rightTop(s); rightUpper(s); rightMid(s); rightLow(s); cornerGauge(s);
+      mainSigil(s);
       c.restore();
-
-      /* 2) 가운데 큰 고리 */
-      c.save(); c.translate(cx, cy);
-      c.save(); c.rotate(s * .015); poly(c, R * 1.62, 8, 0, SIL, .16); poly(c, R * 1.62, 8, Math.PI / 8, SIL, .08); c.restore();   /* 팔각 외곽 */
-      c.save(); c.rotate(-s * .03); dots(c, R * 1.38, 120, 1.6, SIL, .5); c.restore();                 /* 점선 궤도 */
-      c.save(); c.rotate(s * .05); ticks(c, R * 1.2, 96, 5, SIL, .38, 8, 14); c.restore();             /* 눈금 고리 */
-      c.save(); c.rotate(-s * .1); arc(c, R * 1.3, 0, .9, GOLD, .85, 2); arc(c, R * 1.3, 3.14, 3.7, GOLD, .85, 2); c.restore();  /* 떠도는 금 호 */
-      circle(c, R * 1.08, SIL, .55); circle(c, R * 1.03, SIL, .22);
-      c.save(); c.rotate(s * .02); laurel(c, R * .9, -1, SIL, .42); laurel(c, R * .9, 1, SIL, .42); c.restore();   /* 월계관 */
-      circle(c, R * .72, SIL, .45);
-      c.save(); c.rotate(-s * .04);                                                                    /* 안쪽 꽃잎 원 */
-      for (var p = 0; p < 6; p++) { c.save(); c.rotate(p / 6 * TAU); col(c, SIL, .12); c.beginPath(); c.arc(R * .36, 0, R * .36, 0, TAU); c.stroke(); c.restore(); }
-      c.restore();
-      c.save(); c.rotate(s * .03 + Math.PI / 4); col(c, SIL, .25); var q = R * .72 / 1.4142; c.strokeRect(-q, -q, q * 2, q * 2); c.restore();
-      circle(c, R * .16, GOLD, .7);
-      star(c, -R * 1.2, 0, R * .11, GOLD, .95); star(c, R * 1.2, 0, R * .11, GOLD, .95);              /* 좌우 네 꼭지 별 */
-      col(c, GOLD, .9); c.lineWidth = 2;                                                               /* 아래 세 줄 표식 */
-      c.beginPath(); for (var b = -1; b <= 1; b++) { c.moveTo(b * R * .05, R * .98); c.lineTo(b * R * .05, R * (b ? 1.08 : 1.12)); } c.stroke(); c.lineWidth = 1;
-      c.restore();
-
-      /* 3) 금가루 */
+      /* 금가루 */
       c.globalCompositeOperation = 'lighter';
       for (var j = 0; j < dust.length; j++) {
         var d = dust[j]; d.y -= d.v * .016 * k; if (d.y < -.02) { d.y = 1.02; d.x = Math.random(); }
         var x = (d.x + Math.sin(s * .4 + d.p) * .012) * w, y = d.y * h;
-        c.globalAlpha = .2 + .5 * Math.abs(Math.sin(s * .8 + d.p)); c.fillStyle = d.s > 1.4 ? '#fff3c4' : (j % 3 ? '#d4a73a' : '#c9cfcc');
+        c.globalAlpha = .2 + .45 * Math.abs(Math.sin(s * .8 + d.p)); c.fillStyle = d.s > 1.4 ? '#fff3c4' : (j % 3 ? '#d4a73a' : '#d6dce2');
         c.fillRect(x, y, d.s, d.s);
       }
       c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
