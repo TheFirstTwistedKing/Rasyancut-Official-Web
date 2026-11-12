@@ -55,6 +55,14 @@ window.RSC_DATA = {
 
   notices: [
     {
+      title: 'Patch v-2.8.1',
+      date: '2026.11.12',
+      tag: '공지',
+      body: [
+        '커뮤니티로 들어가는 입구를 늘렸습니다: 왼쪽 아이콘 줄 맨 아래, 휴대폰 메뉴 맨 아래, 메인 화면 바로가기(INDEX) 맨 아래.'
+      ]
+    },
+    {
       title: 'Patch v-2.8.0',
       date: '2026.11.12',
       tag: '공지',

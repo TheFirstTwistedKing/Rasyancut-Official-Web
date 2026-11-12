@@ -41,7 +41,7 @@
   var SECS = [['character', '캐릭터'], ['nation', '국가 소개'], ['map', '지도'], ['game', '게임'], ['clue', '떡밥'], ['novel', '소설'], ['notice', '공지'], ['gallery', '갤러리']];
   $('[data-quick]').innerHTML = SECS.map(function (s, i) {
     return '<li><a href="#' + s[0] + '"><b>' + String(i + 2).padStart(2, '0') + '</b>' + s[1] + '</a></li>';
-  }).join('');
+  }).join('') + '<li class="home__quick-wide"><a href="community.html"><b>↗</b>커뮤니티 <span class="mono">Forum</span></a></li>';
 
   var clock = $('[data-clock]') || document.createElement('span');
   function tickClock() { clock.textContent = new Date().toTimeString().slice(0, 8); }
