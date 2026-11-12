@@ -51,7 +51,7 @@
   }).join('');
 
   /* 상단 페이지 메뉴: 왼쪽 레일은 메인 화면의 구역, 위 메뉴는 사이트의 페이지 */
-  var PAGES = [['index.html', '메인', ''], ['characters.html', '캐릭터', 'characters'], ['gallery.html', '갤러리', 'gallery'], ['novels.html', '소설', 'novels']];
+  var PAGES = [['index.html', '메인', ''], ['characters.html', '캐릭터', 'characters'], ['gallery.html', '갤러리', 'gallery'], ['novels.html', '소설', 'novels'], ['community.html', '커뮤니티', 'community']];
   var top = document.createElement('nav');
   top.className = 'topnav';
   top.setAttribute('aria-label', '페이지');

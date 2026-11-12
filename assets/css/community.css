@@ -1,0 +1,77 @@
+/* RASYANCUT — 커뮤니티 */
+.cpage { min-height: calc(100svh - var(--top)); }
+.cpage .sub__head .btn[hidden] { display: none; }
+.ccat { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.ccat button { min-height: 44px; padding: 0 18px; border: 1px solid var(--line); background: rgba(10, 12, 13, .7); color: var(--ink-dim); font-weight: 600; transition: color .5s, background .5s, border-color .5s; }
+.ccat button:hover { color: var(--gold-300); border-color: var(--gold-700); }
+.ccat button[aria-pressed="true"] { background: var(--gold-300); color: var(--void); border-color: var(--gold-300); }
+.cbox { position: relative; z-index: 1; }
+.cbox.is-swap > * { animation: cswap .7s var(--ease); }
+@keyframes cswap { from { opacity: 0; translate: 0 12px; } }
+
+.cgate, .cempty { display: grid; justify-items: start; gap: 12px; max-width: 560px; padding: clamp(24px, 4vw, 40px); border: 1px solid var(--line); background: var(--corners), rgba(10, 12, 13, .88); }
+.cgate h2 { font-size: var(--t-h3); font-weight: 900; }
+.cgate p:not(.stitle__en), .cempty p:not(.mono) { color: var(--ink-dim); }
+
+/* 목록 */
+.clist2 { border-top: 1px solid var(--gold-700); }
+.clist2 li { border-bottom: 1px solid var(--line-soft); }
+.clist2 a { display: grid; grid-template-columns: 110px minmax(0, 1fr) 160px 80px 64px; gap: 16px; align-items: center; min-height: 60px; padding: 8px 12px; transition: background .4s; }
+.clist2 a:hover { background: rgba(212, 167, 58, .07); }
+.clist2 strong { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clist2 strong em { font-style: normal; color: var(--gold-300); font-size: 13px; }
+.clist2 li.is-pin { background: rgba(212, 167, 58, .06); }
+.clist2 li.is-pin strong { color: var(--gold-100); }
+.ctag { color: var(--gold-300); }
+.cmeta { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cwhen, .clike { text-align: right; }
+.cav { width: 24px; height: 24px; border-radius: 50%; flex: none; object-fit: cover; border: 1px solid var(--gold-700); }
+.cav--none { display: inline-block; background: var(--basalt); }
+.cimg-ic { display: inline-block; width: 12px; height: 10px; border: 1px solid var(--gold-500); vertical-align: 1px; margin-left: 4px; }
+.cmore { margin-top: 20px; }
+
+/* 글 */
+.cpost { display: grid; gap: 16px; max-width: 880px; }
+.cback { display: inline-flex; align-items: center; min-height: 44px; color: var(--gold-300); }
+.cpost h2 { font-size: var(--t-h2); font-weight: 900; line-height: 1.3; }
+.cpost > .cmeta { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.cpost > .cmeta .cav { width: 32px; height: 32px; }
+.cbody { line-height: 1.9; white-space: normal; overflow-wrap: anywhere; }
+.cimgs { display: grid; gap: 12px; }
+.cimgs img { max-width: 100%; border: 1px solid var(--line); }
+.cact { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 16px 0; border-block: 1px solid var(--line-soft); }
+.clikebtn { min-height: 48px; padding: 0 20px; border: 1px solid var(--gold-500); color: var(--gold-300); font-weight: 600; transition: background .4s, color .4s; }
+.clikebtn.is-on, .clikebtn:hover { background: var(--gold-300); color: var(--void); }
+.ccom h3 { margin-bottom: 12px; letter-spacing: .3em; }
+.ccom ol { display: grid; gap: 1px; margin-bottom: 16px; }
+.ccom li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.ccom li .cav { width: 32px; height: 32px; }
+.ccom li p:last-child { overflow-wrap: anywhere; }
+.cdel { margin-left: auto; min-height: 32px; padding: 0 8px; color: var(--ink-dim); }
+.cdel:hover { color: var(--gold-300); }
+.ccom form, .cform { display: grid; gap: 12px; }
+.ccom textarea, .cform input, .cform select, .cform textarea {
+  width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: rgba(10, 12, 13, .85); border: 1px solid var(--line); border-radius: 0;
+}
+.ccom textarea:focus, .cform input:focus, .cform select:focus, .cform textarea:focus { outline: 1px solid var(--gold-300); }
+.ccom form .btn, .cform > .btn { justify-self: start; }
+.cform { max-width: 880px; }
+.cform h2 { font-size: var(--t-h3); font-weight: 900; }
+.cform label { display: grid; gap: 6px; }
+.cfile input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.cfiles ul { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cfiles li { position: relative; width: 96px; height: 96px; border: 1px solid var(--line); }
+.cfiles img { width: 100%; height: 100%; object-fit: cover; }
+.cfiles li button { position: absolute; top: 0; right: 0; width: 28px; height: 28px; background: var(--void); color: var(--gold-300); }
+.cmsg { min-height: 1.6em; color: var(--gold-300); }
+
+@media (max-width: 900px) {
+  .clist2 a { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 4px; }
+  .clist2 .ctag { grid-column: 1 / -1; }
+  .clist2 strong { grid-column: 1 / -1; white-space: normal; }
+  .clist2 .cwhen { text-align: left; }
+  .clist2 .cmeta { grid-column: 1; }
+  .clist2 .cwhen { grid-column: 1; }
+  .clist2 .clike { grid-row: 3; grid-column: 2; }
+  .cpage .sub__head > .btn { display: inline-flex; }
+}
