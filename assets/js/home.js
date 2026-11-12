@@ -9,18 +9,22 @@
 
   /* 화면에 보일 때만 그리는 루프 */
   function loop(el, draw) {
-    var on = false, raf = 0;
+    /* 화면에 보이고(교차) 탭이 보일 때만 그린다. 두 조건을 따로 기억해서, 다른 탭에 다녀와도 다시 그리기 시작한다 */
+    var inView = false, raf = 0, running = false, dead = false;
     var sec = el.closest('.sec'), root = document.documentElement;
     function shown() { return !root.classList.contains('is-deck') || !sec || sec.classList.contains('is-cur') || sec.classList.contains('is-out'); }
     /* 한 화면 모드에서 보이지 않는 화면의 캔버스는 그리지 않는다 */
-    function tick(t) { if (!on) return; if (shown()) draw(t); raf = requestAnimationFrame(tick); }
-    new IntersectionObserver(function (es) {
-      on = es[0].isIntersecting && !document.hidden;
-      cancelAnimationFrame(raf);
-      if (on) raf = requestAnimationFrame(tick);
-    }).observe(el);
-    RSC.on(document, 'visibilitychange', function () { if (document.hidden) { on = false; cancelAnimationFrame(raf); } });
-    RSC.onLeave(function () { on = false; cancelAnimationFrame(raf); });
+    function tick(t) { if (!running) return; if (shown()) draw(t); raf = requestAnimationFrame(tick); }
+    function sync() {
+      var want = inView && !document.hidden && !dead;
+      if (want === running) return;
+      running = want; cancelAnimationFrame(raf);
+      if (running) raf = requestAnimationFrame(tick);
+    }
+    var io = new IntersectionObserver(function (es) { inView = es[es.length - 1].isIntersecting; sync(); });
+    io.observe(el);
+    RSC.on(document, 'visibilitychange', sync);
+    RSC.onLeave(function () { dead = true; io.disconnect(); sync(); });
   }
   function fit(cv) {
     /* 변형(scale)의 영향을 받지 않는 실제 표시 크기로 맞춘다 */
