@@ -31,7 +31,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* 창(라디오·갤러리 크게 보기)을 열어 스크롤을 잠가도 스크롤바 자리를 남겨 화면이 밀리지 않게 한다 */
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; scrollbar-color: var(--gold-700) var(--void); }
 body {
   margin: 0;
   background: var(--void);
