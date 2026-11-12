@@ -2,11 +2,21 @@
    이름·설명·이미지는 아직 정해지지 않아 전부 빈 자리로 둔다.
    값을 채우면 화면에 그대로 반영된다. image 는 파일 경로(비우면 빈 자리 표시). */
 window.RSC_DATA = {
-  characters: [1, 2, 3, 4, 5, 6].map(function (n) {
-    var id = String(n).padStart(2, '0');
+  /* 소속: 캐릭터 선택 창 위쪽 아이콘. glyph 0 첨탑 · 1 고리 · 2 결정 · 3 돔 (이름은 정해지면 채운다) */
+  factions: [
+    { id: 'F1', name: '미등록 소속 1', glyph: 0 },
+    { id: 'F2', name: '미등록 소속 2', glyph: 1 },
+    { id: 'F3', name: '미등록 소속 3', glyph: 2 },
+    { id: 'F4', name: '미등록 소속 4', glyph: 3 }
+  ],
+
+  /* 캐릭터 30명. faction 은 위 소속 id (지금은 임시로 8·8·7·7명씩 나눠 둠) */
+  characters: Array.apply(null, Array(30)).map(function (_, k) {
+    var n = k + 1, id = String(n).padStart(2, '0');
     return {
       id: id,
       code: 'RSC-C' + id,
+      faction: n <= 8 ? 'F1' : n <= 16 ? 'F2' : n <= 23 ? 'F3' : 'F4',
       name: '미등록',          // 캐릭터 이름
       nameEn: 'UNREGISTERED',  // 세로 대제목용 영문 표기
       title: '',               // 이명
@@ -44,6 +54,17 @@ window.RSC_DATA = {
   }),
 
   notices: [
+    {
+      title: 'Patch v-2.6.0',
+      date: '2026.11.12',
+      tag: '공지',
+      body: [
+        '캐릭터 슬롯을 30개로 늘렸습니다.',
+        '캐릭터 선택 창 위쪽에 소속 아이콘을 두어 전체 또는 소속별로 골라 볼 수 있습니다. (소속 이름과 캐릭터별 소속은 아직 임시입니다)',
+        '캐릭터 슬롯이 원통처럼 둘러선 회전 목록으로 바뀌었습니다. 휠, 끌기·밀기, 좌우 화살표 버튼, 키보드 ← → 로 돌릴 수 있고, 끝과 처음이 이어집니다.',
+        '옆 카드를 누르면 그 카드가 가운데로 오고, 가운데 카드를 누르면 상세 화면으로 들어갑니다.'
+      ]
+    },
     {
       title: 'Patch v-2.5.1',
       date: '2026.11.12',

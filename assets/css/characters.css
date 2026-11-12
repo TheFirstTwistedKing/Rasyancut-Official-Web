@@ -1,12 +1,10 @@
 /* RASYANCUT — 캐릭터 창: 선택 화면 + 일러스트 배치 화면 */
 
 /* ── 선택 화면 ───────────────────────────────── */
-.clist { min-height: calc(100svh - var(--top)); display: grid; align-content: center; gap: clamp(32px, 6vh, 64px); padding-block: clamp(32px, 7vh, 96px); }
+.clist { min-height: calc(100svh - var(--top)); display: grid; align-content: center; gap: clamp(16px, 3vh, 32px); padding-block: clamp(32px, 7vh, 96px); }
 .clist__hollow { top: 4vh; right: -1vw; }
 .clist__head { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: end; gap: 24px; }
 .clist__head h1 { margin-top: 4px; font-size: var(--t-h2); font-weight: 900; line-height: 1.25; }
-.clist__strips { position: relative; z-index: 1; grid-auto-columns: minmax(150px, 1fr); overflow-x: auto; padding: 12px 0 8px; scrollbar-width: thin; scrollbar-color: var(--gold-700) transparent; }
-.clist__strips li { animation: strip-in 1.62s var(--ease) backwards; animation-delay: calc(var(--i) * 120ms + 600ms); }
 @keyframes strip-in { from { opacity: 0; translate: 0 48px; clip-path: inset(0 0 100% 0); } to { opacity: 1; translate: 0; clip-path: inset(0); } }
 
 /* ── 일러스트 배치 화면 ──────────────────────── */
@@ -116,10 +114,6 @@
 }
 @media (max-width: 900px) {
   .clist { min-height: 0; align-content: start; }
-  .clist__strips { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
-  .clist__strips .strip { max-height: none; aspect-ratio: 9 / 17; }
-  .clist__strips .strip__base { padding-bottom: 17%; gap: 2px; }
-  .clist__strips .strip__base svg { width: 24px; height: 24px; }
   .clist__count { display: none; }
 
   .cview { display: flex; flex-direction: column; padding: 16px 20px 40px; min-height: calc(100svh - var(--bar)); }
@@ -146,3 +140,46 @@
 
 /* 오른쪽 위 라디오 탭과 겹치지 않게 번호 표시를 안쪽으로 */
 @media (min-width: 901px) { .cview__top p { margin-right: 96px; } }
+
+/* ── 소속 아이콘 ── */
+.cfac { position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px; }
+.cfac button {
+  display: grid; grid-template-columns: 36px auto auto; align-items: center; gap: 4px 12px; min-height: 52px; padding: 6px 16px 6px 8px;
+  border: 1px solid var(--line); background: rgba(10, 12, 13, .7); color: var(--ink-dim); transition: color .6s, border-color .6s, background .6s;
+}
+.cfac svg { width: 36px; height: 36px; padding: 5px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.cfac__all { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid currentColor; font-size: 11px; }
+.cfac__name { font-weight: 600; white-space: nowrap; }
+.cfac__n { color: inherit; }
+.cfac button:hover { color: var(--gold-300); border-color: var(--gold-700); }
+.cfac button[aria-pressed="true"] { color: var(--void); background: var(--gold-300); border-color: var(--gold-300); }
+.cfac button[aria-pressed="true"] .cfac__all { border-color: var(--void); }
+
+/* ── 회전 목록 ── */
+.cring { position: relative; z-index: 1; height: clamp(360px, 62vh, 620px); touch-action: pan-y; user-select: none; outline: none; cursor: grab; }
+.cring:active { cursor: grabbing; }
+.cring__track { position: absolute; inset: 0; perspective: 1600px; }   /* preserve-3d 없이: 겹친 카드도 누른 곳이 정확히 잡히게 */
+.cring__track li {
+  position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 9 / 21; margin-left: calc(var(--w, 0px) / -2);
+  translate: -50% 0; will-change: transform, opacity; transition: filter .6s;
+}
+.cring__track li:not(.is-front) { filter: brightness(.62) saturate(.8); }
+.cring__track li .strip { height: 100%; max-height: none; aspect-ratio: auto; }
+.cring__track li.is-front .strip::before { scale: 1 1; }
+.cring__track li.is-front .strip__base::before { background: var(--gold-300); }
+.cring__track.is-in li { animation: ring-in 1.2s var(--ease) backwards; }
+@keyframes ring-in { from { opacity: 0; filter: blur(6px); } }
+.strip__fac { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; color: var(--gold-300); }
+.strip__fac svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.cring__btn { position: absolute; top: 50%; translate: 0 -50%; z-index: 200; width: 52px; height: 52px; }
+.cring__btn--l { left: 0; } .cring__btn--r { right: 0; }
+.cring__foot { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; }
+.cring__foot b { font-size: var(--t-sub); }
+@media (max-width: 900px) {
+  .cring { height: min(64vh, 520px); }
+  .cring__btn { width: 44px; height: 44px; }
+  .cfac button { grid-template-columns: 30px auto; padding-right: 12px; }
+  .cfac__n { display: none; }
+  .cfac svg, .cfac__all { width: 30px; height: 30px; }
+  .cring__hint { display: none; }
+}
