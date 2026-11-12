@@ -1,7 +1,7 @@
 /* RASYANCUT — 메인 화면 구역별 배치 */
 
 /* ── 01 HOME ─────────────────────────────────── */
-.home { min-height: 100svh; display: grid; grid-template-columns: 1fr auto; align-content: end; align-items: end; gap: 32px; padding-bottom: clamp(56px, 9vh, 96px); }
+.home { min-height: calc(100svh - var(--top)); display: grid; grid-template-columns: 1fr auto; align-content: end; align-items: end; gap: 32px; padding-bottom: clamp(56px, 9vh, 96px); }
 .home__fx { position: absolute; inset: 0; width: 100%; height: 100%; }
 .home__slash {
   position: absolute; inset: 0; pointer-events: none;
@@ -114,26 +114,6 @@
 /* ── 05 GAME ─────────────────────────────────── */
 .game { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px clamp(24px, 4vw, 64px); padding-top: clamp(150px, 26vh, 260px); }
 .game__hollow { top: clamp(40px, 7vh, 80px); left: var(--pad); font-size: clamp(72px, 14vw, 200px); -webkit-text-stroke-color: rgba(212, 167, 58, .28); }
-.gview { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto; }
-.gview__slot { aspect-ratio: 16 / 8; border-right: 0; }
-.gview__side { background: var(--gold-300); color: var(--void); display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 16px 0; }
-.gview__side b { writing-mode: vertical-rl; font-family: var(--mono); font-size: 34px; letter-spacing: .08em; line-height: 1; }
-.gview__side .mono { writing-mode: vertical-rl; color: var(--gold-900); font-size: var(--t-label); }
-.gview__cap { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 0 24px; align-items: end; padding: 20px 0 0; }
-.gview__cap h3 { font-size: var(--t-h3); font-weight: 900; line-height: 1.3; grid-column: 1; }
-.gview__cap .mono { grid-column: 1; }
-.gview__cap .btn { grid-column: 2; grid-row: 1 / span 3; }
-.glist { grid-column: 2; border-top: 1px solid var(--line); }
-.glist button {
-  width: 100%; display: grid; grid-template-columns: 48px minmax(0, 1.4fr) 1fr 1fr auto; gap: 16px; align-items: center; text-align: left;
-  min-height: 60px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); position: relative; transition: background .42s, padding .72s var(--ease);
-}
-.glist button::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 0; background: var(--gold-300); transition: width .72s var(--ease); }
-.glist button b { font-family: var(--mono); font-size: var(--t-lead); color: var(--gold-500); }
-.glist button strong { font-size: var(--t-lead); font-weight: 600; }
-.glist button em { font-style: normal; font-family: var(--mono); font-size: var(--t-label); letter-spacing: .15em; padding: 3px 12px; border: 1px solid var(--gold-700); color: var(--gold-300); white-space: nowrap; }
-.glist button:hover, .glist button.is-on { background: var(--obsidian); padding-left: 24px; }
-.glist button.is-on::before { width: 4px; }
 
 /* ── 06 CLUE ─────────────────────────────────── */
 .clue { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px clamp(24px, 4vw, 64px); }
@@ -189,19 +169,6 @@
 .notice__tab { background: var(--gold-300); color: var(--void); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 16px; padding: 24px 0; min-height: 320px; margin-top: calc(clamp(72px, 11vh, 128px) * -1); }
 .notice__tab b { font-size: var(--t-lead); font-weight: 900; border-bottom: 2px solid var(--void); padding-bottom: 8px; }
 .notice__tab .mono { writing-mode: vertical-rl; color: var(--void); font-weight: 700; font-size: var(--t-meta); }
-.nlist { border-top: 1px solid var(--gold-500); }
-.nlist li { border-bottom: 1px solid var(--line-soft); }
-.nlist button { width: 100%; display: grid; grid-template-columns: auto auto 1fr auto; gap: 16px; align-items: baseline; text-align: left; min-height: 64px; padding: 16px 4px; }
-.nlist button strong { font-size: clamp(18px, 1.8vw, 22px); font-weight: 600; }
-.nlist button i { width: 12px; height: 12px; border-right: 1px solid var(--gold-300); border-bottom: 1px solid var(--gold-300); rotate: 45deg; transition: rotate .72s var(--ease); align-self: center; }
-.nlist li.is-open button i { rotate: 225deg; }
-.nlist .nbody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .9s var(--ease); }
-.nlist li.is-open .nbody { grid-template-rows: 1fr; }
-.nlist .nbody > ul { overflow: hidden; padding: 0 4px; }
-.nlist .nbody li { border: 0; padding: 4px 0 4px 20px; position: relative; color: var(--ink-dim); }
-.nlist .nbody li:first-child { color: var(--ink); padding-left: 0; }
-.nlist .nbody li:last-child { padding-bottom: 24px; }
-.nlist .nbody li:not(:first-child)::before { content: ""; position: absolute; left: 2px; top: 1.05em; width: 8px; height: 1px; background: var(--gold-500); }
 
 /* ── 09 GALLERY ──────────────────────────────── */
 .gal { display: grid; gap: 40px; justify-items: start; }
@@ -218,7 +185,6 @@
   .nation::after { display: none; }
   .chara, .map, .game, .clue { grid-template-columns: minmax(0, 1fr); }
   .mapbox { grid-row: auto; }
-  .glist { grid-column: 1; }
   .maplist { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .notice { grid-template-columns: 64px minmax(0, 1fr); }
   .notice__tab { grid-row: span 2; }
@@ -241,13 +207,6 @@
   .npanel__desc { min-height: 0; }
   .mapview { height: 58vh; }
   .mapbox__hint { display: none; }
-  .gview { grid-template-columns: minmax(0, 1fr) 56px; }
-  .gview__side b { font-size: var(--t-sub); }
-  .gview__slot { aspect-ratio: 4 / 3; }
-  .gview__cap { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .gview__cap .btn { grid-column: 1; grid-row: auto; margin-top: 12px; justify-self: start; }
-  .glist button { grid-template-columns: 36px minmax(0, 1fr) auto; }
-  .glist button span { display: none; }
   .clues button { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
   .clues button > .mono { grid-column: 1 / -1; }
   .novel { grid-template-columns: minmax(0, 1fr); }
@@ -258,8 +217,5 @@
   .notice__tab { grid-row: auto; flex-direction: row; justify-content: flex-start; min-height: 0; padding: 12px 16px; margin: calc(clamp(72px, 11vh, 128px) * -1) calc(var(--pad) * -1) 0; }
   .notice__tab b { border: 0; padding: 0; }
   .notice__tab .mono { writing-mode: horizontal-tb; }
-  .nlist button { grid-template-columns: auto 1fr auto; }
-  .nlist button strong { grid-column: 1 / 3; grid-row: 2; }
-  .nlist button i { grid-row: 1 / span 2; grid-column: 3; }
   .foot { margin-left: 0; }
 }

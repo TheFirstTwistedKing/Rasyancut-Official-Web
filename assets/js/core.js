@@ -50,13 +50,35 @@
       String(i + 1).padStart(2, '0') + '</b>' + n[1] + '</a>';
   }).join('');
 
+  /* 상단 페이지 메뉴: 왼쪽 레일은 메인 화면의 구역, 위 메뉴는 사이트의 페이지 */
+  var PAGES = [['index.html', '메인', ''], ['characters.html', '캐릭터', 'characters'], ['gallery.html', '갤러리', 'gallery'], ['novels.html', '소설', 'novels']];
+  var top = document.createElement('nav');
+  top.className = 'topnav';
+  top.setAttribute('aria-label', '페이지');
+  top.innerHTML = '<ul>' + PAGES.map(function (p) { return '<li><a href="' + p[0] + '" data-page-link="' + p[2] + '">' + p[1] + '</a></li>'; }).join('') + '</ul>' +
+    '<svg class="topnav__wave" viewBox="0 0 240 40" preserveAspectRatio="none" aria-hidden="true">' +
+    '<path d="M0 34 H66 C86 34 92 8 120 8 C148 8 154 34 174 34 H240"/><path class="w2" d="M18 37 H70 C90 37 96 13 120 13 C144 13 150 37 170 37 H222"/></svg>';
+  function pageKey() { var m = location.pathname.match(/([\w-]+)\.html$/); return m && m[1] !== 'index' ? m[1] : ''; }
+  RSC.setPage = function () {
+    var key = pageKey(), on = top.querySelector('[data-page-link="' + key + '"]'), wave = top.querySelector('.topnav__wave');
+    top.querySelectorAll('a').forEach(function (a) { a.classList.toggle('is-on', a === on); if (a === on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (!on) return;
+    var r = on.getBoundingClientRect(), base = top.getBoundingClientRect();
+    if (!r.width) return;
+    wave.style.width = (r.width + 120) + 'px';
+    wave.style.transform = 'translateX(' + (r.left - base.left + r.width / 2 - (r.width + 120) / 2) + 'px)';
+  };
+
   var wipe = document.createElement('div');
   wipe.className = 'wipe is-hold';
   wipe.setAttribute('aria-hidden', 'true');
   wipe.innerHTML = '<i></i><i></i><i></i>';
 
-  [rail, bar, menu, wipe].forEach(function (el) { el.setAttribute('data-keep', ''); });
-  document.body.prepend(rail, bar, menu);
+  [rail, bar, menu, top, wipe].forEach(function (el) { el.setAttribute('data-keep', ''); });
+  document.body.prepend(rail, top, bar, menu);
+  requestAnimationFrame(RSC.setPage);
+  window.addEventListener('resize', function () { RSC.setPage(); });
+  if (document.fonts) document.fonts.ready.then(function () { RSC.setPage(); });
   document.body.append(wipe);
 
   /* 모바일 메뉴 */
@@ -135,6 +157,7 @@
         if (push) history.pushState(null, '', url.href);
         current = norm(url.pathname);
         RSC.setNav(document.body.dataset.nav || 'home');
+        RSC.setPage();
         scrollTo(0, 0);
 
         /* 스크립트: 공통은 한 번만, 페이지 전용(data-page)은 올 때마다 다시 실행 */
