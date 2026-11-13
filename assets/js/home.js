@@ -42,7 +42,7 @@
   }
 
   /* ── 01 HOME ── */
-  var SECS = [['character', '캐릭터'], ['nation', '국가 소개'], ['map', '지도'], ['game', '게임'], ['clue', '떡밥'], ['novel', '소설'], ['notice', '공지'], ['gallery', '갤러리']];
+  var SECS = [['character', '캐릭터'], ['nation', '국가 소개'], ['map', '지도'], ['game', '게임'], ['world', '세계관'], ['novel', '소설'], ['notice', '공지'], ['gallery', '갤러리']];
   $('[data-quick]').innerHTML = SECS.map(function (s, i) {
     return '<li><a href="#' + s[0] + '"><b>' + String(i + 2).padStart(2, '0') + '</b>' + s[1] + '</a></li>';
   }).join('') + '<li class="home__quick-wide"><a href="community.html"><b>↗</b>커뮤니티 <span class="mono">Forum</span></a></li>';
@@ -933,23 +933,140 @@
     show(0);
   })();
 
-  /* ── 06 CLUE ── */
+  /* ── 06 WORLD: 세계관 기록 (명조 LORE 배치 — 왼쪽 문장·제목·설명, 오른쪽 세로 카드 띠) ── */
   (function () {
-    var box = $('[data-clues]');
-    box.innerHTML = D.clues.map(function (cl, i) {
-      var w = [[92, 64], [78, 88], [96, 52], [70, 81], [88, 60]][i % 5];
-      return '<li class="rv" style="--d:' + i + '"><button aria-expanded="false"><span class="mono gold">' + cl.code + '</span>' +
-        '<span class="redact"><i style="--w:' + w[0] + '%"></i><i style="--w:' + w[1] + '%"></i></span><span class="body"></span>' +
-        '<span class="state">봉인</span></button></li>';
+    var W = D.world || [], deck = $('[data-l-deck]'), track = $('[data-l-track]'); if (!W.length || !deck) return;
+    var cur = 0, prev = -1, busy = 0;
+    /* 결정적인 난수 (별 위치가 매번 같게) */
+    function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+    function stars(n, seed, x0, y0, w, h, rmax) {
+      var r = rng(seed), out = '';
+      for (var i = 0; i < n; i++) out += '<circle cx="' + (x0 + r() * w).toFixed(1) + '" cy="' + (y0 + r() * h).toFixed(1) + '" r="' + (.4 + r() * rmax).toFixed(2) + '" opacity="' + (.25 + r() * .75).toFixed(2) + '"/>';
+      return out;
+    }
+    var G = '#f2d27a', G5 = '#d4a73a', G7 = '#8f6a1c';
+    /* 카드 그림: 320×560, 금선 위주 */
+    var ART = {
+      sphere: function () {
+        var lat = ''; [-70, -35, 0, 35, 70].forEach(function (d) { var ry = 18 + Math.abs(d) * .05, y = 280 + d; lat += '<ellipse cx="160" cy="' + y + '" rx="' + Math.sqrt(110 * 110 - d * d).toFixed(1) + '" ry="' + ry + '" />'; });
+        return '<defs><radialGradient id="lA" cx=".5" cy="0" r="1"><stop offset="0" stop-color="' + G + '" stop-opacity=".9"/><stop offset=".5" stop-color="' + G5 + '" stop-opacity=".15"/><stop offset="1" stop-opacity="0"/></radialGradient>' +
+          '<linearGradient id="lB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000"/></linearGradient></defs>' +
+          '<path d="M150 0 L170 0 L166 170 L154 170 Z" fill="url(#lA)"/>' +
+          '<path d="M154 390 L166 390 L176 560 L144 560 Z" fill="#000" opacity=".9"/><path d="M156 390 L164 390 L170 560 L150 560 Z" fill="none" stroke="' + G7 + '" stroke-dasharray="2 5"/>' +
+          '<circle cx="160" cy="280" r="110" fill="#0d0b08" stroke="' + G5 + '" stroke-width="1.4"/>' +
+          '<g fill="none" stroke="' + G7 + '" stroke-width=".8">' + lat + '<ellipse cx="160" cy="280" rx="44" ry="110"/><ellipse cx="160" cy="280" rx="86" ry="110"/></g>' +
+          '<line x1="160" y1="150" x2="160" y2="410" stroke="' + G + '" stroke-width=".8" stroke-dasharray="1 4"/>' +
+          '<rect x="153" y="162" width="14" height="14" fill="' + G + '"/><rect x="153" y="384" width="14" height="14" fill="#000" stroke="' + G5 + '"/>' +
+          '<g fill="' + G + '">' + stars(46, 7, 10, 10, 300, 540, 1.1) + '</g>';
+      },
+      sanctum: function () {
+        var vil = [[160, 140], [62, 380], [258, 380]], s = '';
+        vil.forEach(function (p) { s += '<line x1="160" y1="290" x2="' + p[0] + '" y2="' + p[1] + '" stroke="' + G7 + '" stroke-dasharray="3 5"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="26" fill="#0d0b08" stroke="' + G5 + '"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="5" fill="' + G5 + '"/>'; });
+        var lum = ''; for (var i = 0; i < 7; i++) { var a = (-150 + i * 20) * Math.PI / 180; lum += '<circle cx="' + (160 + Math.cos(a) * 128).toFixed(1) + '" cy="' + (290 + Math.sin(a) * 128).toFixed(1) + '" r="3.2" fill="' + G + '"/>'; }
+        return '<circle cx="160" cy="290" r="128" fill="none" stroke="' + G7 + '" stroke-dasharray="2 6"/><circle cx="160" cy="290" r="150" fill="none" stroke="' + G7 + '" opacity=".5"/>' + s +
+          '<circle cx="160" cy="290" r="58" fill="#120f0a" stroke="' + G + '" stroke-width="1.4"/>' +
+          '<path d="M160 248 L178 270 L178 318 L142 318 L142 270 Z" fill="none" stroke="' + G + '"/><path d="M160 248 V232 M150 238 H170" stroke="' + G + '"/><rect x="154" y="296" width="12" height="22" fill="' + G5 + '"/>' + lum +
+          '<g fill="' + G5 + '">' + stars(22, 11, 10, 20, 300, 520, .9) + '</g>';
+      },
+      rift: function () {
+        var pts = [[160, 0], [150, 70], [172, 130], [146, 200], [168, 260], [140, 330], [176, 400], [150, 470], [164, 560]];
+        var right = pts.map(function (p, i) { return (p[0] + 10 + (i % 2 ? 14 : 4)) + ' ' + p[1]; }).reverse();
+        var poly = pts.map(function (p) { return p[0] + ' ' + p[1]; }).concat(right).join(' L');
+        return '<defs><linearGradient id="rG" x1="0" x2="1"><stop offset="0" stop-color="' + G + '"/><stop offset=".5" stop-color="#fff3c4"/><stop offset="1" stop-color="' + G + '"/></linearGradient></defs>' +
+          '<path d="M' + poly + ' Z" fill="url(#rG)" opacity=".9"/><path d="M' + poly + ' Z" fill="none" stroke="' + G + '" stroke-width="6" opacity=".12"/>' +
+          '<rect x="128" y="250" width="70" height="96" fill="#050505" stroke="' + G + '"/><path d="M140 262 h46 v72 h-46z" fill="none" stroke="' + G7 + '"/><circle cx="163" cy="298" r="8" fill="none" stroke="' + G + '"/>' +
+          '<g fill="' + G + '">' + stars(30, 23, 10, 10, 120, 540, .9) + stars(30, 31, 200, 10, 110, 540, .9) + '</g>';
+      },
+      gauge: function () {
+        var bands = [[0, 10, '빛'], [10, 90, '에테로스'], [90, 100, '어둠']], g = '';
+        bands.forEach(function (b) { var y1 = 70 + b[0] * 4.2, y2 = 70 + b[1] * 4.2; g += '<line x1="262" y1="' + y1 + '" x2="292" y2="' + y1 + '" stroke="' + G5 + '"/><text x="296" y="' + (y1 + 4) + '" class="t">' + b[0] + '</text>'; });
+        g += '<line x1="262" y1="490" x2="292" y2="490" stroke="' + G5 + '"/><text x="296" y="494" class="t">100</text>';
+        return '<defs><linearGradient id="gG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".1" stop-color="' + G + '"/><stop offset=".5" stop-color="' + G7 + '" stop-opacity=".55"/><stop offset=".9" stop-color="#140f08"/><stop offset="1" stop-color="#000"/></linearGradient></defs>' +
+          '<rect x="60" y="70" width="180" height="420" fill="url(#gG)"/><rect x="60" y="70" width="180" height="420" fill="none" stroke="' + G5 + '"/>' +
+          '<line x1="60" y1="112" x2="240" y2="112" stroke="#050505" stroke-dasharray="4 4"/><line x1="60" y1="448" x2="240" y2="448" stroke="' + G7 + '" stroke-dasharray="4 4"/>' +
+          '<path d="M150 0 V70 M170 0 V70" stroke="' + G + '" opacity=".8"/><path d="M150 490 V560 M170 490 V560" stroke="' + G7 + '"/>' +
+          '<line x1="262" y1="70" x2="262" y2="490" stroke="' + G7 + '"/>' + g;
+      },
+      vault: function () {
+        var pil = '';
+        [[48, 300], [98, 250], [222, 250], [272, 300]].forEach(function (p) { pil += '<rect x="' + (p[0] - 9) + '" y="' + p[1] + '" width="18" height="' + (500 - p[1]) + '" fill="#0d0b08" stroke="' + G5 + '"/><path d="M' + p[0] + ' ' + (p[1] - 26) + ' l12 26 h-24z" fill="' + G + '" opacity=".85"/>'; });
+        return '<g fill="' + G + '">' + stars(90, 41, 6, 6, 308, 260, 1.2) + '</g>' +
+          '<path d="M0 120 C 90 60, 230 180, 320 110" fill="none" stroke="' + G7 + '" stroke-width="22" opacity=".18"/>' +
+          '<circle cx="160" cy="170" r="34" fill="#000" stroke="' + G + '"/><ellipse cx="160" cy="170" rx="62" ry="12" fill="none" stroke="' + G5 + '" transform="rotate(-14 160 170)"/>' + pil +
+          '<path d="M124 500 V420 a36 36 0 0 1 72 0 V500 Z" fill="#120f0a" stroke="' + G + '" stroke-width="1.4"/><path d="M136 500 V424 a24 24 0 0 1 48 0 V500" fill="none" stroke="' + G7 + '"/>' +
+          '<line x1="0" y1="500" x2="320" y2="500" stroke="' + G7 + '"/>';
+      },
+      threads: function () {
+        var t = '';
+        for (var i = 0; i < 13; i++) {
+          var x = 28 + i * 22;
+          if (i === 6) {
+            t += '<path d="M' + x + ' 0 V210 C ' + (x + 30) + ' 240, ' + (x - 40) + ' 260, ' + (x + 10) + ' 288" fill="none" stroke="' + G + '" stroke-width="1.6"/>' +
+              '<path d="M' + (x + 4) + ' 320 C ' + (x - 30) + ' 350, ' + (x + 36) + ' 380, ' + x + ' 410 V560" fill="none" stroke="' + G + '" stroke-width="1.6"/>' +
+              '<g fill="' + G + '"><circle cx="' + (x + 10) + '" cy="288" r="3"/><circle cx="' + (x + 4) + '" cy="320" r="3"/><rect x="' + (x + 14) + '" y="298" width="3" height="3"/><rect x="' + (x - 8) + '" y="306" width="2.5" height="2.5"/></g>';
+          } else t += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="560" stroke="' + (i % 3 ? G7 : G5) + '" stroke-width=".8" opacity="' + (i % 3 ? .6 : .9) + '"/>';
+        }
+        return t + '<g fill="' + G5 + '">' + stars(26, 53, 10, 10, 300, 540, .8) + '</g>';
+      }
+    };
+    /* 왼쪽 문장(시길): 같은 그림을 작게, 선만 */
+    function sigil(w) { return '<svg viewBox="0 0 320 560" aria-hidden="true"><g class="wld__sig">' + ART[w.art]() + '</g></svg>'; }
+
+    track.innerHTML = W.map(function (w, i) {
+      return '<li class="wld__card" data-l="' + i + '"><button type="button" aria-label="' + esc(w.name) + ' 기록 보기">' +
+        '<svg class="wld__art" viewBox="0 0 320 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + ART[w.art]() + '</svg>' +
+        '<span class="mono wld__cno">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<span class="wld__cap"><b>' + esc(w.name) + '</b><span class="mono">' + esc(w.en) + '</span></span></button></li>';
     }).join('');
-    box.addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return;
-      var li = b.parentNode, i = [].indexOf.call(box.children, li), open = li.classList.toggle('is-open');
-      b.setAttribute('aria-expanded', open);
-      b.querySelector('.state').textContent = open ? '해독' : '봉인';
-      if (open) RSC.scramble(b.querySelector('.body'), D.clues[i].text || '기록 없음 — 해독할 내용이 아직 등록되지 않았습니다.', 1600);
+    $('[data-l-total]').textContent = String(W.length).padStart(2, '0');
+    var cards = track.children;
+
+    function fill(i, first) {
+      var w = W[i];
+      $('[data-l-no]').textContent = String(i + 1).padStart(2, '0');
+      $('[data-l-en]').textContent = w.en;
+      var nm = $('[data-l-name]'), ds = $('[data-l-desc]'), fx = $('[data-l-facts]'), sg = $('[data-l-sigil]');
+      sg.innerHTML = sigil(w);
+      fx.innerHTML = w.facts.map(function (f, k) {
+        return '<div style="--k:' + k + '"><dt class="mono">' + esc(f[0]) + (f[2] === 'legacy' ? '<em class="wld__leg" title="레거시 문서 기준">Legacy</em>' : '') + '</dt><dd>' + esc(f[1]) + '</dd></div>';
+      }).join('');
+      if (first || reduce) { nm.textContent = w.name; ds.textContent = w.desc; return; }
+      var info = nm.closest('.wld__info'); info.classList.remove('is-swap'); void info.offsetWidth; info.classList.add('is-swap');
+      RSC.scramble(nm, w.name, 520); ds.textContent = w.desc;
+    }
+    function layout() {
+      /* 고른 카드부터 오른쪽으로 늘어선다. 앞의 카드들은 왼쪽 밖으로 밀려난다 */
+      var x = 0;
+      for (var k = 0; k < cards.length; k++) {
+        cards[k].classList.toggle('is-on', k === cur);
+        cards[k].classList.toggle('is-past', k < cur);
+        cards[k].querySelector('button').setAttribute('aria-current', k === cur ? 'true' : 'false');
+      }
+      /* 폭이 바뀌는 중인 카드(지금·직전 선택)를 피해, 변하지 않는 카드의 폭으로 계산한다 */
+      var ref = null;
+      for (var q = 0; q < cards.length; q++) if (q !== cur && q !== prev) { ref = cards[q]; break; }
+      var small = ref ? ref.offsetWidth : cards[0].offsetWidth;
+      x = cur * (small + 10);
+      track.style.transform = 'translateX(' + (-x) + 'px)';
+    }
+    function go(i) {
+      i = (i + W.length) % W.length; if (i === cur) return;
+      prev = cur; cur = i; fill(cur); layout();
+      clearTimeout(busy); busy = setTimeout(function () { prev = -1; layout(); }, 700);
+    }
+    $('[data-l-prev]').addEventListener('click', function () { go(cur - 1); });
+    $('[data-l-next]').addEventListener('click', function () { go(cur + 1); });
+    track.addEventListener('click', function (e) { var c = e.target.closest('[data-l]'); if (c) go(+c.dataset.l); });
+    deck.addEventListener('keydown', function (e) {
+      var d = { ArrowLeft: -1, ArrowRight: 1 }[e.key]; if (!d) return;
+      e.preventDefault(); e.stopPropagation(); go(cur + d);
     });
-    RSC.observe(box);
+    /* 휴대폰: 옆으로 밀어서 넘김 */
+    var sx = null;
+    deck.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') sx = e.clientX; });
+    deck.addEventListener('pointerup', function (e) { if (sx === null) return; var dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); });
+    watch(deck, layout);
+    fill(0, true); layout();
   })();
 
   /* ── 08 NOTICE: 왼쪽 목록을 고르면 오른쪽 카드가 바뀐다 ── */
@@ -992,7 +1109,7 @@
   var secs = [].slice.call(document.querySelectorAll('.page > .sec[id]'));
   var deckMQ = matchMedia('(min-width: 901px) and (min-height: 620px)');
   var deck = false, cur = 0, busy = false, root = document.documentElement;
-  var EN = { home: 'Home', character: 'Character', nation: 'Nation', map: 'Map', game: 'Game', clue: 'Clue', novel: 'Novel', notice: 'Notice', gallery: 'Gallery', end: 'End' };
+  var EN = { home: 'Home', character: 'Character', nation: 'Nation', map: 'Map', game: 'Game', world: 'World', novel: 'Novel', notice: 'Notice', gallery: 'Gallery', end: 'End' };
 
   var hud = document.createElement('div');
   hud.className = 'deckhud';
