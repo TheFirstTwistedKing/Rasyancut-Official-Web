@@ -301,7 +301,7 @@
   --c: var(--gold-300);
   position: absolute; z-index: 6; top: 0; right: 0; bottom: 0; width: min(420px, 46%);
   display: grid; grid-template-rows: auto auto minmax(0, 1fr);
-  background: linear-gradient(180deg, rgba(23, 20, 15, .97), rgba(8, 7, 5, .97));
+  background: linear-gradient(180deg, #17140f, #080705);
   border-left: 1px solid var(--gold-500); box-shadow: -24px 0 48px rgba(0, 0, 0, .55);
   clip-path: inset(0 0 0 100%); opacity: 0;
   transition: clip-path .62s var(--ease), opacity .3s;
@@ -409,3 +409,88 @@
 /* 지도 상자가 왼쪽 목록 때문에 길어져도 지도 그림이 아래까지 채운다 */
 .mapbox { display: flex; flex-direction: column; }
 .mapview { flex: 1 1 auto; height: auto; min-height: min(72vh, 680px); }
+
+/* ── 지도: 2D / 3D 전환 ─────────────────────── */
+.mapbox__read, .mapbox__ctl, .mapbox__hint, .mapmini { z-index: 3; }
+.mapmode {
+  position: absolute; z-index: 5; top: 10px; right: 12px; display: grid; grid-template-columns: 1fr 1fr;
+  padding: 3px; background: rgba(5, 5, 5, .9); border: 1px solid var(--gold-700);
+  transition: right .62s var(--ease);
+}
+.mapmode button { position: relative; z-index: 1; min-width: 52px; min-height: 36px; padding: 0 12px; font-size: var(--t-meta); letter-spacing: .2em; color: var(--ink-dim); transition: color .4s; }
+.mapmode button[aria-pressed="true"] { color: var(--void); }
+.mapmode button:not([aria-pressed="true"]):hover { color: var(--gold-100); }
+.mapmode__thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); background: var(--gold-300);
+  transition: translate .55s var(--ease); }
+.mapmode__thumb::after { content: ""; position: absolute; inset: -3px; border: 1px solid var(--gold-300); opacity: 0; }
+.mapbox.is-3d .mapmode__thumb { translate: 100% 0; }
+.mapbox.is-wipe .mapmode__thumb::after { animation: modePing .7s var(--ease); }
+@keyframes modePing { from { opacity: 1; inset: -3px; } to { opacity: 0; inset: -10px; } }
+.mapbox.has-dos .mapmode { right: calc(min(420px, 46%) + 12px); }
+
+/* 3D 화면 */
+.m3d { position: absolute; inset: 0; z-index: 2; overflow: hidden; background:
+  radial-gradient(ellipse 70% 60% at 50% 55%, rgba(143, 106, 28, .16), transparent 70%), #050505; cursor: grab; touch-action: none; outline: none; }
+.m3d.is-drag { cursor: grabbing; }
+.m3d.is-point:not(.is-drag) { cursor: pointer; }
+.m3d__cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.m3d__state { position: absolute; inset: 0; display: none; place-content: center; justify-items: center; gap: 14px;
+  font-size: var(--t-label); letter-spacing: .3em; text-transform: uppercase; color: var(--gold-300); text-align: center; padding: 24px; }
+.m3d.is-loading .m3d__state, .m3d.is-fail .m3d__state { display: grid; }
+.m3d__state i { width: 46px; height: 46px; border: 1px solid var(--gold-700); rotate: 45deg; position: relative; }
+.m3d__state i::after { content: ""; position: absolute; inset: 8px; background: var(--gold-300); animation: stateSpin 1.6s var(--ease) infinite; }
+@keyframes stateSpin { 0% { scale: 0; } 50% { scale: 1; } 100% { scale: 0; rotate: 90deg; } }
+.m3d.is-fail .m3d__state { letter-spacing: .08em; text-transform: none; color: var(--ink); }
+.m3d.is-fail .m3d__state i { display: none; }
+.mapbox.is-3d .mapmini, .mapbox.is-3d .mapview { visibility: hidden; }
+
+/* 3D 이름표: 금박 핀 + 국가 코드 */
+.m3d__labs { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .8s; }
+.m3d__labs.is-in { opacity: 1; }
+.m3lab { position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 8px;
+  margin: -34px 0 0 -2px; padding: 4px 10px 5px 10px; white-space: nowrap; will-change: transform;
+  background: rgba(5, 5, 5, .82); border-left: 2px solid var(--gold-500); transition: background .3s, border-color .3s; }
+.m3lab::before { content: ""; position: absolute; left: -2px; top: 100%; width: 1px; height: 22px; background: linear-gradient(var(--gold-500), transparent); }
+.m3lab::after { content: ""; position: absolute; left: -5px; top: calc(100% + 20px); width: 7px; height: 7px; rotate: 45deg; border: 1px solid var(--gold-300); background: var(--void); }
+.m3lab span { font-size: 10px; letter-spacing: .14em; color: var(--gold-500); }
+.m3lab b { font-family: var(--serif); font-weight: 600; font-size: 14px; letter-spacing: .04em; color: var(--ink); }
+.m3lab.is-dim b { color: var(--ink-dim); font-weight: 400; }
+.m3lab.has-dos { border-left-color: var(--gold-300); }
+.m3lab.has-dos span::after { content: " ◆"; color: var(--gold-300); }
+.m3lab:hover, .m3lab.is-hover { background: rgba(23, 20, 15, .95); border-left-color: var(--gold-100); }
+.m3lab.is-on { background: var(--gold-300); border-left-color: var(--gold-100); z-index: 2; }
+.m3lab.is-on span, .m3lab.is-on b { color: var(--void); }
+.m3lab.is-on::after { background: var(--gold-300); }
+
+/* 전환 연출: 금빛 주사선이 지나가며 새 화면이 드러난다 */
+.mapwipe { position: absolute; z-index: 4; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, transparent 0 46%, rgba(242, 210, 122, .14) 49%, var(--gold-100) 50%, rgba(242, 210, 122, .14) 51%, transparent 54% 100%) no-repeat;
+  background-size: 200% 100%; }
+.mapbox.is-wipe .mapwipe { animation: mapWipe .8s var(--ease); }
+.mapbox.is-wipe .m3d:not([hidden]), .mapbox.is-wipe:not(.is-3d) .mapview { animation: mapReveal .8s var(--ease); }
+@keyframes mapWipe { 0% { opacity: 1; background-position: 100% 0; } 85% { opacity: 1; } 100% { opacity: 0; background-position: 0 0; } }
+@keyframes mapReveal { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+
+@media (max-width: 900px) {
+  .mapbox.has-dos .mapmode { right: calc(min(380px, 62%) + 12px); }
+}
+@media (max-width: 600px) {
+  .mapmode button { min-width: 44px; padding: 0 8px; }
+  .mapbox.has-dos .mapmode { right: 12px; }
+  .m3lab { padding: 3px 8px 4px; }
+  .m3lab b { font-size: 12px; }
+  .m3lab span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapmode, .mapmode__thumb { transition: none; }
+  .mapbox.is-wipe .mapwipe, .mapbox.is-wipe .m3d, .mapbox.is-wipe .mapview { animation: none; }
+}
+/* 겹친 이름표는 글자를 접고 핀만 남긴다 (마우스를 올리면 다시 펼침) */
+.m3lab.is-pin { background: transparent; border-left-color: transparent; }
+.m3lab.is-pin span, .m3lab.is-pin b { opacity: 0; }
+.m3lab.is-pin::before { opacity: .5; }
+.m3lab span, .m3lab b { transition: opacity .3s; }
+.m3lab.is-pin:hover { background: rgba(23, 20, 15, .95); border-left-color: var(--gold-100); z-index: 3; }
+.m3lab.is-pin:hover span, .m3lab.is-pin:hover b { opacity: 1; }
+.mapbox.has-dos .mapbox__hint { opacity: 0; }
+.mapbox__hint { transition: opacity .4s; }
