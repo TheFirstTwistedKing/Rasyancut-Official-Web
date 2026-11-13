@@ -563,3 +563,112 @@
 }
 .m3d__labs.is-focus .m3lab:not(.is-titled):not(:hover) { opacity: .32; }
 .m3lab { transition: opacity .4s, background .3s, border-color .3s; }
+
+/* ── 국가 기록 창 v2 (67 결선: 4번 뼈대 + 5번 해독 엔진 + 6번 관측 고리 + 2번 핵심 거점) ── */
+.mdos { grid-template-rows: auto minmax(0, 1fr); }
+.mdos__head h3 { color: var(--gold-100); font-size: clamp(30px, 2.8vw, 40px); letter-spacing: -.01em; line-height: 1.1; }
+.mdos__now { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: var(--t-label); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); }
+.mdos__ring { position: relative; width: 22px; height: 22px; flex: none; border: 1px solid var(--gold-700); border-radius: 50%; }
+.mdos__ring::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 1px dashed rgba(212, 167, 58, .4); }
+.mdos__ring b { position: absolute; left: 50%; top: 50%; width: 1.5px; height: 9px; margin-left: -.75px; background: var(--c); transform-origin: 50% 100%; translate: 0 -100%; rotate: var(--ring, 0deg); transition: rotate .7s var(--ease); }
+.mdos__body { overflow: hidden; padding: 0; display: block; min-height: 0; }
+.mdos__body.is-full { display: grid; grid-template-columns: 44px minmax(0, 1fr); }
+.mdos__rail { display: flex; flex-direction: column; padding-top: 8px; border-right: 1px solid var(--line-soft); }
+.mdos__rail button { position: relative; height: 46px; display: grid; place-items: center; font-size: var(--t-meta); font-weight: 600; color: var(--ink-dim); transition: color .3s; }
+.mdos__rail button::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; background: var(--gold-300); scale: 1 0; transition: scale .4s var(--ease); }
+.mdos__rail button:hover { color: var(--ink); }
+.mdos__rail button[aria-current="true"] { color: var(--gold-300); }
+.mdos__rail button[aria-current="true"]::before { scale: 1 1; }
+.mdos__scroll { overflow-y: auto; overscroll-behavior: contain; padding: 0 22px 40px; height: 100%; scrollbar-width: thin; scrollbar-color: var(--gold-700) transparent; }
+.mdos__scroll:focus-visible { outline: 1px solid var(--gold-300); outline-offset: -2px; }
+.mdos__sec { padding-top: 22px; }
+.mdos__sec + .mdos__sec { margin-top: 8px; }
+.mdos__sech { display: flex; align-items: baseline; gap: 12px; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.mdos__sech > .mono { font-size: var(--t-meta); font-weight: 600; color: var(--gold-500); }
+.mdos__sech h4 { font-size: var(--t-lead); font-weight: 600; color: var(--ink); }
+.mdos__sech em { margin-left: auto; font-style: normal; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); }
+.mdos__facts { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line-soft); }
+.mdos__facts > div { padding: 12px 0; border-bottom: 1px solid var(--line-soft); min-width: 0; }
+.mdos__facts > div:nth-child(odd) { padding-right: 14px; }
+.mdos__facts > div:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--line-soft); }
+.mdos__facts dt { font-size: var(--t-label); letter-spacing: .14em; color: var(--ink-dim); }
+.mdos__facts dd { margin-top: 4px; font-size: var(--t-body); line-height: 1.45; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
+.mdos__subh { margin: 20px 0 8px; font-size: var(--t-label); letter-spacing: .2em; text-transform: uppercase; color: var(--gold-500); }
+.mdos__keys { display: grid; gap: 6px; }
+.mdos__keys button { display: grid; grid-template-columns: 40px minmax(0, 1fr) 10px; align-items: center; gap: 12px; padding: 10px 14px; text-align: left;
+  border: 1px solid var(--line); background: linear-gradient(90deg, rgba(212, 167, 58, .07), transparent 70%); transition: border-color .3s, background .3s; }
+.mdos__keys button:hover { border-color: var(--gold-500); background: linear-gradient(90deg, rgba(212, 167, 58, .14), transparent 80%); }
+.mdos__keys b { font-size: 24px; font-weight: 600; color: var(--gold-300); }
+.mdos__keys em { display: block; font-style: normal; font-size: 10px; letter-spacing: .2em; color: var(--gold-500); }
+.mdos__keys span { color: var(--ink); min-width: 0; }
+.mdos__keys i { width: 8px; height: 8px; border-top: 1px solid var(--gold-300); border-right: 1px solid var(--gold-300); rotate: 45deg; }
+.mdos__lst li { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.mdos__lst li > .mono { flex: none; width: 24px; font-size: var(--t-label); color: var(--ink-dim); }
+.mdos__lang li > span:first-child { flex: 1; font-size: var(--t-meta); color: var(--ink-dim); }
+.mdos__lang li > .dc { font-weight: 600; }
+.mdos__idx { display: grid; grid-template-columns: 40px repeat(8, minmax(0, 1fr)); gap: 4px; margin-bottom: 8px; }
+.mdos__rl { display: flex; align-items: center; font-size: var(--t-label); letter-spacing: .08em; color: var(--ink-dim); }
+.mdos__idx button { position: relative; height: 30px; border: 1px solid var(--line-soft); background: var(--obsidian); font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink-dim); transition: border-color .3s, color .3s, background .3s; }
+.mdos__idx button:hover { border-color: var(--gold-700); color: var(--ink); }
+.mdos__idx button.is-cap, .mdos__idx button.is-hq { color: var(--gold-300); border-color: var(--gold-700); }
+.mdos__idx button.is-cap::after, .mdos__idx button.is-hq::after { content: ""; position: absolute; right: 2px; top: 2px; width: 4px; height: 4px; background: var(--gold-300); }
+.mdos__idx button[aria-pressed="true"] { background: var(--gold-500); border-color: var(--gold-500); color: var(--void); }
+.mdos__idx button[aria-pressed="true"]::after { background: var(--void); }
+.mdos__legend { margin-bottom: 14px; font-size: 10px; letter-spacing: .14em; color: var(--ink-dim); }
+.mdos__legend i { display: inline-block; width: 6px; height: 6px; margin-right: 8px; background: var(--gold-300); vertical-align: middle; }
+.mdos__reg + .mdos__reg { margin-top: 14px; }
+.mdos__regh { display: flex; align-items: baseline; gap: 8px; padding: 8px 0; }
+.mdos__regh b { font-weight: 600; }
+.mdos__regh span, .mdos__regh em { font-size: 10px; letter-spacing: .2em; color: var(--ink-dim); }
+.mdos__regh em { margin-left: auto; font-style: normal; }
+.mdos__dist { border-top: 1px solid var(--line-soft); scroll-margin-top: 12px; }
+.mdos__reg .mdos__dist:last-child { border-bottom: 1px solid var(--line-soft); }
+.mdos__dist > button { width: 100%; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 0; text-align: left; }
+.mdos__no { flex: none; width: 26px; font-size: var(--t-meta); font-weight: 600; color: var(--gold-500); }
+.mdos__dn { flex: 1; line-height: 1.4; }
+.mdos__dist > button:hover .mdos__dn { color: var(--gold-100); }
+.mdos__badge { flex: none; padding: 0 8px; line-height: 20px; font-size: var(--t-label); font-weight: 600; letter-spacing: .14em; border: 1px solid var(--gold-500); color: var(--gold-300); }
+.mdos__badge.is-cap { background: var(--gold-500); color: var(--void); }
+.mdos__dist > button > i { flex: none; width: 8px; height: 8px; margin: 0 4px 4px; border-right: 1px solid var(--ink-dim); border-bottom: 1px solid var(--ink-dim); rotate: 45deg; transition: rotate .3s var(--ease), margin .3s; }
+.mdos__dist.is-sel > button > i { rotate: -135deg; margin-bottom: -4px; }
+.mdos__dist.is-sel { background: linear-gradient(90deg, rgba(212, 167, 58, .08), transparent 70%); }
+.mdos__dist.is-sel .mdos__dn { color: var(--gold-100); }
+.mdos__dd { padding: 0 0 14px 38px; animation: dosIn .45s var(--ease) both; }
+.mdos__kv { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; padding: 4px 0; font-size: var(--t-meta); }
+.mdos__kv > .mono { font-size: var(--t-label); letter-spacing: .14em; color: var(--ink-dim); padding-top: 2px; }
+.mdos__blds { margin-top: 6px; }
+.mdos__blds li { display: flex; gap: 10px; padding: 5px 0; font-size: var(--t-meta); border-top: 1px dashed var(--line-soft); }
+.mdos__blds li > .mono { flex: none; width: 34px; font-size: var(--t-label); color: var(--ink-dim); padding-top: 2px; }
+.mdos__nodata { font-size: var(--t-meta); color: var(--ink-dim); }
+.mdos__empty { display: block; padding: 22px 0 8px; border: 0; text-align: left; }
+.mdos__empty > i { display: block; height: 14px; margin-bottom: 10px; background: repeating-linear-gradient(135deg, #1d1912 0 6px, #050505 6px 12px); }
+.mdos__empty > i.m { width: 84%; } .mdos__empty > i.s { width: 58%; }
+.mdos__empty strong { display: block; margin: 20px 0 8px; font-family: var(--serif); font-size: var(--t-sub); color: var(--ink); }
+.mdos__empty p { font-size: var(--t-meta); color: var(--ink-dim); }
+.mdos__stamp { display: inline-block; margin-top: 18px; padding: 4px 12px; border: 1px solid var(--gold-500); font-size: var(--t-label); letter-spacing: .24em; text-transform: uppercase; color: var(--gold-300); }
+.mdos:not(.is-full) .mdos__scroll { height: auto; }
+
+/* 해독: 진짜 글자는 자리를 지키고, 가림막·기호만 그 위에 겹친다 */
+.dc { position: relative; }
+span.dc { display: inline-block; max-width: 100%; vertical-align: top; }
+.dc-x { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--gold-300); white-space: pre-wrap; word-break: break-all; }
+.dc.is-mask .dc-t, .dc.is-scr .dc-t { opacity: 0; }
+.dc.is-mask .dc-x { background: repeating-linear-gradient(135deg, #000 0 6px, var(--gold-900) 6px 8px); outline: 1px solid var(--gold-900); }
+
+@media (max-width: 600px) {
+  .mdos__body.is-full { grid-template-columns: 38px minmax(0, 1fr); }
+  .mdos__scroll { padding: 0 14px 32px; }
+  .mdos__dd { padding-left: 0; }
+  .mdos__idx { grid-template-columns: 30px repeat(8, minmax(0, 1fr)); gap: 3px; }
+  .mdos__facts { grid-template-columns: 1fr; }
+  .mdos__facts > div:nth-child(n) { padding: 10px 0; border-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .mdos__ring b { transition: none; } .mdos__dd { animation: none; } }
+.mdos__sech h4 { margin: 0; line-height: 1.3; }
+.mdos__sech em { color: var(--ink-dim); }
+.mdos__sec > .mdos__subh:first-child { margin-top: 0; }
+.mdos__sec > .mdos__subh:first-of-type:not(:first-child) { margin-top: 20px; }
+/* 기록 창 가장자리의 나라색 점선 띠는 쓰지 않는다 */
+.mdos::before { display: none; }
+.mdos__reg ol.mdos__blds { display: block; background: none; border: 0; }
+.mdos__reg .mdos__blds li { background: none; }

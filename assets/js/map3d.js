@@ -373,7 +373,7 @@ export function create(host, opt) {
     uniforms: { uTime: uni.uTime, uA: { value: 0 }, uColor: plaqueMat.uniforms.uColor },
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'uniform float uTime, uA; uniform vec3 uColor; varying vec2 vUv; void main(){ float x = abs(vUv.x - 0.5) * 2.0; float core = pow(1.0 - x, 3.0); float flow = 0.55 + 0.45 * sin(vUv.y * 26.0 - uTime * 5.0); vec3 c = mix(vec3(0.95, 0.82, 0.48), uColor, 0.4); gl_FragColor = vec4(c * core * flow * uA * (0.4 + 0.6 * vUv.y), 1.0); }'
+    fragmentShader: 'uniform float uTime, uA; uniform vec3 uColor; varying vec2 vUv; void main(){ float x = abs(vUv.x - 0.5) * 2.0; float core = pow(1.0 - x, 3.0); float breathe = 0.85 + 0.15 * sin(uTime * 1.6); vec3 c = vec3(0.95, 0.82, 0.48); gl_FragColor = vec4(c * core * breathe * uA * (0.35 + 0.65 * vUv.y), 1.0); }'
   });
   var beam = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1), beamMat);
   beam.renderOrder = 19; beam.visible = false; scene.add(beam);

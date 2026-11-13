@@ -594,87 +594,145 @@
 
     /* ── 국가 기록 창 ── */
     var dos = (function () {
-      var box = $('[data-dos]'), body = $('[data-dos-body]'), tabs = $('[data-dos-tabs]'), cur = null, tab = 'basic', timer = 0;
-      var TABS = [['basic', '개요'], ['culture', '사회 · 문화'], ['district', '행정 구역']];
+      var box = $('[data-dos]'), body = $('[data-dos-body]'), cur = null, timer = 0, io = null, spy = null;
+      var RAIL = [['basic', '01', '개요'], ['faith', '02', '종교'], ['food', '03', '식량'], ['lang', '04', '언어'], ['admin', '05', '행정 구역']];
       function nm(l) { return l.name.replace(/\\n|\n/g, ' '); }
-      function li(a) { return a.map(function (x, k) { return '<li style="--i:' + k + '">' + esc(x) + '</li>'; }).join(''); }
-      function pane(d) {
-        if (tab === 'basic') {
-          return '<dl class="mdos__dl">' + d.basics.map(function (b, k) {
-            return '<div style="--i:' + k + '"><dt class="mono">' + esc(b[0]) + '</dt><dd>' + esc(b[1]) + '</dd></div>';
-          }).join('') + '</dl>';
-        }
-        if (tab === 'culture') {
-          return '<section class="mdos__blk"><h4><span class="mono">01</span>종교</h4><ul class="mdos__chips">' + li(d.religions) + '</ul></section>' +
-            '<section class="mdos__blk"><h4><span class="mono">02</span>전통 식품 · 특산물</h4>' +
-            '<p class="mono mdos__sub">생식품</p><ul class="mdos__chips">' + li(d.foods.raw) + '</ul>' +
-            '<p class="mono mdos__sub">조리된 식품</p><ul class="mdos__chips">' + li(d.foods.cooked) + '</ul></section>' +
-            '<section class="mdos__blk"><h4><span class="mono">03</span>언어</h4><dl class="mdos__dl mdos__dl--sm">' + d.languages.map(function (b, k) {
-              return '<div style="--i:' + k + '"><dt class="mono">' + esc(b[0]) + '</dt><dd>' + esc(b[1]) + '</dd></div>';
-            }).join('') + '</dl></section>';
-        }
-        var n = d.regions.reduce(function (a, r) { return a + r.districts.length; }, 0);
-        return '<p class="mono mdos__sum"><b class="gold">' + n + '</b> Districts · <b class="gold">' + d.regions.length + '</b> Regions</p>' +
-          d.regions.map(function (r) {
-            return '<section class="mdos__reg"><h4><span class="mono">' + esc(r.en) + '</span>' + esc(r.name) + '<small class="mono">' + r.districts.length + '</small></h4><ol>' +
-              r.districts.map(function (x, k) {
-                var head = '<span class="mono gold">' + String(x.no).padStart(2, '0') + '</span><b>' + esc(x.name) + '</b>' + (x.tag ? '<em class="mono">' + esc(x.tag) + '</em>' : '');
-                if (!x.loc && !x.buildings) return '<li style="--i:' + k + '"><div class="mdos__row">' + head + '</div></li>';
-                return '<li style="--i:' + k + '"><details class="mdos__row is-more"><summary>' + head + '<i aria-hidden="true"></i></summary>' +
-                  '<dl class="mdos__dl mdos__dl--sm">' + (x.loc ? '<div><dt class="mono">위치</dt><dd>' + esc(x.loc) + '</dd></div>' : '') +
-                  (x.geo ? '<div><dt class="mono">지리</dt><dd>' + esc(x.geo) + '</dd></div>' : '') + '</dl>' +
-                  (x.buildings ? '<p class="mono mdos__sub">건물</p><ul class="mdos__chips">' + li(x.buildings) + '</ul>' : '') + '</details></li>';
-              }).join('') + '</ol></section>';
-          }).join('');
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      /* ── 해독 (떡밥 연출): 가림막 → 뒤섞인 기호 → 진짜 글자 ──
+         진짜 글자(.dc-t)는 늘 자리를 잡고 있고 기호(.dc-x)만 그 위에 겹친다 → 줄이 흔들리지 않고 화면 낭독기는 진짜 글자를 읽는다.
+         rAF 하나가 전부 돌리고, 스크롤 영역에 들어온 것만 해독하며, 동시에 10개까지. 무거우면 남은 것을 한 번에 끝낸다. */
+      var GLY = '▚▞▙▟░▒#/\\<>01';
+      function D(t, cls) { var s = esc(t); return '<span class="dc' + (reduce ? '' : ' is-mask') + (cls ? ' ' + cls : '') + '"><span class="dc-t">' + s + '</span><span class="dc-x" aria-hidden="true"></span></span>'; }
+      var Dec = {
+        q: [], act: [], raf: 0, last: 0, heavy: 0, tick: 0,
+        add: function (els, base) { var now = performance.now(), self = this; els.forEach(function (e, i) { if (e._q || !e.classList.contains('is-mask')) return; e._q = 1; e._s = now + (base || 0) + Math.min(i, 14) * 45; self.q.push(e); }); this.run(); },
+        run: function () { var self = this; if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(function (t) { self.frame(t); }); } },
+        frame: function (now) {
+          var self = this; this.raf = 0;
+          this.heavy = now - this.last > 70 ? this.heavy + 1 : 0; this.last = now;
+          if (this.heavy >= 3) return this.flush();
+          this.q.sort(function (a, b) { return a._s - b._s; });
+          while (this.act.length < 10 && this.q.length && this.q[0]._s <= now) { var e = this.q.shift(); if (!e.isConnected) continue; e._t0 = now; e._txt = e.firstChild.textContent; e._dur = Math.min(720, 260 + e._txt.length * 22); this.act.push(e); }
+          var draw = (this.tick++ & 1) === 0;
+          this.act = this.act.filter(function (e) {
+            if (!e.isConnected) return false;
+            var t = now - e._t0; if (t < 140) return true;
+            if (e.classList.contains('is-mask')) { e.classList.remove('is-mask'); e.classList.add('is-scr'); }
+            var p = (t - 140) / e._dur;
+            if (p >= 1) { self.done(e); return false; }
+            if (draw && e.classList.contains('is-scr')) { var s = e._txt, k = Math.floor(p * s.length), out = s.slice(0, k); for (var i = k; i < s.length; i++) out += s[i] === ' ' ? ' ' : GLY[(Math.random() * GLY.length) | 0]; e.lastChild.textContent = out; }
+            return true;
+          });
+          if (this.act.length || this.q.length) this.raf = requestAnimationFrame(function (t) { self.frame(t); });
+        },
+        done: function (e) { e.classList.remove('is-mask', 'is-scr'); e.lastChild.textContent = ''; },
+        flush: function () { var self = this; box.querySelectorAll('.dc.is-mask, .dc.is-scr').forEach(function (e) { self.done(e); }); this.q = []; this.act = []; cancelAnimationFrame(this.raf); this.raf = 0; },
+        reset: function () { this.q = []; this.act = []; cancelAnimationFrame(this.raf); this.raf = 0; }
+      };
+      RSC.on(document, 'visibilitychange', function () { if (document.hidden) Dec.flush(); });
+
+      function full(d) {
+        var all = []; d.regions.forEach(function (r) { r.districts.forEach(function (x) { all.push(x); }); });
+        var key = all.filter(function (x) { return x.tag; }).sort(function (a, b) { return a.tag === '수도' ? -1 : b.tag === '수도' ? 1 : 0; });
+        var idx = d.regions.map(function (r) {
+          return '<span class="mdos__rl mono">' + esc(r.name) + '</span>' + r.districts.map(function (x) {
+            var c = x.tag === '수도' ? ' is-cap' : x.tag ? ' is-hq' : '';
+            return '<button type="button" class="' + c.trim() + '" data-dist-go="' + x.no + '" aria-pressed="false" aria-label="' + x.no + '구 ' + esc(x.name) + (x.tag ? ' (' + esc(x.tag) + ')' : '') + '">' + x.no + '</button>';
+          }).join('') + new Array(9 - r.districts.length).join('<span></span>');
+        }).join('');
+        var regs = d.regions.map(function (r) {
+          return '<div class="mdos__reg"><div class="mdos__regh"><b>' + esc(r.name) + '</b><span class="mono">' + esc(r.en) + '</span><em class="mono">' + r.districts[0].no + '–' + r.districts[r.districts.length - 1].no + '구 · ' + r.districts.length + '</em></div>' +
+            r.districts.map(function (x) {
+              var more = x.loc || x.geo || x.buildings;
+              return '<div class="mdos__dist" data-dist="' + x.no + '"><button type="button" aria-expanded="false" data-dist-tg="' + x.no + '">' +
+                '<span class="mono mdos__no">' + pad(x.no) + '</span>' + D(x.name, 'mdos__dn') + (x.tag ? '<span class="mono mdos__badge' + (x.tag === '수도' ? ' is-cap' : '') + '">' + esc(x.tag) + '</span>' : '') + '<i aria-hidden="true"></i></button>' +
+                '<div class="mdos__dd" hidden>' + (more
+                  ? (x.loc ? '<div class="mdos__kv"><span class="mono">위치</span>' + D(x.loc) + '</div>' : '') + (x.geo ? '<div class="mdos__kv"><span class="mono">지리</span>' + D(x.geo) + '</div>' : '') +
+                    (x.buildings ? '<div class="mdos__kv"><span class="mono">건물</span><span>' + x.buildings.length + '개 시설</span></div><ol class="mdos__blds">' + x.buildings.map(function (b, i) { return '<li><span class="mono">B-' + pad(i + 1) + '</span>' + D(b) + '</li>'; }).join('') + '</ol>' : '')
+                  : '<p class="mdos__nodata">' + esc(r.name) + ' · ' + esc(r.en) + (x.tag ? ' · ' + esc(x.tag) : '') + ' — 세부 기록은 아직 해독되지 않았습니다.</p>') + '</div></div>';
+            }).join('') + '</div>';
+        }).join('');
+        function sec(id, n, ko, en, inner) { return '<section class="mdos__sec" data-sec="' + id + '"><div class="mdos__sech"><span class="mono">' + n + '</span><h4>' + ko + '</h4><em class="mono">' + en + '</em></div>' + inner + '</section>'; }
+        function list(a, pre) { return '<ul class="mdos__lst">' + a.map(function (x, i) { return '<li><span class="mono">' + pre + (i + 1) + '</span>' + D(x) + '</li>'; }).join('') + '</ul>'; }
+        return '<nav class="mdos__rail" aria-label="기록 목차">' + RAIL.map(function (r) { return '<button type="button" data-go="' + r[0] + '" title="' + r[2] + '" aria-label="' + r[2] + '"><span class="mono">' + r[1] + '</span></button>'; }).join('') + '</nav>' +
+          '<div class="mdos__scroll" data-scroll tabindex="0">' +
+          sec('basic', '01', '개요', 'Overview · ' + d.basics.length, '<dl class="mdos__facts">' + d.basics.map(function (b) { return '<div><dt class="mono">' + esc(b[0]) + '</dt><dd>' + D(b[1]) + '</dd></div>'; }).join('') + '</dl>' +
+            (key.length ? '<p class="mono mdos__subh">핵심 거점 · Key Sites</p><div class="mdos__keys">' + key.map(function (x) { return '<button type="button" data-dist-go="' + x.no + '"><b class="mono">' + pad(x.no) + '</b><span><em class="mono">' + esc(x.tag) + '</em>' + D(x.name) + '</span><i aria-hidden="true"></i></button>'; }).join('') + '</div>' : '')) +
+          sec('faith', '02', '종교', 'Faith · ' + d.religions.length, list(d.religions, '0')) +
+          sec('food', '03', '식량', 'Provisions · ' + (d.foods.raw.length + d.foods.cooked.length), '<p class="mono mdos__subh">생식품 · Raw ' + d.foods.raw.length + '</p>' + list(d.foods.raw, 'R') + '<p class="mono mdos__subh">조리된 식품 · Cooked ' + d.foods.cooked.length + '</p>' + list(d.foods.cooked, 'C')) +
+          sec('lang', '04', '언어', 'Language · ' + d.languages.length, '<ul class="mdos__lst mdos__lang">' + d.languages.map(function (b) { return '<li><span>' + esc(b[0]) + '</span>' + D(b[1]) + '</li>'; }).join('') + '</ul>') +
+          sec('admin', '05', '행정 구역', d.regions.length + ' Regions · ' + all.length + ' Districts', '<div class="mdos__idx" role="group" aria-label="구 색인">' + idx + '</div><p class="mono mdos__legend"><i></i>본부 · 수도 표시 — 번호를 누르면 그 구로 이동</p>' + regs) +
+          '</div>';
       }
-      function draw(again) {
-        var d = cur && DOS[nm(cur)], full = d && d.basics;
-        tabs.hidden = !full;
-        tabs.innerHTML = full ? TABS.map(function (t) { return '<button role="tab" data-dos-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') : '';
-        body.innerHTML = full ? pane(d) :
-          '<div class="mdos__empty"><p class="mono">' + (d ? 'Record Pending' : 'No Data') + '</p><strong>' + (d ? '기록 준비 중' : '정보 없음') + '</strong>' +
-          '<span>' + (d ? '이 지역의 세부 기록은 아직 정리되지 않았습니다.' : '접근 가능한 기록이 없습니다.') + '</span></div>';
-        body.scrollTop = 0;
-        body.classList.remove('is-swap'); void body.offsetWidth; body.classList.add('is-swap');
-        decode(body);
-        if (again) { box.classList.remove('is-scan'); void box.offsetWidth; box.classList.add('is-scan'); }
+      function empty(d) {
+        return '<div class="mdos__scroll" data-scroll tabindex="0"><div class="mdos__empty"><i></i><i class="m"></i><i class="s"></i><i class="m"></i>' +
+          '<strong>' + D(d ? '기록 준비 중' : '정보 없음') + '</strong><p>' + D(d ? '이 지역의 설정 기록은 편찬 중입니다. 공개될 때까지 열람이 봉인됩니다.' : '이 지역에 대해 확인된 기록이 없습니다.') + '</p>' +
+          '<span class="mono mdos__stamp">' + (d ? 'Sealed · In Preparation' : 'No Record') + '</span></div></div>';
       }
-      var decT = [];
-      function decode(root) {
-        decT.forEach(clearTimeout); decT = [];
+      function draw() {
+        var d = cur && DOS[nm(cur)], isFull = !!(d && d.basics);
+        if (io) io.disconnect(); if (spy) spy.disconnect(); Dec.reset();
+        body.classList.toggle('is-full', isFull);
+        body.innerHTML = isFull ? full(d) : empty(d);
+        var sc = body.querySelector('.mdos__scroll');
         if (reduce) return;
-        var els = root.querySelectorAll('.mdos__dl dd, .mdos__chips li, .mdos__row b, .mdos__empty strong, .mdos__empty span');
-        [].forEach.call(els, function (e, n) {
-          var txt = e.textContent; if (!txt.trim()) return;
-          e.classList.add('is-sealed');
-          decT.push(setTimeout(function () { e.classList.remove('is-sealed'); RSC.scramble(e, txt, Math.min(900, 280 + txt.length * 22)); }, 260 + Math.min(n, 28) * 60));
-        });
+        if (!isFull) { Dec.add([].slice.call(sc.querySelectorAll('.dc')), 420); return; }
+        /* 창 안에 들어온 글자만 해독 */
+        io = new IntersectionObserver(function (es) {
+          var vis = []; es.forEach(function (e) { if (e.isIntersecting) { vis.push(e.target); io.unobserve(e.target); } });
+          if (vis.length) Dec.add(vis, 0);
+        }, { root: sc, rootMargin: '0px 0px 40px 0px' });
+        setTimeout(function () { if (sc.isConnected) sc.querySelectorAll('.dc.is-mask').forEach(function (e) { io.observe(e); }); }, 420);
+        /* 목차: 지금 읽는 장 표시 + 관측 고리 바늘 */
+        var rail = body.querySelectorAll('[data-go]');
+        function mark(id) {
+          rail.forEach(function (b) { b.setAttribute('aria-current', b.dataset.go === id ? 'true' : 'false'); });
+          var k = RAIL.findIndex(function (r) { return r[0] === id; });
+          box.style.setProperty('--ring', (k * 72) + 'deg');
+          $('[data-dos-sec]').textContent = RAIL[k][1] + ' · ' + RAIL[k][2];
+        }
+        mark('basic');
+        spy = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) mark(e.target.dataset.sec); }); }, { root: sc, rootMargin: '0px 0px -70% 0px' });
+        sc.querySelectorAll('.mdos__sec').forEach(function (s) { spy.observe(s); });
       }
+      function scrollTo(el) {
+        var sc = body.querySelector('.mdos__scroll'); if (!sc || !el) return;
+        sc.scrollTo({ top: sc.scrollTop + el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 12, behavior: reduce ? 'auto' : 'smooth' });
+      }
+      function pick(no, jump) {
+        body.querySelectorAll('.mdos__dist').forEach(function (d) {
+          var on = d.dataset.dist === String(no) && (jump || !d.classList.contains('is-sel'));
+          d.classList.toggle('is-sel', on); d.querySelector('.mdos__dd').hidden = !on;
+          d.querySelector('[data-dist-tg]').setAttribute('aria-expanded', on);
+        });
+        body.querySelectorAll('.mdos__idx [data-dist-go]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.distGo === String(no) && !!body.querySelector('.mdos__dist.is-sel[data-dist="' + no + '"]')); });
+        if (jump) scrollTo(body.querySelector('.mdos__dist[data-dist="' + no + '"]'));
+      }
+      body.addEventListener('click', function (e) {
+        var g = e.target.closest('[data-go]'); if (g) return scrollTo(body.querySelector('[data-sec="' + g.dataset.go + '"]'));
+        var j = e.target.closest('[data-dist-go]'); if (j) return pick(+j.dataset.distGo, true);
+        var t = e.target.closest('[data-dist-tg]'); if (t) return pick(+t.dataset.distTg, false);
+      });
       function show(l) {
         clearTimeout(timer);
-        if (!l) { decT.forEach(clearTimeout); decT = []; if (!box.hidden) { box.classList.remove('is-open'); timer = setTimeout(function () { box.hidden = true; }, reduce ? 0 : 420); } cur = null; return; }
+        if (!l) { Dec.reset(); if (io) io.disconnect(); if (spy) spy.disconnect(); if (!box.hidden) { box.classList.remove('is-open'); timer = setTimeout(function () { box.hidden = true; }, reduce ? 0 : 420); } cur = null; return; }
         var first = box.hidden || !box.classList.contains('is-open');
-        cur = l; tab = 'basic';
+        cur = l;
         var d = DOS[nm(l)];
         $('[data-dos-code]').textContent = 'Dossier / ' + (d ? (d.basics ? 'Open' : 'Pending') : 'Sealed');
         $('[data-dos-name]').textContent = nm(l);
         $('[data-dos-en]').textContent = d && d.en ? d.en : '— —';
+        $('[data-dos-sec]').textContent = d && d.basics ? '01 · 개요' : (d ? '열람 봉인' : '기록 없음');
         box.classList.toggle('is-full', !!(d && d.basics));
         box.style.setProperty('--c', l.color || 'var(--gold-300)');
+        box.style.setProperty('--ring', '0deg');
         box.hidden = false; void box.offsetWidth; box.classList.add('is-open');
-        if (first && !reduce) { box.classList.remove('is-unfold'); void box.offsetWidth; box.classList.add('is-unfold'); }
+        if (!reduce) { box.classList.remove('is-unfold'); void box.offsetWidth; box.classList.add('is-unfold'); }
         if (!reduce) RSC.scramble($('[data-dos-name]'), nm(l), 700);
-        draw(!first);
+        draw();
+        if (!first) { box.classList.remove('is-scan'); void box.offsetWidth; box.classList.add('is-scan'); }
       }
-      tabs.addEventListener('click', function (e) {
-        var b = e.target.closest('[data-dos-tab]'); if (!b || b.dataset.dosTab === tab) return;
-        tab = b.dataset.dosTab; draw(false);
-      });
-      tabs.addEventListener('keydown', function (e) {
-        var k = { ArrowLeft: -1, ArrowRight: 1 }[e.key]; if (!k) return;
-        var i = TABS.findIndex(function (t) { return t[0] === tab; }); i = (i + k + TABS.length) % TABS.length;
-        tab = TABS[i][0]; draw(false); tabs.querySelector('[data-dos-tab="' + tab + '"]').focus();
-      });
       $('[data-dos-close]').addEventListener('click', closeDos);
       box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeDos(); } });
       return { show: show, width: function () { return box.hidden || !box.classList.contains('is-open') ? 0 : box.offsetWidth; } };
@@ -752,7 +810,7 @@
       if (loading) return loading;
       host.classList.add('is-loading');
       var base = new URL('assets/js/', document.baseURI).href;
-      loading = import(base + 'map3d.js?v=2.14.0').then(function (mod) {
+      loading = import(base + 'map3d.js?v=2.15.0').then(function (mod) {
         m3d = mod.create(host, {
           reduce: reduce, info: info,
           onLost: function () {
