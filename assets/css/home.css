@@ -295,3 +295,117 @@
 /* 지도를 끌어도 글자·그림이 선택되거나 끌려 나오지 않게 */
 .mapbox, .mapbox * { -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
 .mapview.is-drag, .mapview.is-drag * { cursor: grabbing; }
+
+/* ── 지도: 국가 기록 창 ─────────────────────── */
+.mdos {
+  --c: var(--gold-300);
+  position: absolute; z-index: 6; top: 0; right: 0; bottom: 0; width: min(420px, 46%);
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr);
+  background: linear-gradient(180deg, rgba(23, 20, 15, .97), rgba(8, 7, 5, .97));
+  border-left: 1px solid var(--gold-500); box-shadow: -24px 0 48px rgba(0, 0, 0, .55);
+  clip-path: inset(0 0 0 100%); opacity: 0;
+  transition: clip-path .62s var(--ease), opacity .3s;
+}
+.mdos.is-open { clip-path: inset(0); opacity: 1; }
+.mdos, .mdos * { -webkit-user-select: text; user-select: text; }
+.mdos::before {                                       /* 국가색 띠 + 눈금 */
+  content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 3px;
+  background: repeating-linear-gradient(var(--c) 0 18px, transparent 18px 26px);
+}
+.mdos__scan { position: absolute; left: 0; right: 0; top: 0; height: 2px; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, transparent, var(--gold-100), transparent); box-shadow: 0 0 18px var(--gold-300); }
+.mdos.is-open .mdos__scan, .mdos.is-scan .mdos__scan { animation: dosScan .9s var(--ease) .12s both; }
+@keyframes dosScan { 0% { top: 0; opacity: 1; } 90% { opacity: .8; } 100% { top: 100%; opacity: 0; } }
+
+.mdos__head { position: relative; padding: 20px 56px 14px 24px; border-bottom: 1px solid var(--line); }
+.mdos__code { font-size: var(--t-label); letter-spacing: .16em; text-transform: uppercase; color: var(--gold-500); }
+.mdos__head h3 { margin-top: 6px; font-family: var(--serif); font-size: var(--t-h3); font-weight: 900; line-height: 1.2; color: var(--ink); }
+.mdos__head h3::after { content: ""; display: block; width: 40px; height: 2px; margin-top: 10px; background: var(--c); }
+.mdos__en { margin-top: 8px; font-size: var(--t-label); letter-spacing: .32em; color: var(--ink-dim); }
+.mdos__x { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; display: grid; place-items: center;
+  border: 1px solid var(--line); color: var(--gold-300); font-size: 22px; line-height: 1; transition: background .3s, color .3s, rotate .5s var(--ease); }
+.mdos__x:hover { background: var(--gold-300); color: var(--void); rotate: 90deg; }
+
+.mdos__tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line); }
+.mdos__tabs[hidden] { display: none; }
+.mdos__tabs button { position: relative; min-height: 44px; padding: 0 8px; font-size: var(--t-meta); color: var(--ink-dim); transition: color .3s, background .3s; }
+.mdos__tabs button + button { border-left: 1px solid var(--line-soft); }
+.mdos__tabs button::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--gold-300); scale: 0 1; transition: scale .5s var(--ease); }
+.mdos__tabs button:hover { color: var(--ink); }
+.mdos__tabs button[aria-selected="true"] { color: var(--gold-100); background: rgba(212, 167, 58, .06); }
+.mdos__tabs button[aria-selected="true"]::after { scale: 1 1; }
+
+.mdos__body { overflow-y: auto; overscroll-behavior: contain; padding: 18px 24px 28px; scrollbar-width: thin; scrollbar-color: var(--gold-700) transparent; }
+.mdos__body:focus-visible { outline-offset: -3px; }
+.mdos__body.is-swap > *, .mdos__body.is-swap li, .mdos__body.is-swap .mdos__dl > div { animation: dosIn .56s var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes dosIn { from { opacity: 0; translate: 14px 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; translate: 0; clip-path: inset(0); } }
+
+.mdos__dl { display: grid; gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); }
+.mdos__dl > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 12px 14px; background: var(--obsidian); }
+.mdos__dl dt { font-size: var(--t-label); letter-spacing: .1em; color: var(--gold-500); padding-top: 3px; }
+.mdos__dl dd { font-size: var(--t-body); line-height: 1.5; color: var(--ink); word-break: keep-all; }
+.mdos__dl--sm > div { padding: 9px 12px; }
+
+.mdos__blk + .mdos__blk { margin-top: 24px; }
+.mdos__blk h4, .mdos__reg h4 { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; font-size: var(--t-lead); font-weight: 600; color: var(--ink); }
+.mdos__blk h4 .mono, .mdos__reg h4 .mono { font-size: var(--t-label); letter-spacing: .14em; color: var(--gold-500); }
+.mdos__sub { margin: 12px 0 6px; font-size: var(--t-label); letter-spacing: .14em; color: var(--ink-dim); }
+.mdos__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mdos__chips li { padding: 5px 10px; border: 1px solid var(--line); background: rgba(212, 167, 58, .05); font-size: var(--t-meta); color: var(--ink); }
+
+.mdos__sum { margin-bottom: 16px; font-size: var(--t-label); letter-spacing: .14em; color: var(--ink-dim); }
+.mdos__reg + .mdos__reg { margin-top: 22px; }
+.mdos__reg h4 small { margin-left: auto; font-size: var(--t-label); color: var(--ink-dim); }
+.mdos__reg ol { display: grid; gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); }
+.mdos__reg li { background: var(--obsidian); }
+.mdos__row { display: block; }
+.mdos__row:not(details), .mdos__row summary { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto; gap: 10px; align-items: baseline; padding: 10px 14px; min-height: 44px; }
+.mdos__row .mono.gold { font-size: var(--t-label); }
+.mdos__row b { font-weight: 500; font-size: var(--t-body); color: var(--ink); word-break: keep-all; }
+.mdos__row em { font-style: normal; font-size: var(--t-label); letter-spacing: .1em; padding: 1px 7px; background: var(--gold-300); color: var(--void); }
+.mdos__row summary { cursor: pointer; list-style: none; transition: background .3s; }
+.mdos__row summary::-webkit-details-marker { display: none; }
+.mdos__row summary:hover { background: var(--basalt); }
+.mdos__row summary i { width: 9px; height: 9px; border-right: 1px solid var(--gold-300); border-bottom: 1px solid var(--gold-300); rotate: 45deg; translate: 0 -2px; transition: rotate .4s var(--ease); }
+.mdos__row[open] summary i { rotate: 225deg; translate: 0 2px; }
+.mdos__row[open] summary { background: var(--basalt); }
+.mdos__row[open] > :not(summary) { margin: 0 14px; animation: dosIn .5s var(--ease) both; }
+.mdos__row[open] > :last-child { margin-bottom: 14px; }
+.mdos__row[open] .mdos__dl { margin-top: 10px; }
+
+.mdos__empty { display: grid; gap: 8px; padding: 28px 18px; border: 1px dashed var(--line); text-align: center; }
+.mdos__empty .mono { font-size: var(--t-label); letter-spacing: .3em; text-transform: uppercase; color: var(--gold-500); }
+.mdos__empty strong { font-family: var(--serif); font-size: var(--t-sub); color: var(--ink); }
+.mdos__empty span { font-size: var(--t-meta); color: var(--ink-dim); }
+.mdos:not(.is-full) { bottom: auto; }                 /* 내용이 없는 곳은 짧은 카드로 */
+
+/* 목록: 기록이 있는 나라 표시 */
+.maplist button .mono:last-child { letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); }
+.maplist button.has-dos .mono:last-child { color: var(--gold-300); }
+
+@media (max-width: 900px) {
+  .mdos { width: min(380px, 62%); }
+}
+@media (max-width: 600px) {
+  .mdos { left: 0; width: auto; border-left: 0; border-top: 1px solid var(--gold-500); }
+  .mdos::before { left: 0; right: 0; top: -1px; bottom: auto; width: auto; height: 3px; background: repeating-linear-gradient(90deg, var(--c) 0 18px, transparent 18px 26px); }
+  .mdos { clip-path: inset(100% 0 0 0); }
+  .mdos.is-open { clip-path: inset(0); }
+  .mdos__head { padding: 16px 56px 12px 16px; }
+  .mdos__body { padding: 14px 16px 22px; }
+  .mdos__dl > div { grid-template-columns: 78px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mdos, .mdos__tabs button::after, .mdos__x { transition: none; }
+  .mdos__scan { display: none; }
+  .mdos__body.is-swap > *, .mdos__body.is-swap li, .mdos__body.is-swap .mdos__dl > div, .mdos__row[open] > :not(summary) { animation: none; }
+}
+.maplist button { min-width: 0; }
+/* 좁은 두 칸 목록: 번호를 이름 위로 올려 긴 나라 이름이 중간에서 끊기지 않게 */
+.maplist button { grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; padding: 7px 10px; min-height: 0; }
+.maplist button .mono:last-child { grid-column: 2; grid-row: 1; justify-self: end; font-size: 10px; }
+.maplist button strong { grid-column: 1 / -1; grid-row: 2; }
+.maplist button strong { min-width: 0; font-size: 15px; letter-spacing: -.01em; word-break: keep-all; overflow-wrap: break-word; }
+/* 지도 상자가 왼쪽 목록 때문에 길어져도 지도 그림이 아래까지 채운다 */
+.mapbox { display: flex; flex-direction: column; }
+.mapview { flex: 1 1 auto; height: auto; min-height: min(72vh, 680px); }
