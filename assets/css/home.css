@@ -793,3 +793,9 @@ span.dc { display: inline-block; max-width: 100%; vertical-align: top; }
 .wld__fx.is-in { opacity: 1; }
 .wld__card:not(.is-on) .wld__fx { opacity: 0; }
 .wld__cno, .wld__cap { z-index: 1; }
+/* 고른 카드 덮개: 비네트(::after) + 필름 입자(::before, 아주 옅게). 캔버스 밖에서 GPU가 합성한다 */
+.wld__card.is-on button::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 55%, rgba(0, 0, 0, .7)); }
+.wld__card.is-on button::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: var(--wld-grain, none) 0 0 / 128px 128px; opacity: .05; mix-blend-mode: screen; }
+.wld__cno, .wld__cap { z-index: 2; }
