@@ -562,21 +562,35 @@
     }
     /* 처음에는 바다 한가운데를 가깝게: 주변 나라는 직접 끌어서 찾아본다 */
     function reset() { var r = size(); if (!r.width) return; st.z = zmin * 2.4; st.x = r.width / 2 - 1000 * K * st.z; st.y = r.height / 2 - 600 * K * st.z; apply(); }
-    function select(i, move) {
+    /* 3D에서는 두 단계: 나라를 고르면 3D 현판 + [세부정보 보기], 그 버튼을 누르면(detail) 기록 창이 열린다.
+       2D에서는 바로 기록 창. */
+    function select(i, move, detail) {
       sel = i;
       world.querySelectorAll('[data-lab]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.lab === i); });
       document.querySelectorAll('[data-loc]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.loc === i); });
-      dos.show(L[i] && L[i].kind !== 'sea' ? L[i] : null);
+      var land = !!L[i] && L[i].kind !== 'sea', staged = mode === '3d' && !!m3d;
+      dos.show(land && (!staged || detail) ? L[i] : null);
       /* 기록 창이 지도 오른쪽을 가리면, 남은 왼쪽 영역의 가운데로 옮긴다 */
       var pw = dos.width(), vw = size().width, ox = pw && pw < vw * .7 ? -pw / 2 : 0;
       if (move && L[i] && mode === '2d') fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45), ox);
       if (m3d) {
         var k = TI[i] == null ? -1 : TI[i];
         m3d.select(k, L[i] && L[i].color);
-        if (move && k >= 0 && mode === '3d') m3d.focus(k, -ox);
+        if (staged) {
+          if (k >= 0) { m3d.title(k, plaqueInfo(i)); m3d.lift(!!detail); } else m3d.hideTitle();
+          if (move && k >= 0) m3d.focus(k, -ox);
+        } else m3d.hideTitle();
       }
-      box.classList.toggle('has-dos', i >= 0 && !!L[i] && L[i].kind !== 'sea');
+      box.classList.toggle('has-dos', dos.width() > 0);
     }
+    /* 기록 창 닫기: 3D에서는 현판 단계로 돌아가고, 2D에서는 선택을 푼다 */
+    function closeDos() { if (mode === '3d' && m3d && sel >= 0) select(sel, false); else select(-1); }
+    function plaqueInfo(i) {
+      var l = L[i], d = DOS[nm2(l)];
+      return { name: nm2(l), en: d && d.en, color: l.color, code: info(TI[i]).code,
+        status: d ? (d.basics ? 'Dossier Open' : 'Record Pending') : 'Sealed · No Data' };
+    }
+    function nm2(l) { return (l.name || '').replace(/\\n|\n/g, ' '); }
 
     /* ── 국가 기록 창 ── */
     var dos = (function () {
@@ -622,11 +636,23 @@
           '<span>' + (d ? '이 지역의 세부 기록은 아직 정리되지 않았습니다.' : '접근 가능한 기록이 없습니다.') + '</span></div>';
         body.scrollTop = 0;
         body.classList.remove('is-swap'); void body.offsetWidth; body.classList.add('is-swap');
+        decode(body);
         if (again) { box.classList.remove('is-scan'); void box.offsetWidth; box.classList.add('is-scan'); }
+      }
+      var decT = [];
+      function decode(root) {
+        decT.forEach(clearTimeout); decT = [];
+        if (reduce) return;
+        var els = root.querySelectorAll('.mdos__dl dd, .mdos__chips li, .mdos__row b, .mdos__empty strong, .mdos__empty span');
+        [].forEach.call(els, function (e, n) {
+          var txt = e.textContent; if (!txt.trim()) return;
+          e.classList.add('is-sealed');
+          decT.push(setTimeout(function () { e.classList.remove('is-sealed'); RSC.scramble(e, txt, Math.min(900, 280 + txt.length * 22)); }, 260 + Math.min(n, 28) * 60));
+        });
       }
       function show(l) {
         clearTimeout(timer);
-        if (!l) { if (!box.hidden) { box.classList.remove('is-open'); timer = setTimeout(function () { box.hidden = true; }, reduce ? 0 : 420); } cur = null; return; }
+        if (!l) { decT.forEach(clearTimeout); decT = []; if (!box.hidden) { box.classList.remove('is-open'); timer = setTimeout(function () { box.hidden = true; }, reduce ? 0 : 420); } cur = null; return; }
         var first = box.hidden || !box.classList.contains('is-open');
         cur = l; tab = 'basic';
         var d = DOS[nm(l)];
@@ -636,6 +662,8 @@
         box.classList.toggle('is-full', !!(d && d.basics));
         box.style.setProperty('--c', l.color || 'var(--gold-300)');
         box.hidden = false; void box.offsetWidth; box.classList.add('is-open');
+        if (first && !reduce) { box.classList.remove('is-unfold'); void box.offsetWidth; box.classList.add('is-unfold'); }
+        if (!reduce) RSC.scramble($('[data-dos-name]'), nm(l), 700);
         draw(!first);
       }
       tabs.addEventListener('click', function (e) {
@@ -647,9 +675,9 @@
         var i = TABS.findIndex(function (t) { return t[0] === tab; }); i = (i + k + TABS.length) % TABS.length;
         tab = TABS[i][0]; draw(false); tabs.querySelector('[data-dos-tab="' + tab + '"]').focus();
       });
-      $('[data-dos-close]').addEventListener('click', function () { select(-1); });
-      box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); select(-1); } });
-      return { show: show, width: function () { return box.hidden ? 0 : box.offsetWidth; } };
+      $('[data-dos-close]').addEventListener('click', closeDos);
+      box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closeDos(); } });
+      return { show: show, width: function () { return box.hidden || !box.classList.contains('is-open') ? 0 : box.offsetWidth; } };
     })();
 
     view.addEventListener('pointerdown', function (e) {
@@ -724,7 +752,7 @@
       if (loading) return loading;
       host.classList.add('is-loading');
       var base = new URL('assets/js/', document.baseURI).href;
-      loading = import(base + 'map3d.js?v=2.13.0').then(function (mod) {
+      loading = import(base + 'map3d.js?v=2.14.0').then(function (mod) {
         m3d = mod.create(host, {
           reduce: reduce, info: info,
           onLost: function () {
@@ -732,6 +760,7 @@
             setTimeout(function () { setMode('2d'); }, 1800);
           },
           onPick: function (k) { select(TL[k], true); },
+          onDetail: function (k) { select(TL[k], true, true); },
           onCam: function (c, home) {
             $('[data-mx]').textContent = String(Math.round(((c.az * 180 / Math.PI) % 360 + 360) % 360)).padStart(3, '0') + '°';
             $('[data-my]').textContent = String(Math.round(c.el * 180 / Math.PI)).padStart(2, '0') + '°';
