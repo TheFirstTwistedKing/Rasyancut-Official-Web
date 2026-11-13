@@ -51,8 +51,7 @@ window.RSC_DATA = {
     { name: '인페르누스\n공화국', x: 752, y: 192, kind: 'nation', color: '#5a2f2a' },
     { name: '스텔루비아', x: 880, y: 232, kind: 'nation', color: '#7b5fa0', rot: -58 },
     { name: '추풍', x: 862, y: 392, kind: 'nation', color: '#8a6a42' },
-    { name: '미정', x: 1082, y: 132, kind: 'unknown', rot: -62 },
-    { name: '미정', x: 1150, y: 208, kind: 'unknown', rot: -75 },
+    { name: '미정', x: 1118, y: 168, kind: 'unknown', rot: -68 },
     { name: '겔루에테르누시아', x: 1110, y: 26, kind: 'region', color: '#2a5bd7' },
     { name: '아스트랄리스', x: 1366, y: 88, kind: 'nation', color: '#5a2ee0' },
     { name: '소버린\n아일랜드', x: 1862, y: 92, kind: 'nation', color: '#3f8fbf' },
@@ -140,6 +139,16 @@ window.RSC_DATA = {
   }),
 
   notices: [
+    {
+      title: 'Patch v-2.12.1',
+      date: '2026.11.13',
+      tag: '공지',
+      body: [
+        '3D 지도의 국경을 새로 올린 국경 지도의 색 그대로 다시 나눴습니다. 열두 나라의 영토가 국경 지도와 같아졌습니다.',
+        '두 개로 나뉘어 있던 「미정」 이름표를 하나로 합쳤습니다. 회색 땅 전체가 한 지역입니다.',
+        '겔루에테르누시아, 소버린 아일랜드, ???, 글라시카 에룰리아는 이름이 놓인 땅덩어리 전체를 영토로 표시합니다.'
+      ]
+    },
     {
       title: 'Patch v-2.12.0',
       date: '2026.11.13',
