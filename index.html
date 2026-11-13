@@ -9,14 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Noto+Serif+KR:wght@400;600;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/core.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/strips.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/home.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/deck.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/radio.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/auth.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/loader.css?v=2.10.0">
-<link rel="stylesheet" href="assets/css/military.css?v=2.10.0">
+<link rel="stylesheet" href="assets/css/core.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/strips.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/home.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/deck.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/radio.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/auth.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/loader.css?v=2.11.0">
+<link rel="stylesheet" href="assets/css/military.css?v=2.11.0">
 </head>
 <body>
 <div class="boot" data-boot role="progressbar" aria-label="불러오는 중" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -60,10 +60,10 @@
   <section class="sec home" id="home">
     <!-- 임시 일러스트: 3초마다 순서대로. 각 그림은 자기 비율 그대로(잘리거나 늘어나지 않게) 보인다 -->
     <div class="home__show" data-show aria-hidden="true">
-      <img src="assets/img/home/01.jpg?v=2.10.0" width="1920" height="1182" alt="" class="is-on" decoding="async">
-      <img src="assets/img/home/02.jpg?v=2.10.0" width="1920" height="1041" alt="" decoding="async">
-      <img src="assets/img/home/03.jpg?v=2.10.0" width="1920" height="1033" alt="" decoding="async">
-      <img src="assets/img/home/04.jpg?v=2.10.0" width="1920" height="1016" alt="" decoding="async">
+      <img src="assets/img/home/01.jpg?v=2.11.0" width="1920" height="1182" alt="" class="is-on" decoding="async">
+      <img src="assets/img/home/02.jpg?v=2.11.0" width="1920" height="1041" alt="" decoding="async">
+      <img src="assets/img/home/03.jpg?v=2.11.0" width="1920" height="1033" alt="" decoding="async">
+      <img src="assets/img/home/04.jpg?v=2.11.0" width="1920" height="1016" alt="" decoding="async">
     </div>
     <div class="home__title">
       <p class="mono gold rv">Official Archive</p>
@@ -148,6 +148,17 @@
         <button data-zoom="0" aria-label="처음 위치로" class="mono">RST</button>
       </div>
       <p class="mono mapbox__hint">Ctrl + Wheel : Zoom</p>
+      <aside class="mdos" data-dos hidden aria-label="국가 기록">
+        <i class="mdos__scan" aria-hidden="true"></i>
+        <header class="mdos__head">
+          <p class="mono mdos__code" data-dos-code></p>
+          <h3 data-dos-name></h3>
+          <p class="mono mdos__en" data-dos-en></p>
+          <button class="mdos__x" data-dos-close aria-label="기록 닫기"><span aria-hidden="true">×</span></button>
+        </header>
+        <nav class="mdos__tabs" role="tablist" aria-label="기록 구분" data-dos-tabs></nav>
+        <div class="mdos__body" data-dos-body data-scroll tabindex="0"></div>
+      </aside>
     </div>
     <ol class="maplist rv" style="--d:2" data-maplist></ol>
   </section>
@@ -257,11 +268,11 @@
 </main>
 
 <noscript><p style="padding:24px">이 사이트는 자바스크립트가 켜져 있어야 정상적으로 보입니다.</p></noscript>
-<script src="assets/js/data.js?v=2.10.0"></script>
-<script src="assets/js/core.js?v=2.10.0"></script>
-<script src="assets/js/radio.js?v=2.10.0"></script>
-<script src="assets/js/firebase-config.js?v=2.10.0"></script>
-<script src="assets/js/auth.js?v=2.10.0"></script>
-<script src="assets/js/home.js?v=2.10.0" data-page></script>
+<script src="assets/js/data.js?v=2.11.0"></script>
+<script src="assets/js/core.js?v=2.11.0"></script>
+<script src="assets/js/radio.js?v=2.11.0"></script>
+<script src="assets/js/firebase-config.js?v=2.11.0"></script>
+<script src="assets/js/auth.js?v=2.11.0"></script>
+<script src="assets/js/home.js?v=2.11.0" data-page></script>
 </body>
 </html>

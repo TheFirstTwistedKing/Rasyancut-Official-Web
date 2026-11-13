@@ -509,7 +509,7 @@
   var map = (function () {
     var view = $('[data-map]'), world = $('[data-world]'), K = 4, W = 2000 * K, H = 1125 * K;
     var st = { x: 0, y: 0, z: .3 }, zmin = .1, zmax = 1.4, ptr = new Map(), pinch = 0, anim = 0, sel = -1;
-    var L = D.mapLabels || [], SRC = 'assets/img/map/world.svg?v=1';
+    var L = D.mapLabels || [], DOS = D.dossiers || {}, SRC = 'assets/img/map/world.svg?v=1';
     var mini = $('[data-mini]'), miniBox = $('[data-mini-box]'), miniImg = $('[data-mini-img]');
 
     world.style.width = W + 'px'; world.style.height = H + 'px';
@@ -526,7 +526,8 @@
 
     var named = L.map(function (l, i) { return [l, i]; }).filter(function (p) { return p[0].kind === 'nation'; });
     $('[data-maplist]').innerHTML = named.map(function (p, k) {
-      return '<li><button data-loc="' + p[1] + '"><span class="mono gold">' + String(k + 1).padStart(2, '0') + '</span><strong>' + esc(p[0].name.replace(/\\n|\n/g, ' ')) + '</strong></button></li>';
+      var d = DOS[p[0].name], st = !d ? 'No Data' : Object.keys(d).length ? 'Dossier' : 'Pending';
+      return '<li><button data-loc="' + p[1] + '"' + (d ? ' class="has-dos"' : '') + '><span class="mono gold">' + String(k + 1).padStart(2, '0') + '</span><strong>' + esc(p[0].name.replace(/\\n|\n/g, ' ')) + '</strong><span class="mono">' + st + '</span></button></li>';
     }).join('');
 
     function size() { return view.getBoundingClientRect(); }
@@ -548,11 +549,11 @@
       z = Math.max(zmin, Math.min(zmax, z));
       st.x = cx - (cx - st.x) * (z / st.z); st.y = cy - (cy - st.y) * (z / st.z); st.z = z; apply();
     }
-    function fly(wx, wy, z) {
+    function fly(wx, wy, z, ox) {
       cancelAnimationFrame(anim);
       var r = size(), a = { x: st.x, y: st.y, z: st.z };
       z = Math.max(zmin, Math.min(zmax, z));
-      var b = { x: r.width / 2 - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = 1400;
+      var b = { x: r.width / 2 + (ox || 0) - wx * z, y: r.height / 2 - wy * z, z: z }, t0 = performance.now(), dur = 1400;
       (function step(now) {
         var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
         st.z = a.z + (b.z - a.z) * e; st.x = a.x + (b.x - a.x) * e; st.y = a.y + (b.y - a.y) * e; apply();
@@ -565,8 +566,85 @@
       sel = i;
       world.querySelectorAll('[data-lab]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.lab === i); });
       document.querySelectorAll('[data-loc]').forEach(function (p) { p.classList.toggle('is-on', +p.dataset.loc === i); });
-      if (move && L[i]) fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45));
+      dos.show(L[i] && L[i].kind !== 'sea' ? L[i] : null);
+      /* 기록 창이 지도 오른쪽을 가리면, 남은 왼쪽 영역의 가운데로 옮긴다 */
+      var pw = dos.width(), vw = size().width, ox = pw && pw < vw * .7 ? -pw / 2 : 0;
+      if (move && L[i]) fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45), ox);
     }
+
+    /* ── 국가 기록 창 ── */
+    var dos = (function () {
+      var box = $('[data-dos]'), body = $('[data-dos-body]'), tabs = $('[data-dos-tabs]'), cur = null, tab = 'basic', timer = 0;
+      var TABS = [['basic', '개요'], ['culture', '사회 · 문화'], ['district', '행정 구역']];
+      function nm(l) { return l.name.replace(/\\n|\n/g, ' '); }
+      function li(a) { return a.map(function (x, k) { return '<li style="--i:' + k + '">' + esc(x) + '</li>'; }).join(''); }
+      function pane(d) {
+        if (tab === 'basic') {
+          return '<dl class="mdos__dl">' + d.basics.map(function (b, k) {
+            return '<div style="--i:' + k + '"><dt class="mono">' + esc(b[0]) + '</dt><dd>' + esc(b[1]) + '</dd></div>';
+          }).join('') + '</dl>';
+        }
+        if (tab === 'culture') {
+          return '<section class="mdos__blk"><h4><span class="mono">01</span>종교</h4><ul class="mdos__chips">' + li(d.religions) + '</ul></section>' +
+            '<section class="mdos__blk"><h4><span class="mono">02</span>전통 식품 · 특산물</h4>' +
+            '<p class="mono mdos__sub">생식품</p><ul class="mdos__chips">' + li(d.foods.raw) + '</ul>' +
+            '<p class="mono mdos__sub">조리된 식품</p><ul class="mdos__chips">' + li(d.foods.cooked) + '</ul></section>' +
+            '<section class="mdos__blk"><h4><span class="mono">03</span>언어</h4><dl class="mdos__dl mdos__dl--sm">' + d.languages.map(function (b, k) {
+              return '<div style="--i:' + k + '"><dt class="mono">' + esc(b[0]) + '</dt><dd>' + esc(b[1]) + '</dd></div>';
+            }).join('') + '</dl></section>';
+        }
+        var n = d.regions.reduce(function (a, r) { return a + r.districts.length; }, 0);
+        return '<p class="mono mdos__sum"><b class="gold">' + n + '</b> Districts · <b class="gold">' + d.regions.length + '</b> Regions</p>' +
+          d.regions.map(function (r) {
+            return '<section class="mdos__reg"><h4><span class="mono">' + esc(r.en) + '</span>' + esc(r.name) + '<small class="mono">' + r.districts.length + '</small></h4><ol>' +
+              r.districts.map(function (x, k) {
+                var head = '<span class="mono gold">' + String(x.no).padStart(2, '0') + '</span><b>' + esc(x.name) + '</b>' + (x.tag ? '<em class="mono">' + esc(x.tag) + '</em>' : '');
+                if (!x.loc && !x.buildings) return '<li style="--i:' + k + '"><div class="mdos__row">' + head + '</div></li>';
+                return '<li style="--i:' + k + '"><details class="mdos__row is-more"><summary>' + head + '<i aria-hidden="true"></i></summary>' +
+                  '<dl class="mdos__dl mdos__dl--sm">' + (x.loc ? '<div><dt class="mono">위치</dt><dd>' + esc(x.loc) + '</dd></div>' : '') +
+                  (x.geo ? '<div><dt class="mono">지리</dt><dd>' + esc(x.geo) + '</dd></div>' : '') + '</dl>' +
+                  (x.buildings ? '<p class="mono mdos__sub">건물</p><ul class="mdos__chips">' + li(x.buildings) + '</ul>' : '') + '</details></li>';
+              }).join('') + '</ol></section>';
+          }).join('');
+      }
+      function draw(again) {
+        var d = cur && DOS[nm(cur)], full = d && d.basics;
+        tabs.hidden = !full;
+        tabs.innerHTML = full ? TABS.map(function (t) { return '<button role="tab" data-dos-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + '</button>'; }).join('') : '';
+        body.innerHTML = full ? pane(d) :
+          '<div class="mdos__empty"><p class="mono">' + (d ? 'Record Pending' : 'No Data') + '</p><strong>' + (d ? '기록 준비 중' : '정보 없음') + '</strong>' +
+          '<span>' + (d ? '이 지역의 세부 기록은 아직 정리되지 않았습니다.' : '접근 가능한 기록이 없습니다.') + '</span></div>';
+        body.scrollTop = 0;
+        body.classList.remove('is-swap'); void body.offsetWidth; body.classList.add('is-swap');
+        if (again) { box.classList.remove('is-scan'); void box.offsetWidth; box.classList.add('is-scan'); }
+      }
+      function show(l) {
+        clearTimeout(timer);
+        if (!l) { if (!box.hidden) { box.classList.remove('is-open'); timer = setTimeout(function () { box.hidden = true; }, reduce ? 0 : 420); } cur = null; return; }
+        var first = box.hidden || !box.classList.contains('is-open');
+        cur = l; tab = 'basic';
+        var d = DOS[nm(l)];
+        $('[data-dos-code]').textContent = 'Dossier / ' + (d ? (d.basics ? 'Open' : 'Pending') : 'Sealed');
+        $('[data-dos-name]').textContent = nm(l);
+        $('[data-dos-en]').textContent = d && d.en ? d.en : '— —';
+        box.classList.toggle('is-full', !!(d && d.basics));
+        box.style.setProperty('--c', l.color || 'var(--gold-300)');
+        box.hidden = false; void box.offsetWidth; box.classList.add('is-open');
+        draw(!first);
+      }
+      tabs.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-dos-tab]'); if (!b || b.dataset.dosTab === tab) return;
+        tab = b.dataset.dosTab; draw(false);
+      });
+      tabs.addEventListener('keydown', function (e) {
+        var k = { ArrowLeft: -1, ArrowRight: 1 }[e.key]; if (!k) return;
+        var i = TABS.findIndex(function (t) { return t[0] === tab; }); i = (i + k + TABS.length) % TABS.length;
+        tab = TABS[i][0]; draw(false); tabs.querySelector('[data-dos-tab="' + tab + '"]').focus();
+      });
+      $('[data-dos-close]').addEventListener('click', function () { select(-1); });
+      box.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); select(-1); } });
+      return { show: show, width: function () { return box.hidden ? 0 : box.offsetWidth; } };
+    })();
 
     view.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.mlab')) return;
@@ -600,6 +678,7 @@
       if (k) { e.preventDefault(); st.x += k[0]; st.y += k[1]; apply(); }
       if (e.key === '+' || e.key === '=') { var r = size(); zoomAt(r.width / 2, r.height / 2, st.z * 1.3); }
       if (e.key === '-') { var r2 = size(); zoomAt(r2.width / 2, r2.height / 2, st.z / 1.3); }
+      if (e.key === 'Escape' && sel >= 0) select(-1);
     });
     document.querySelectorAll('[data-zoom]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -768,18 +847,22 @@
     if (extra < 48) return false;
     return dy > 0 ? s.scrollTop + s.clientHeight < s.scrollHeight - 2 : s.scrollTop > 2;
   }
+  function innerScroll(t, dy) {                      /* 기록 창처럼 안쪽에서 따로 스크롤되는 영역 */
+    var el = t && t.closest && t.closest('[data-scroll]');
+    return !!el && el.scrollHeight - el.clientHeight >= 4;   /* 끝까지 읽어도 화면이 넘어가지 않게 */
+  }
   function overlayOpen() { return !!document.querySelector('.rpanel.is-open'); }
 
   addEventListener('wheel', function (e) {
     if (!deck || e.ctrlKey || overlayOpen() || Math.abs(e.deltaX) > Math.abs(e.deltaY) || !e.deltaY) return;
-    if (canScrollInside(e.deltaY)) return;            /* 구역 안 스크롤이 먼저 */
+    if (canScrollInside(e.deltaY) || innerScroll(e.target, e.deltaY)) return;            /* 구역 안 스크롤이 먼저 */
     e.preventDefault();
     if (!busy) goTo(cur + (e.deltaY > 0 ? 1 : -1));
   }, { passive: false });
   addEventListener('keydown', function (e) {
     if (!deck || overlayOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
     var t = e.target;
-    if (t.closest && t.closest('input, textarea, select, [contenteditable], .mapview')) return;
+    if (t.closest && t.closest('input, textarea, select, [contenteditable], .mapview, [data-scroll]')) return;
     var d = { PageDown: 1, ArrowDown: 1, ' ': 1, PageUp: -1, ArrowUp: -1 }[e.key];
     if (e.key === ' ' && t.closest && t.closest('button, a')) return;
     if (e.key === 'Home') { e.preventDefault(); return goTo(0); }
