@@ -724,7 +724,7 @@
       if (loading) return loading;
       host.classList.add('is-loading');
       var base = new URL('assets/js/', document.baseURI).href;
-      loading = import(base + 'map3d.js?v=2.12.0').then(function (mod) {
+      loading = import(base + 'map3d.js?v=2.12.1').then(function (mod) {
         m3d = mod.create(host, {
           reduce: reduce, info: info,
           onPick: function (k) { select(TL[k], true); },

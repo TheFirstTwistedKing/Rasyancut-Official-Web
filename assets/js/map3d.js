@@ -3,7 +3,7 @@
    흑요석 기둥 + 금박 테두리, 선택한 나라만 그 나라 색으로 솟아오른다.
    home.js 가 필요할 때(3D 스위치를 처음 켰을 때)만 불러온다. */
 import * as THREE from './vendor/three.module.min.js';
-import DATA from './map3d-data.js';
+import DATA from './map3d-data.js?v=2.12.1';
 
 var U = 1 / 40;                                  /* 지도 1px → 3D 단위 */
 var BASE = -0.4;                                 /* 바다 면 높이 */
