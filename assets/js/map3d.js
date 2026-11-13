@@ -344,9 +344,128 @@ export function create(host, opt) {
     }
     flyTo(g);
   }
-  function clear() { select(null); }
+  function clear() { select(null); hideTitle(); }
   function reset() { clear(); flyTo(Object.assign({}, HOME)); }
   function zoom(d) { goal = null; flyTo(Object.assign({}, cam, { dist: Math.max(DMIN, Math.min(DMAX, cam.dist * (d > 0 ? 1 / 1.5 : 1.5))) }), 600); }
+
+  /* ── 3D 현판: 고른 나라의 이름이 금빛 광선 위로 아래에서부터 스캔되며 떠오른다 ── */
+  var PW = 6.6, PH = PW * 400 / 1024;
+  var plaqueMat = new THREE.ShaderMaterial({
+    uniforms: { uMap: { value: null }, uReveal: { value: 0 }, uTime: uni.uTime, uColor: { value: new THREE.Color('#f2d27a') } },
+    transparent: true, depthTest: false, depthWrite: false,
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: [
+      'uniform sampler2D uMap; uniform float uReveal, uTime; uniform vec3 uColor; varying vec2 vUv;',
+      'void main(){',
+      '  vec4 c = texture2D(uMap, vUv);',
+      '  float edge = uReveal * 1.1 - 0.05;',
+      '  float shown = step(vUv.y, edge);',
+      '  float line = smoothstep(0.025, 0.0, abs(vUv.y - edge)) * (1.0 - step(0.999, uReveal));',
+      '  float flick = 0.94 + 0.06 * sin(uTime * 6.0 + vUv.y * 60.0);',
+      '  vec3 col = c.rgb * flick + vec3(1.0, 0.88, 0.55) * line;',
+      '  gl_FragColor = vec4(col, max(c.a * shown, line * 0.95));',
+      '}'
+    ].join('\n')
+  });
+  var plaque = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), plaqueMat);
+  plaque.renderOrder = 20; plaque.visible = false; scene.add(plaque);
+  var beamMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: uni.uTime, uA: { value: 0 }, uColor: plaqueMat.uniforms.uColor },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform float uTime, uA; uniform vec3 uColor; varying vec2 vUv; void main(){ float x = abs(vUv.x - 0.5) * 2.0; float core = pow(1.0 - x, 3.0); float flow = 0.55 + 0.45 * sin(vUv.y * 26.0 - uTime * 5.0); vec3 c = mix(vec3(0.95, 0.82, 0.48), uColor, 0.4); gl_FragColor = vec4(c * core * flow * uA * (0.4 + 0.6 * vUv.y), 1.0); }'
+  });
+  var beam = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 1), beamMat);
+  beam.renderOrder = 19; beam.visible = false; scene.add(beam);
+  var cta = document.createElement('button');
+  cta.type = 'button'; cta.className = 'm3d__cta'; cta.hidden = true;
+  cta.innerHTML = '<span class="mono" data-cta-k></span><b>세부정보 보기</b><i aria-hidden="true"></i>';
+  host.appendChild(cta);
+  var plq = { k: -1, t0: 0, out: false, outT0: 0, lift: 0, liftTo: 0, info: null };
+  cta.addEventListener('click', function (e) { e.stopPropagation(); if (plq.k >= 0 && opt.onDetail) opt.onDetail(plq.k); });
+  cta.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+
+  var MONO = '"Barlow Condensed", ui-monospace, monospace', SERIF = '"Noto Serif KR", serif';
+  function drawPlaque(info) {
+    var cv = document.createElement('canvas'), w2 = 1024, h2 = 400; cv.width = w2; cv.height = h2;
+    var g = cv.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, 0, h2); bg.addColorStop(0, 'rgba(23,20,15,.94)'); bg.addColorStop(1, 'rgba(5,5,5,.9)');
+    g.fillStyle = bg; g.fillRect(0, 0, w2, h2);
+    g.strokeStyle = 'rgba(212,167,58,.5)'; g.lineWidth = 2; g.strokeRect(16, 16, w2 - 32, h2 - 32);
+    g.strokeStyle = '#f2d27a'; g.lineWidth = 5;                       /* 모서리 꺾쇠 */
+    [[16, 16, 1, 1], [w2 - 16, 16, -1, 1], [16, h2 - 16, 1, -1], [w2 - 16, h2 - 16, -1, -1]].forEach(function (c) {
+      g.beginPath(); g.moveTo(c[0] + c[2] * 46, c[1]); g.lineTo(c[0], c[1]); g.lineTo(c[0], c[1] + c[3] * 46); g.stroke();
+    });
+    g.fillStyle = info.color || '#f2d27a'; g.fillRect(16, 16, 10, h2 - 32);  /* 국가색 띠 */
+    g.textBaseline = 'alphabetic';
+    g.font = '600 32px ' + MONO; g.fillStyle = '#d4a73a';
+    if ('letterSpacing' in g) g.letterSpacing = '6px';
+    g.fillText((info.code || '') + '   /   ' + (info.status || ''), 62, 84);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+    var size = 156; g.font = '900 ' + size + 'px ' + SERIF;
+    while (g.measureText(info.name).width > w2 - 124 && size > 64) { size -= 6; g.font = '900 ' + size + 'px ' + SERIF; }
+    var gy = 112 + size * .86, gr = g.createLinearGradient(0, gy - size, 0, gy);
+    gr.addColorStop(0, '#fff3c4'); gr.addColorStop(1, '#e2b85a');
+    g.fillStyle = gr; g.fillText(info.name, 58, gy);
+    g.fillStyle = info.color || '#f2d27a'; g.fillRect(62, gy + 30, 96, 6);
+    g.font = '500 34px ' + MONO; g.fillStyle = '#c2b69a';
+    if ('letterSpacing' in g) g.letterSpacing = '12px';
+    g.fillText(info.en || 'UNREGISTERED', 182, gy + 40);
+    var tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+    return tex;
+  }
+  function setPlaqueTex(info) {
+    var old = plaqueMat.uniforms.uMap.value;
+    plaqueMat.uniforms.uMap.value = drawPlaque(info);
+    if (old) old.dispose();
+  }
+  function title(k, info) {
+    if (k == null || k < 0 || !cent[k] || !cent[k].k || !info) { hideTitle(); return; }
+    var same = plq.k === k && !plq.out;
+    plq.k = k; plq.info = info; plq.out = false;
+    plaqueMat.uniforms.uColor.value.set(info.color || '#f2d27a');
+    setPlaqueTex(info);
+    if (!same) { plq.t0 = performance.now(); plaqueMat.uniforms.uReveal.value = reduce ? 1 : 0; cta.classList.remove('is-in'); }
+    plaque.visible = beam.visible = true; cta.hidden = false;
+    cta.querySelector('[data-cta-k]').textContent = (info.code || '') + ' · ' + (info.status || '');
+    labs.forEach(function (b, i) { if (b) b.classList.toggle('is-titled', i === k); });
+    labWrap.classList.add('is-focus');
+    /* 글꼴이 늦게 오면 한 번 더 그린다 */
+    if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('900 120px "Noto Serif KR"'), document.fonts.load('600 32px "Barlow Condensed"')]).then(function () { if (plq.k === k && !plq.out) setPlaqueTex(info); }, function () {});
+  }
+  function hideTitle() {
+    if (plq.k < 0 || plq.out) return;
+    plq.out = true; plq.outT0 = performance.now(); plq.liftTo = 0; cta.classList.remove('is-in');
+    labs.forEach(function (b) { if (b) b.classList.remove('is-titled'); });
+    labWrap.classList.remove('is-focus');
+  }
+  function lift(on) { plq.liftTo = on ? 1 : 0; cta.classList.toggle('is-gone', !!on); }
+  function framePlaque(now) {
+    if (plq.k < 0) return;
+    var q = cent[plq.k];
+    if (plq.out) {
+      var po = Math.min(1, (now - plq.outT0) / 380);
+      plaqueMat.uniforms.uReveal.value = Math.min(plaqueMat.uniforms.uReveal.value, 1 - po); beamMat.uniforms.uA.value = 1 - po;
+      if (po >= 1) { plaque.visible = beam.visible = false; cta.hidden = true; plq.k = -1; return; }
+    } else if (!reduce) {
+      var pb = Math.min(1, (now - plq.t0) / 450), pr2 = Math.min(1, Math.max(0, (now - plq.t0 - 250) / 750));
+      beamMat.uniforms.uA.value = ease(pb); plaqueMat.uniforms.uReveal.value = ease(pr2);
+      if (pr2 >= 1 && !cta.classList.contains('is-in')) cta.classList.add('is-in');
+    } else { beamMat.uniforms.uA.value = 1; cta.classList.add('is-in'); }
+    plq.lift += (plq.liftTo - plq.lift) * (reduce ? 1 : .08);
+    var sc = Math.max(.75, Math.min(1.7, cam.dist / 30));
+    var ground = q.y + (plq.k === uni.uSel.value ? uni.uRise.value * 0.32 : 0);
+    var bottom = ground + 1.6 * sc + plq.lift * 1.6 * sc;
+    plaque.scale.set(sc, sc, 1);
+    plaque.position.set(q.x, bottom + PH * sc / 2, q.z);
+    plaque.rotation.set(0, cam.az, 0);
+    beam.position.set(q.x, (ground + bottom) / 2, q.z); beam.scale.set(sc, bottom - ground, 1); beam.rotation.set(0, cam.az, 0);
+    /* 버튼은 현판 바로 아래 */
+    v3.set(q.x, bottom, q.z).project(camera);
+    var vis = v3.z < 1 && Math.abs(v3.x) < 1.05 && Math.abs(v3.y) < 1.05;
+    cta.style.transform = 'translate(' + ((v3.x + 1) / 2 * W).toFixed(1) + 'px,' + ((1 - v3.y) / 2 * H).toFixed(1) + 'px)';
+    cta.style.visibility = vis ? '' : 'hidden';
+  }
 
   /* ── 크기 ── */
   function resize() {
@@ -383,6 +502,7 @@ export function create(host, opt) {
     if (hoverQ && !ptr.size) { setHover(pick(hoverQ[0], hoverQ[1])); hoverQ = null; }
     place();
     uni.uFogNear.value = cam.dist * 0.75; uni.uFogFar.value = cam.dist * 2.1;   /* 안개는 지금 카메라 거리 기준 */
+    framePlaque(now);
     renderer.render(scene, camera);
     /* 이름표 위치 */
     var showLab = uni.uIntro.value > 0.85;
@@ -420,11 +540,14 @@ export function create(host, opt) {
     stop(); ro.disconnect();
     geo.dispose(); tileMat.dispose(); seaMat.dispose(); sea.geometry.dispose(); pgeo.dispose(); pmat.dispose();
     renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss();
-    el.remove(); labWrap.remove(); hud.remove();
+    plaque.geometry.dispose(); plaqueMat.dispose(); beam.geometry.dispose(); beamMat.dispose();
+    if (plaqueMat.uniforms.uMap.value) plaqueMat.uniforms.uMap.value.dispose();
+    el.remove(); labWrap.remove(); hud.remove(); cta.remove();
   }
 
   var api = {
     start: start, stop: stop, select: select, focus: focus, clear: clear, reset: reset, zoom: zoom,
+    title: title, hideTitle: hideTitle, lift: lift,
     replayIntro: replayIntro, resize: resize, dispose: dispose,
     fps: function () { return fps.v; }, has: function (k) { return !!(cent[k] && cent[k].k); }
   };
