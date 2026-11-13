@@ -632,15 +632,56 @@
       };
       RSC.on(document, 'visibilitychange', function () { if (document.hidden) Dec.flush(); });
 
+      /* ── 성도(星圖): 네 권역을 나침반 사분면에(북 위·동 오른쪽·남 아래·서 왼쪽), 구는 원 위의 별 ── */
+      var QUAD = { NORTH: -90, EAST: 0, SOUTH: 90, WEST: 180 }, DSTEP = 9, DR = 118, DRL = 139, DC = 160, dialAll = [];
+      function dpt(rad, deg) { var t = deg * Math.PI / 180; return [DC + rad * Math.cos(t), DC + rad * Math.sin(t)]; }
+      function dialSVG(d) {
+        dialAll = [];
+        d.regions.forEach(function (r, ri) {
+          var n = r.districts.length, c = QUAD[r.en] != null ? QUAD[r.en] : -90 + ri * 360 / d.regions.length;
+          r.districts.forEach(function (x, i) { dialAll.push({ x: x, r: r, a: c - DSTEP * (n - 1) / 2 + DSTEP * i }); });
+        });
+        var marks = dialAll.map(function (o) {
+          var p = dpt(DR, o.a), l = dpt(DRL, o.a), x = o.x, sh;
+          if (x.tag === '수도') sh = '<rect class="mk" x="' + (p[0] - 6) + '" y="' + (p[1] - 6) + '" width="12" height="12" transform="rotate(45 ' + p[0] + ' ' + p[1] + ')"/>';
+          else if (x.tag) sh = '<rect class="mk" x="' + (p[0] - 6) + '" y="' + (p[1] - 6) + '" width="12" height="12"/>';
+          else sh = '<circle class="mk" cx="' + p[0] + '" cy="' + p[1] + '" r="5"/>';
+          return '<g class="nd' + (x.tag === '수도' ? ' is-cap' : x.tag ? ' is-hq' : '') + '" data-dial="' + x.no + '" tabindex="0" role="button" aria-label="' + x.no + '구 ' + esc(x.name) + (x.tag ? ' (' + esc(x.tag) + ')' : '') + '">' +
+            '<circle class="hit" cx="' + p[0] + '" cy="' + p[1] + '" r="13"/>' + sh + '<text x="' + l[0] + '" y="' + l[1] + '">' + pad(x.no) + '</text></g>';
+        }).join('');
+        var arcs = d.regions.map(function (r, ri) {
+          var n = r.districts.length, c = QUAD[r.en] != null ? QUAD[r.en] : -90 + ri * 360 / d.regions.length, half = DSTEP * (n - 1) / 2 + 5;
+          var a1 = dpt(DR, c - half), a2 = dpt(DR, c + half), q = dpt(78, c);
+          return '<path d="M' + a1[0] + ' ' + a1[1] + ' A' + DR + ' ' + DR + ' 0 0 1 ' + a2[0] + ' ' + a2[1] + '" class="arc"/><text class="q" x="' + q[0] + '" y="' + q[1] + '">' + esc(r.name) + '</text>';
+        }).join('');
+        var ticks = ''; for (var i = 0; i < 72; i++) { var t1 = dpt(100, i * 5), t2 = dpt(i % 18 === 0 ? 92 : 96, i * 5); ticks += '<line x1="' + t1[0] + '" y1="' + t1[1] + '" x2="' + t2[0] + '" y2="' + t2[1] + '"/>'; }
+        return '<div class="mdos__dial"><svg viewBox="0 0 320 320" role="group" aria-label="행정 구역 성도: ' + d.regions.length + '권역 ' + dialAll.length + '개 구">' +
+          '<circle cx="160" cy="160" r="' + DR + '" class="orbit"/><g class="ticks">' + ticks + '</g><circle cx="160" cy="160" r="56" class="inner"/>' +
+          '<g class="ptr" data-dial-ptr><line x1="160" y1="160" x2="260" y2="160"/><circle cx="260" cy="160" r="2.5"/></g>' + arcs +
+          '<circle cx="160" cy="160" r="40" class="core"/><text class="cnum" x="160" y="154" data-dial-num>01</text><text class="csub" x="160" y="184">DISTRICT</text>' + marks + '</svg></div>' +
+          '<p class="mono mdos__dlegend"><span class="c"><i></i>수도</span><span class="h"><i></i>본부</span><span>별을 누르면 판독</span></p>' +
+          '<div class="mdos__read" data-dial-read aria-live="polite"></div>';
+      }
+      function readout(o) {
+        var x = o.x, r = o.r;
+        return '<p class="mono mdos__readk">제 ' + pad(x.no) + ' 구 · ' + esc(r.name) + ' ' + esc(r.en) + '</p><h5>' + D(x.name) + (x.tag ? '<span class="mono mdos__badge' + (x.tag === '수도' ? ' is-cap' : '') + '">' + esc(x.tag) + '</span>' : '') + '</h5>' +
+          (x.loc || x.geo || x.buildings
+            ? (x.loc ? '<div class="mdos__kv"><span class="mono">위치</span>' + D(x.loc) + '</div>' : '') + (x.geo ? '<div class="mdos__kv"><span class="mono">지리</span>' + D(x.geo) + '</div>' : '') +
+              (x.buildings ? '<p class="mono mdos__subh">주요 건물 · ' + pad(x.buildings.length) + '</p><ol class="mdos__blds">' + x.buildings.map(function (b, i) { return '<li><span class="mono">B-' + pad(i + 1) + '</span>' + D(b) + '</li>'; }).join('') + '</ol>' : '')
+            : '<p class="mdos__nodata">' + D('이 구역은 명칭만 기록되어 있습니다. 세부 관측 기록 없음.') + '</p>');
+      }
+      function dial(no) {
+        var o = dialAll.filter(function (q) { return q.x.no === no; })[0]; if (!o) return;
+        body.querySelectorAll('[data-dial]').forEach(function (g) { g.classList.toggle('is-on', +g.dataset.dial === no); });
+        var ptr = body.querySelector('[data-dial-ptr]'); if (ptr) ptr.style.transform = 'rotate(' + o.a + 'deg)';
+        var num = body.querySelector('[data-dial-num]'); if (num) num.textContent = pad(no);
+        var ro = body.querySelector('[data-dial-read]'); if (!ro) return;
+        ro.innerHTML = readout(o);
+        if (!reduce) Dec.add([].slice.call(ro.querySelectorAll('.dc.is-mask')), 0);
+      }
       function full(d) {
         var all = []; d.regions.forEach(function (r) { r.districts.forEach(function (x) { all.push(x); }); });
         var key = all.filter(function (x) { return x.tag; }).sort(function (a, b) { return a.tag === '수도' ? -1 : b.tag === '수도' ? 1 : 0; });
-        var idx = d.regions.map(function (r) {
-          return '<span class="mdos__rl mono">' + esc(r.name) + '</span>' + r.districts.map(function (x) {
-            var c = x.tag === '수도' ? ' is-cap' : x.tag ? ' is-hq' : '';
-            return '<button type="button" class="' + c.trim() + '" data-dist-go="' + x.no + '" aria-pressed="false" aria-label="' + x.no + '구 ' + esc(x.name) + (x.tag ? ' (' + esc(x.tag) + ')' : '') + '">' + x.no + '</button>';
-          }).join('') + new Array(9 - r.districts.length).join('<span></span>');
-        }).join('');
         var regs = d.regions.map(function (r) {
           return '<div class="mdos__reg"><div class="mdos__regh"><b>' + esc(r.name) + '</b><span class="mono">' + esc(r.en) + '</span><em class="mono">' + r.districts[0].no + '–' + r.districts[r.districts.length - 1].no + '구 · ' + r.districts.length + '</em></div>' +
             r.districts.map(function (x) {
@@ -662,7 +703,7 @@
           sec('faith', '02', '종교', 'Faith · ' + d.religions.length, list(d.religions, '0')) +
           sec('food', '03', '식량', 'Provisions · ' + (d.foods.raw.length + d.foods.cooked.length), '<p class="mono mdos__subh">생식품 · Raw ' + d.foods.raw.length + '</p>' + list(d.foods.raw, 'R') + '<p class="mono mdos__subh">조리된 식품 · Cooked ' + d.foods.cooked.length + '</p>' + list(d.foods.cooked, 'C')) +
           sec('lang', '04', '언어', 'Language · ' + d.languages.length, '<ul class="mdos__lst mdos__lang">' + d.languages.map(function (b) { return '<li><span>' + esc(b[0]) + '</span>' + D(b[1]) + '</li>'; }).join('') + '</ul>') +
-          sec('admin', '05', '행정 구역', d.regions.length + ' Regions · ' + all.length + ' Districts', '<div class="mdos__idx" role="group" aria-label="구 색인">' + idx + '</div><p class="mono mdos__legend"><i></i>본부 · 수도 표시 — 번호를 누르면 그 구로 이동</p>' + regs) +
+          sec('admin', '05', '행정 구역', 'Star Chart · ' + all.length, dialSVG(d) + '<p class="mono mdos__subh">구역 목록</p>' + regs) +
           '</div>';
       }
       function empty(d) {
@@ -675,6 +716,7 @@
         if (io) io.disconnect(); if (spy) spy.disconnect(); Dec.reset();
         body.classList.toggle('is-full', isFull);
         body.innerHTML = isFull ? full(d) : empty(d);
+        if (isFull) dial(dialAll.length ? dialAll[0].x.no : 1);
         var sc = body.querySelector('.mdos__scroll');
         if (reduce) return;
         if (!isFull) { Dec.add([].slice.call(sc.querySelectorAll('.dc')), 420); return; }
@@ -711,8 +753,13 @@
       }
       body.addEventListener('click', function (e) {
         var g = e.target.closest('[data-go]'); if (g) return scrollTo(body.querySelector('[data-sec="' + g.dataset.go + '"]'));
-        var j = e.target.closest('[data-dist-go]'); if (j) return pick(+j.dataset.distGo, true);
-        var t = e.target.closest('[data-dist-tg]'); if (t) return pick(+t.dataset.distTg, false);
+        var dl = e.target.closest('[data-dial]'); if (dl) return dial(+dl.dataset.dial);
+        var j = e.target.closest('[data-dist-go]'); if (j) { dial(+j.dataset.distGo); return scrollTo(body.querySelector('[data-sec="admin"]')); }
+        var t = e.target.closest('[data-dist-tg]'); if (t) { dial(+t.dataset.distTg); return pick(+t.dataset.distTg, false); }
+      });
+      body.addEventListener('keydown', function (e) {
+        var g = e.target.closest && e.target.closest('[data-dial]');
+        if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); dial(+g.dataset.dial); }
       });
       function show(l) {
         clearTimeout(timer);
