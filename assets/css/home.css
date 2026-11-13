@@ -788,3 +788,8 @@ span.dc { display: inline-block; max-width: 100%; vertical-align: top; }
   .wld__desc { order: 4; margin-top: 0; }
   .wld__facts { order: 5; margin-top: 0; }
 }
+/* 고른 카드의 움직이는 일러스트 */
+.wld__fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .7s var(--ease); pointer-events: none; }
+.wld__fx.is-in { opacity: 1; }
+.wld__card:not(.is-on) .wld__fx { opacity: 0; }
+.wld__cno, .wld__cap { z-index: 1; }
