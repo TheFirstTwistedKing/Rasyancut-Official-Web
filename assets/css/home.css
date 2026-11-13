@@ -672,3 +672,39 @@ span.dc { display: inline-block; max-width: 100%; vertical-align: top; }
 .mdos::before { display: none; }
 .mdos__reg ol.mdos__blds { display: block; background: none; border: 0; }
 .mdos__reg .mdos__blds li { background: none; }
+
+/* ── 행정 구역 성도 (6번 시안) ── */
+.mdos__dial { width: 100%; max-width: 300px; margin: 4px auto 0; }
+.mdos__dial svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mdos__dial .orbit { fill: none; stroke: var(--line-soft); }
+.mdos__dial .ticks { stroke: rgba(212, 167, 58, .35); stroke-width: 1; }
+.mdos__dial .inner { fill: none; stroke: var(--line); }
+.mdos__dial .arc { fill: none; stroke: var(--gold-700); stroke-width: 1; }
+.mdos__dial .q { font-family: var(--serif); font-size: 12px; font-weight: 600; fill: var(--ink-dim); text-anchor: middle; dominant-baseline: central; }
+.mdos__dial .core { fill: var(--void); stroke: var(--gold-700); }
+.mdos__dial .cnum { font-family: var(--mono); font-size: 44px; font-weight: 600; fill: var(--gold-100); text-anchor: middle; dominant-baseline: central; }
+.mdos__dial .csub { font-family: var(--mono); font-size: 11px; font-weight: 500; fill: var(--gold-500); text-anchor: middle; letter-spacing: .2em; }
+.mdos__dial .ptr { transform-box: view-box; transform-origin: 160px 160px; transition: transform .7s var(--ease); }
+.mdos__dial .ptr line { stroke: var(--gold-500); stroke-width: 1; }
+.mdos__dial .ptr circle { fill: var(--gold-300); }
+.mdos__dial .nd { cursor: pointer; outline: none; }
+.mdos__dial .hit { fill: transparent; }
+.mdos__dial .mk { fill: var(--obsidian); stroke: var(--gold-700); stroke-width: 1.2; transition: fill .25s, stroke .25s; }
+.mdos__dial text:not(.q):not(.cnum):not(.csub) { font-family: var(--mono); font-size: 11px; font-weight: 500; fill: var(--ink-dim); text-anchor: middle; dominant-baseline: central; transition: fill .25s; }
+.mdos__dial .nd:hover .mk, .mdos__dial .nd:focus-visible .mk { stroke: var(--gold-300); }
+.mdos__dial .nd.is-cap .mk { fill: var(--gold-500); stroke: var(--gold-300); }
+.mdos__dial .nd.is-hq .mk { fill: var(--gold-900); stroke: var(--gold-300); }
+.mdos__dial .nd.is-on .mk { fill: var(--gold-300); stroke: var(--gold-100); }
+.mdos__dial .nd.is-on text { fill: var(--gold-100); font-weight: 600; }
+.mdos__dlegend { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 20px; margin: 6px 0 14px; font-size: 10px; letter-spacing: .14em; color: var(--ink-dim); }
+.mdos__dlegend span { display: inline-flex; align-items: center; gap: 8px; }
+.mdos__dlegend i { width: 8px; height: 8px; display: inline-block; }
+.mdos__dlegend .c i { background: var(--gold-500); rotate: 45deg; }
+.mdos__dlegend .h i { background: var(--gold-900); border: 1px solid var(--gold-300); }
+.mdos__read { padding: 14px 16px 16px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(212, 167, 58, .06), transparent 60%); margin-bottom: 8px; }
+.mdos__readk { font-size: 10px; letter-spacing: .2em; color: var(--gold-500); }
+.mdos__read h5 { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; font-family: var(--serif); font-size: var(--t-lead); font-weight: 600; color: var(--gold-100); }
+.mdos__read .mdos__subh { margin-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .mdos__dial .ptr { transition: none; } }
+.mdos .mdos__sech em.mono { color: var(--ink-dim); white-space: nowrap; }
+.mdos__sech h4 { white-space: nowrap; }
