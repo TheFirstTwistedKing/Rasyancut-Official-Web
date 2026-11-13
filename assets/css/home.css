@@ -494,3 +494,33 @@
 .m3lab.is-pin:hover span, .m3lab.is-pin:hover b { opacity: 1; }
 .mapbox.has-dos .mapbox__hint { opacity: 0; }
 .mapbox__hint { transition: opacity .4s; }
+
+/* ── 3D 지도: 나침반 · 범례 ── */
+.m3d__hud { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.m3d__compass { position: absolute; left: 12px; top: 44px; width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid var(--gold-700); background: rgba(5, 5, 5, .8); }
+.m3d__compass::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed rgba(212, 167, 58, .35); }
+.m3d__compass i { position: absolute; left: 50%; top: 50%; width: 2px; height: 36px; translate: -50% -50%; rotate: var(--a, 0deg);
+  background: linear-gradient(var(--gold-300) 0 50%, var(--gold-900) 50% 100%); }
+.m3d__compass i::before { content: ""; position: absolute; left: 50%; top: -3px; width: 7px; height: 7px; translate: -50% 0; rotate: 45deg; background: var(--gold-300); }
+.m3d__compass b { position: absolute; left: 50%; top: 50%; translate: -50% -50%; rotate: var(--a, 0deg); font-size: 9px; letter-spacing: 0; color: var(--void);
+  width: 14px; height: 14px; display: grid; place-items: center; border-radius: 50%; background: var(--gold-300); transform: translateY(-1px); }
+.m3d__legend { position: absolute; left: 12px; bottom: 12px; width: 208px; padding: 10px 12px 12px; background: rgba(5, 5, 5, .86); border: 1px solid var(--gold-700); }
+.m3d__legend > p:first-child { font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--gold-500); margin-bottom: 8px; }
+.m3d__legend ol { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.m3d__legend li { height: 10px; background: color-mix(in srgb, #f0c050 calc(var(--k) * 20%), #1f1910); }
+.m3d__scale { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--ink-dim); }
+.m3d__unk { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 11px; color: var(--ink-dim); }
+.m3d__unk i { flex: none; width: 14px; height: 10px; border: 1px solid var(--gold-500);
+  background: repeating-linear-gradient(0deg, rgba(242, 210, 122, .35) 0 1px, transparent 1px 3px); }
+.m3d__unk--line i { height: 0; border: 0; border-top: 1px dashed var(--gold-300); background: none; }
+.m3lab.is-pin { pointer-events: none; }
+@media (max-width: 600px) {
+  .m3d__legend { width: 150px; padding: 8px 10px; }
+  .m3d__unk span { font-size: 10px; }
+  .m3d__compass { width: 42px; height: 42px; }
+  .m3d__compass i { height: 28px; }
+}
+.m3d__compass b { display: none; }
+.m3d__compass i { height: 26px; }
+.m3d__compass i::after { content: "N"; position: absolute; left: 50%; top: -15px; translate: -50% 0; font: 600 9px/1 var(--mono); color: var(--gold-100); }

@@ -724,9 +724,13 @@
       if (loading) return loading;
       host.classList.add('is-loading');
       var base = new URL('assets/js/', document.baseURI).href;
-      loading = import(base + 'map3d.js?v=2.12.1').then(function (mod) {
+      loading = import(base + 'map3d.js?v=2.13.0').then(function (mod) {
         m3d = mod.create(host, {
           reduce: reduce, info: info,
+          onLost: function () {
+            host.classList.add('is-fail'); stateEl.querySelector('span').textContent = '그래픽 장치가 초기화되어 2D 지도로 돌아갑니다';
+            setTimeout(function () { setMode('2d'); }, 1800);
+          },
           onPick: function (k) { select(TL[k], true); },
           onCam: function (c, home) {
             $('[data-mx]').textContent = String(Math.round(((c.az * 180 / Math.PI) % 360 + 360) % 360)).padStart(3, '0') + '°';
@@ -870,6 +874,7 @@
   RSC.onLeave(function () { clearInterval(camTimer); });
   RSC.onLeave(function () { root.classList.remove('is-deck'); delete root.dataset.slide; });
 
+  var queued = -1;
   function indexOf(id) { for (var k = 0; k < secs.length; k++) if (secs[k].id === id) return k; return -1; }
   function replay(sec) {               /* 들어오는 화면의 등장 연출을 다시 재생 */
     var rv = sec.querySelectorAll('.rv');
@@ -888,7 +893,9 @@
   }
   function goTo(i, instant) {
     i = Math.max(0, Math.min(secs.length - 1, i));
-    if (!deck || i === cur && !instant || busy && !instant) return;
+    if (!deck) return;
+    if (busy && !instant) { queued = i; return; }      /* 넘어가는 중에 누른 곳은 기억했다가 끝나면 간다 */
+    if (i === cur && !instant) return;
     var prev = secs[cur], next = secs[i];
     secs.forEach(function (s) { s.classList.remove('is-cur', 'is-out'); s.setAttribute('aria-hidden', 'true'); s.inert = true; });
     if (!instant && prev !== next) { prev.classList.add('is-out'); setTimeout(function () { prev.classList.remove('is-out'); }, 1400); }
@@ -897,7 +904,8 @@
     cur = i; replay(next); mark();
     if (!instant) {
       var line = hud.querySelector('.deckline'); line.classList.remove('is-run'); void line.offsetWidth; line.classList.add('is-run');
-      busy = true; setTimeout(function () { busy = false; }, 1200);
+      busy = true; queued = -1;
+      setTimeout(function () { busy = false; if (queued >= 0 && queued !== cur) { var q = queued; queued = -1; goTo(q); } }, 1200);
     }
   }
   function setDeck(on) {
@@ -931,7 +939,7 @@
   addEventListener('keydown', function (e) {
     if (!deck || overlayOpen() || e.altKey || e.ctrlKey || e.metaKey) return;
     var t = e.target;
-    if (t.closest && t.closest('input, textarea, select, [contenteditable], .mapview, [data-scroll]')) return;
+    if (t.closest && t.closest('input, textarea, select, [contenteditable], .mapview, .m3d, [data-scroll]')) return;
     var d = { PageDown: 1, ArrowDown: 1, ' ': 1, PageUp: -1, ArrowUp: -1 }[e.key];
     if (e.key === ' ' && t.closest && t.closest('button, a')) return;
     if (e.key === 'Home') { e.preventDefault(); return goTo(0); }

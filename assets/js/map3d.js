@@ -3,7 +3,7 @@
    흑요석 기둥 + 금박 테두리, 선택한 나라만 그 나라 색으로 솟아오른다.
    home.js 가 필요할 때(3D 스위치를 처음 켰을 때)만 불러온다. */
 import * as THREE from './vendor/three.module.min.js';
-import DATA from './map3d-data.js?v=2.12.1';
+import DATA from './map3d-data.js?v=2.13.0';
 
 var U = 1 / 40;                                  /* 지도 1px → 3D 단위 */
 var BASE = -0.4;                                 /* 바다 면 높이 */
@@ -13,7 +13,7 @@ function hexHeight(lv) { return lv > 0 ? 0.25 + lv * 0.46 : (lv === -1 ? 0.16 : 
 export function create(host, opt) {
   opt = opt || {};
   var reduce = !!opt.reduce;
-  var names = DATA.names, R = DATA.R, w = Math.sqrt(3) * R, dy = 1.5 * R;
+  var names = DATA.names, R = DATA.R, w = Math.sqrt(3) * R, dy = 1.5 * R, C0 = DATA.c0 || 0, R0 = DATA.r0 || 0;
   var cx0 = DATA.w / 2, cz0 = DATA.h / 2;
 
   /* ── 렌더러 ── */
@@ -34,12 +34,13 @@ export function create(host, opt) {
   var geo = new THREE.CylinderGeometry(R * U * 0.93, R * U * 0.93, 1, 6, 1);
   geo.translate(0, 0.5, 0);                      /* 바닥이 0, 윗면이 1 */
   var aData = new Float32Array(n * 4);
-  var m4 = new THREE.Matrix4(), owners = [], maxD = Math.hypot(cx0, cz0);
+  var m4 = new THREE.Matrix4(), owners = [], maxD = 1;
+  for (var i0 = 0; i0 < n; i0++) { var c1 = t[i0 * 4], r1 = t[i0 * 4 + 1]; maxD = Math.max(maxD, Math.hypot((c1 - C0) * w + (r1 % 2) * w / 2 - cx0, (r1 - R0) * dy - cz0)); }
   var cent = names.map(function () { return { x: 0, z: 0, y: 0, k: 0, x0: 1e9, x1: -1e9, z0: 1e9, z1: -1e9 }; });
   var mesh = new THREE.InstancedMesh(geo, null, n);
   for (var i = 0; i < n; i++) {
     var c = t[i * 4], r = t[i * 4 + 1], lv = t[i * 4 + 2], ow = t[i * 4 + 3];
-    var px = c * w + (r % 2) * w / 2, pz = r * dy;
+    var px = (c - C0) * w + (r % 2) * w / 2, pz = (r - R0) * dy;
     var x = (px - cx0) * U, z = (pz - cz0) * U, h = hexHeight(lv);
     var base = lv > 0 ? BASE : BASE - 0.02 + (lv === -1 ? 0 : -0.04);
     m4.makeScale(1, h, 1).setPosition(x, base, z);
@@ -99,6 +100,15 @@ export function create(host, opt) {
       '  vec3 col;',
       '  vec3 L = normalize(vec3(-0.45, 1.0, 0.35));',
       '  if (top) {',
+      '    if (own < -1.5) {',
+      '      float scan = step(0.82, fract(vWorld.z * 2.6 + uTime * 0.18));',
+      '      vec3 c2 = vec3(0.03, 0.026, 0.02) + GOLD * (0.05 * scan + 0.025 * lv);',
+      '      float r2 = smoothstep(0.07, 0.0, e) * (0.3 + 0.12 * sin(uTime * 1.3 + vData.w * 6.2832));',
+      '      gl_FragColor = vec4(mix(c2, GOLD * 0.8, r2), 1.0);',
+      '      float d2 = length(vWorld - cameraPosition);',
+      '      gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.02, 0.018, 0.014), smoothstep(uFogNear, uFogFar, d2));',
+      '      return;',
+      '    }',
       '    col = lvColor(lv) * (0.93 + vData.w * 0.14);',
       '    if (own < -0.5 && lv > 0.5) col *= 0.62;',
       '    col += hov * 0.06 * GOLD;',
@@ -120,6 +130,7 @@ export function create(host, opt) {
       '    col = mix(col, mix(GOLD, uSelColor, vSel * uRise * 0.7), rim * clamp(rimA, 0.0, 1.0));',
       '  } else {',
       '    float yy = clamp(vLocal.y, 0.0, 1.0);',
+      '    if (own < -1.5) { col = vec3(0.012) + GOLD_D * smoothstep(0.88, 1.0, yy) * 0.3; float d3 = length(vWorld - cameraPosition); gl_FragColor = vec4(mix(col, vec3(0.02, 0.018, 0.014), smoothstep(uFogNear, uFogFar, d3)), 1.0); return; }',
       '    float diff = max(dot(normalize(vNormal2), L), 0.0);',
       '    col = (OBS + lvColor(max(lv, 1.0)) * 0.18) * (0.35 + 0.9 * diff) * (0.4 + 0.6 * yy);',
       '    col += GOLD_D * smoothstep(0.9, 1.0, yy) * (lv > 0.5 ? 0.35 : 0.08);',   /* 윗모서리 금박 */
@@ -141,6 +152,7 @@ export function create(host, opt) {
     vertexShader: 'varying vec3 vW; void main(){ vec4 wp = modelMatrix * vec4(position,1.0); vW = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }',
     fragmentShader: [
       'uniform float uTime, uFogNear, uFogFar; uniform vec3 uPing, uSelColor;',
+      'const float FW = ' + (DATA.w / 2 * U).toFixed(3) + ', FH = ' + (DATA.h / 2 * U).toFixed(3) + ';',
       'varying vec3 vW;',
       'const vec3 GOLD = vec3(0.949, 0.824, 0.478);',
       'float hexLine(vec2 p, float s){',
@@ -156,11 +168,15 @@ export function create(host, opt) {
       '  col += GOLD * hexLine(p, 1.6) * 0.035 * smoothstep(40.0, 8.0, r);',
       /* 측량 원: 두 겹 고리 + 돌아가는 눈금 */
       '  float a = atan(p.y, p.x);',
-      '  float ring1 = smoothstep(0.06, 0.0, abs(r - 31.0));',
-      '  float ring2 = smoothstep(0.04, 0.0, abs(r - 32.4));',
-      '  float ticks = smoothstep(0.03, 0.0, abs(fract((a + uTime * 0.02) * 72.0 / 6.2832) - 0.5) - 0.47) * step(abs(r - 31.7), 0.5);',
-      '  float big = smoothstep(0.01, 0.0, abs(fract((a - uTime * 0.012) * 12.0 / 6.2832) - 0.5) - 0.495) * step(abs(r - 33.4), 1.1);',
-      '  col += GOLD * (ring1 * 0.4 + ring2 * 0.2 + ticks * 0.06 + big * 0.3);',
+      '  float ring1 = smoothstep(0.06, 0.0, abs(r - 40.0));',
+      '  float ring2 = smoothstep(0.04, 0.0, abs(r - 41.4));',
+      '  float fd = max(abs(p.x) - FW, abs(p.y) - FH);',
+      '  float frame = smoothstep(0.07, 0.0, abs(fd)) * step(0.45, fract((p.x + p.y) * 0.9));',
+      '  float corner = smoothstep(0.09, 0.0, abs(fd)) * step(FW - 2.2, abs(p.x)) * step(FH - 2.2, abs(p.y));',
+      '  col += GOLD * (frame * 0.32 + corner * 0.7);',
+      '  float ticks = smoothstep(0.03, 0.0, abs(fract((a + uTime * 0.02) * 72.0 / 6.2832) - 0.5) - 0.47) * step(abs(r - 40.7), 0.5);',
+      '  float big = smoothstep(0.01, 0.0, abs(fract((a - uTime * 0.012) * 12.0 / 6.2832) - 0.5) - 0.495) * step(abs(r - 42.4), 1.1);',
+      '  col += GOLD * (ring1 * 0.3 + ring2 * 0.15 + ticks * 0.05);',
       '  if (uPing.z >= 0.0) {',
       '    float age = uTime - uPing.z;',
       '    float ring = smoothstep(0.35, 0.0, abs(distance(p, uPing.xy) - age * 9.0)) * smoothstep(5.0, 0.0, age);',
@@ -172,13 +188,13 @@ export function create(host, opt) {
       '}'
     ].join('\n')
   });
-  var sea = new THREE.Mesh(new THREE.PlaneGeometry(120, 90).rotateX(-Math.PI / 2), seaMat);
+  var sea = new THREE.Mesh(new THREE.PlaneGeometry(150, 110).rotateX(-Math.PI / 2), seaMat);
   sea.position.y = BASE - 0.06;
   scene.add(sea);
 
   /* ── 떠오르는 금빛 먼지 ── */
   var NP = reduce ? 0 : 320, pp = new Float32Array(NP * 3);
-  for (var j = 0; j < NP; j++) { pp[j * 3] = (Math.random() - .5) * 56; pp[j * 3 + 1] = Math.random() * 6; pp[j * 3 + 2] = (Math.random() - .5) * 34; }
+  for (var j = 0; j < NP; j++) { pp[j * 3] = (Math.random() - .5) * 72; pp[j * 3 + 1] = Math.random() * 6; pp[j * 3 + 2] = (Math.random() - .5) * 46; }
   var pgeo = new THREE.BufferGeometry(); pgeo.setAttribute('position', new THREE.BufferAttribute(pp, 3));
   var pmat = new THREE.ShaderMaterial({
     uniforms: uni, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -186,6 +202,15 @@ export function create(host, opt) {
     fragmentShader: 'varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(0.95, 0.82, 0.48, smoothstep(0.5, 0.0, d) * vA * 0.5); }'
   });
   if (NP) scene.add(new THREE.Points(pgeo, pmat));
+
+  /* ── 범례 · 나침반 ── */
+  var hud = document.createElement('div'); hud.className = 'm3d__hud';
+  hud.innerHTML = '<div class="m3d__compass" aria-hidden="true"><i></i><b class="mono">N</b></div>' +
+    '<div class="m3d__legend"><p class="mono">Elevation</p><ol>' + [1, 2, 3, 4, 5].map(function (k) { return '<li style="--k:' + k + '"></li>'; }).join('') + '</ol>' +
+    '<p class="mono m3d__scale"><span>01</span><span>05</span></p><p class="m3d__unk"><i aria-hidden="true"></i><span>미측량 지역 · 추정 지형</span></p>' +
+    '<p class="m3d__unk m3d__unk--line"><i aria-hidden="true"></i><span>측량 한계선 (원본 지도)</span></p></div>';
+  host.appendChild(hud);
+  var needle = hud.querySelector('.m3d__compass');
 
   /* ── 이름표 (HTML) ── */
   var labWrap = document.createElement('div'); labWrap.className = 'm3d__labs'; host.appendChild(labWrap);
@@ -220,7 +245,7 @@ export function create(host, opt) {
   function clampCam() {
     cam.dist = Math.max(DMIN, Math.min(DMAX, cam.dist));
     cam.el = Math.max(0.42, Math.min(1.45, cam.el));
-    cam.tx = Math.max(-26, Math.min(26, cam.tx)); cam.tz = Math.max(-15, Math.min(15, cam.tz));
+    cam.tx = Math.max(-34, Math.min(34, cam.tx)); cam.tz = Math.max(-22, Math.min(22, cam.tz));
   }
   function flyTo(g, dur) { goal = { from: Object.assign({}, cam), to: g, t0: performance.now(), dur: reduce ? 1 : (dur || 1300) }; }
 
@@ -270,6 +295,14 @@ export function create(host, opt) {
     cam.dist *= Math.exp(e.deltaY * 0.0022); clampCam();
   }, { passive: false });
 
+  host.addEventListener('keydown', function (e) {
+    var k = { ArrowLeft: [-.18, 0], ArrowRight: [.18, 0], ArrowUp: [0, .08], ArrowDown: [0, -.08] }[e.key];
+    if (k) { e.preventDefault(); goal = null; cam.az += k[0]; cam.el += k[1]; clampCam(); return; }
+    if (e.key === '+' || e.key === '=') zoom(1);
+    if (e.key === '-') zoom(-1);
+  });
+  el.addEventListener('webglcontextlost', function (e) { e.preventDefault(); stop(); if (opt.onLost) opt.onLost(); });
+
   var ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   function pick(x, y) {
     var r = el.getBoundingClientRect();
@@ -292,7 +325,7 @@ export function create(host, opt) {
     if (k == null) k = -1;
     labs.forEach(function (b, i) { if (b) b.classList.toggle('is-on', i === k); });
     if (k < 0 || !cent[k] || !cent[k].k) { uni.uSel.value = -1; uni.uRise.value = 0; return false; }
-    uni.uSel.value = k; uni.uRise.value = reduce ? 1 : 0; uni.uSelColor.value.set(color || '#f2d27a');
+    uni.uSel.value = k; uni.uRise.value = reduce ? 1 : 0; uni.uSelColor.value.set(color || '#f3f1ec');
     selFrom = 0; selT0 = performance.now();
     uni.uPing.value.set(cent[k].x, cent[k].z, uni.uTime.value);
     return true;
@@ -324,9 +357,10 @@ export function create(host, opt) {
     /* 지도 폭(약 52)이 가로로 다 들어오는 거리. 세로로 긴 화면은 너무 멀어지지 않게 자른다 */
     HOME.dist = Math.max(56, Math.min(84, 30 / (Math.tan(16 * Math.PI / 180) * camera.aspect)));
     uni.uFogNear.value = HOME.dist * 0.75; uni.uFogFar.value = HOME.dist * 2.1;
-    DMAX = HOME.dist * 1.35;
+    DMAX = HOME.dist * 1.6;
     camera.updateProjectionMatrix();
   }
+  place(); try { renderer.compile(scene, camera); } catch (_) {}   /* 셰이더를 미리 만들어 첫 화면 전환이 끊기지 않게 */
   var ro = new ResizeObserver(function () { var fresh = cam.dist === HOME.dist; resize(); if (fresh && !goal) cam.dist = HOME.dist; }); ro.observe(host); resize();
   cam.dist = HOME.dist; clampCam();
 
@@ -348,6 +382,7 @@ export function create(host, opt) {
     }
     if (hoverQ && !ptr.size) { setHover(pick(hoverQ[0], hoverQ[1])); hoverQ = null; }
     place();
+    uni.uFogNear.value = cam.dist * 0.75; uni.uFogFar.value = cam.dist * 2.1;   /* 안개는 지금 카메라 거리 기준 */
     renderer.render(scene, camera);
     /* 이름표 위치 */
     var showLab = uni.uIntro.value > 0.85;
@@ -369,6 +404,7 @@ export function create(host, opt) {
     }
     order.sort(function (a, b) { return rank(a) - rank(b); });
     if (opt.onCam) opt.onCam(cam, HOME.dist);
+    needle.style.setProperty('--a', (cam.az * 180 / Math.PI).toFixed(1) + 'deg');
     fps.n++;
     if (now - fps.t > 1000) {
       fps.v = fps.n * 1000 / (now - fps.t); fps.n = 0; fps.t = now;
@@ -384,7 +420,7 @@ export function create(host, opt) {
     stop(); ro.disconnect();
     geo.dispose(); tileMat.dispose(); seaMat.dispose(); sea.geometry.dispose(); pgeo.dispose(); pmat.dispose();
     renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss();
-    el.remove(); labWrap.remove();
+    el.remove(); labWrap.remove(); hud.remove();
   }
 
   var api = {
