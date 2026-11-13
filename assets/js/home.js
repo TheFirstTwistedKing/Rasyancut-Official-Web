@@ -509,7 +509,7 @@
   var map = (function () {
     var view = $('[data-map]'), world = $('[data-world]'), K = 4, W = 2000 * K, H = 1125 * K;
     var st = { x: 0, y: 0, z: .3 }, zmin = .1, zmax = 1.4, ptr = new Map(), pinch = 0, anim = 0, sel = -1;
-    var L = D.mapLabels || [], DOS = D.dossiers || {}, SRC = 'assets/img/map/world.svg?v=1';
+    var L = D.mapLabels || [], DOS = D.dossiers || {}, box = view.closest('.mapbox'), SRC = 'assets/img/map/world.svg?v=1';
     var mini = $('[data-mini]'), miniBox = $('[data-mini-box]'), miniImg = $('[data-mini-img]');
 
     world.style.width = W + 'px'; world.style.height = H + 'px';
@@ -569,7 +569,13 @@
       dos.show(L[i] && L[i].kind !== 'sea' ? L[i] : null);
       /* 기록 창이 지도 오른쪽을 가리면, 남은 왼쪽 영역의 가운데로 옮긴다 */
       var pw = dos.width(), vw = size().width, ox = pw && pw < vw * .7 ? -pw / 2 : 0;
-      if (move && L[i]) fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45), ox);
+      if (move && L[i] && mode === '2d') fly(L[i].x * K, L[i].y * K, Math.max(zmin * 3, .45), ox);
+      if (m3d) {
+        var k = TI[i] == null ? -1 : TI[i];
+        m3d.select(k, L[i] && L[i].color);
+        if (move && k >= 0 && mode === '3d') m3d.focus(k, -ox);
+      }
+      box.classList.toggle('has-dos', i >= 0 && !!L[i] && L[i].kind !== 'sea');
     }
 
     /* ── 국가 기록 창 ── */
@@ -683,6 +689,7 @@
     document.querySelectorAll('[data-zoom]').forEach(function (b) {
       b.addEventListener('click', function () {
         var d = +b.dataset.zoom, r = size();
+        if (mode === '3d' && m3d) { if (!d) { select(-1); m3d.reset(); } else m3d.zoom(d); return; }
         if (!d) { reset(); select(-1); return; }
         var cxw = (r.width / 2 - st.x) / st.z, cyw = (r.height / 2 - st.y) / st.z;
         fly(cxw, cyw, st.z * (d > 0 ? 1.5 : 1 / 1.5));
@@ -696,6 +703,68 @@
     });
     watch(view, function () { if (st.z === .3) reset(); else apply(); });
     reset();
+
+    /* ── 2D / 3D 전환 ── */
+    var mode = '2d', m3d = null, loading = null, host = $('[data-m3d]'), stateEl = $('[data-m3d-state]');
+    var hint = $('[data-map-hint]'), sec = box.closest('.sec'), vis3 = false, KEY = 'rsc.mapmode';
+    /* 지도 이름표 번호 → 3D 영토 번호 (바다 이름은 영토가 아니다) */
+    var TI = [], TL = [];
+    L.forEach(function (l, i) { if (l.kind !== 'sea') { TI[i] = TL.length; TL.push(i); } });
+    var NUM = {}; named.forEach(function (p, k) { NUM[p[1]] = String(k + 1).padStart(2, '0'); });
+    function info(k) {
+      var i = TL[k], l = L[i] || {};
+      return { kind: l.kind, dos: !!DOS[(l.name || '').replace(/\\n|\n/g, ' ')], code: l.kind === 'nation' ? 'N-' + NUM[i] : l.kind === 'region' ? 'REG' : 'UNK' };
+    }
+    function shown() { return !document.documentElement.classList.contains('is-deck') || !sec || sec.classList.contains('is-cur'); }
+    function sync3() { if (!m3d) return; if (mode === '3d' && vis3 && !document.hidden && shown()) m3d.start(); else m3d.stop(); }
+    new IntersectionObserver(function (es) { vis3 = es[es.length - 1].isIntersecting; sync3(); }).observe(box);
+    if (sec) { var mo = new MutationObserver(sync3); mo.observe(sec, { attributes: true, attributeFilter: ['class'] }); RSC.onLeave(function () { mo.disconnect(); }); }
+    RSC.on(document, 'visibilitychange', sync3);
+    function load3d() {
+      if (loading) return loading;
+      host.classList.add('is-loading');
+      var base = new URL('assets/js/', document.baseURI).href;
+      loading = import(base + 'map3d.js?v=2.12.0').then(function (mod) {
+        m3d = mod.create(host, {
+          reduce: reduce, info: info,
+          onPick: function (k) { select(TL[k], true); },
+          onCam: function (c, home) {
+            $('[data-mx]').textContent = String(Math.round(((c.az * 180 / Math.PI) % 360 + 360) % 360)).padStart(3, '0') + '°';
+            $('[data-my]').textContent = String(Math.round(c.el * 180 / Math.PI)).padStart(2, '0') + '°';
+            $('[data-mz]').textContent = (home / c.dist).toFixed(1) + 'x';
+          }
+        });
+        if (!m3d) throw new Error('webgl');
+        host.classList.remove('is-loading');
+        if (sel >= 0) select(sel, true);
+        sync3();
+      }).catch(function () {
+        host.classList.remove('is-loading'); host.classList.add('is-fail');
+        stateEl.querySelector('span').textContent = 'WebGL을 쓸 수 없어 2D 지도만 볼 수 있습니다';
+        loading = null; setTimeout(function () { setMode('2d'); }, 1800);
+      });
+      return loading;
+    }
+    function setMode(m, quiet) {
+      if (m === mode) return;
+      mode = m;
+      try { localStorage.setItem(KEY, m); } catch (_) {}
+      box.classList.toggle('is-3d', m === '3d');
+      document.querySelectorAll('[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === m)); });
+      document.querySelectorAll('[data-rk]').forEach(function (e) { e.textContent = e.dataset.rk.split('|')[m === '3d' ? 1 : 0]; });
+      hint.textContent = m === '3d' ? 'Drag : Rotate · Shift / R-Drag : Pan · Ctrl + Wheel : Zoom' : 'Ctrl + Wheel : Zoom';
+      if (!quiet && !reduce) { box.classList.remove('is-wipe'); void box.offsetWidth; box.classList.add('is-wipe'); }
+      host.hidden = m !== '3d';
+      if (m === '3d') { load3d(); if (m3d) { m3d.replayIntro(); if (sel >= 0) select(sel, true); } }
+      else { apply(); if (sel >= 0) select(sel, true); }
+      sync3();
+    }
+    document.querySelectorAll('[data-mode]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
+    host.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sel >= 0) select(-1); });
+    RSC.onLeave(function () { if (m3d) m3d.dispose(); m3d = null; });
+    var saved = ''; try { saved = localStorage.getItem(KEY) || ''; } catch (_) {}
+    if (saved === '3d') setMode('3d', true);
+
     return { select: select };
   })();
   $('[data-n-map]').addEventListener('click', function () { setTimeout(function () { map.select(-1, false); }, 900); });

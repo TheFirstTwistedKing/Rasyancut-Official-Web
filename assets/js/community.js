@@ -5,7 +5,7 @@
   'use strict';
   var RSC = window.RSC, esc = RSC.esc;
   var $ = function (s, r) { return (r || document).querySelector(s); };
-  var view = $('[data-c-view]'), catsEl = $('[data-c-cats]'), writeBtn = $('[data-c-write]');
+  var view = $('[data-c-view]'), catsEl = $('[data-c-cats]'), writeBtn = $('[data-c-write]'), side = $('[data-c-side]'), meEl = $('[data-c-me]');
   var CATS = [['all', '전체'], ['notice', '공지'], ['free', '자유'], ['theory', '떡밥 토론'], ['fanart', '팬아트'], ['qna', '질문']];
   var CAT = {}; CATS.forEach(function (c) { CAT[c[0]] = c[1]; });
   var PAGE = 60, MAXIMG = 4, IMGBYTES = 300000;
@@ -21,6 +21,9 @@
   function text(s) { return esc(s || '').replace(/\n/g, '<br>'); }
   function avatar(p) { return p ? '<img class="cav" src="' + esc(p) + '" alt="" referrerpolicy="no-referrer">' : '<span class="cav cav--none"></span>'; }
   function show(html) { view.innerHTML = html; view.classList.remove('is-swap'); void view.offsetWidth; view.classList.add('is-swap'); }
+  function pad(n, k) { return String(n).padStart(k || 2, '0'); }
+  function serial(id) { return 'REC-' + String(id || '').slice(0, 6).toUpperCase(); }
+  function firstLine(b) { var t = String(b || '').split('\n').filter(Boolean)[0] || ''; return t.length > 90 ? t.slice(0, 90) + '…' : t; }
   function fail(err) {
     var c = err && err.code || '';
     var m = c === 'permission-denied' ? '권한이 없습니다. (데이터베이스 규칙을 확인해 주세요)'
@@ -28,19 +31,24 @@
       : c === 'unavailable' ? '네트워크 연결을 확인해 주세요.'
       : /firestore|not.*(enabled|found)|NOT_FOUND/i.test(String(err && err.message)) ? '커뮤니티 데이터베이스가 아직 준비되지 않았습니다.'
       : '문제가 생겼습니다 (' + (c || (err && err.message) || '알 수 없음') + ')';
-    show('<div class="cempty"><p class="mono gold">Error</p><p>' + esc(m) + '</p><a class="btn btn--ghost" href="#">목록으로</a></div>');
+    show('<div class="cempty"><p class="mono gold">Error / Access Fault</p><p>' + esc(m) + '</p><a class="btn btn--ghost" href="#">목록으로</a></div>');
   }
-  function busy(msg) { show('<div class="cempty"><p class="mono gold">Loading</p><p>' + esc(msg || '불러오는 중…') + '</p></div>'); }
+  function busy(msg) { show('<div class="cempty cempty--busy"><i class="cbusy" aria-hidden="true"></i><p class="mono gold">Loading</p><p>' + esc(msg || '불러오는 중…') + '</p></div>'); }
 
   /* ── 로그인 확인 ── */
   function gate() {
-    catsEl.hidden = true; writeBtn.hidden = true;
-    show('<div class="cgate"><p class="stitle__en">RESTRICTED</p><h2>기록자 전용 구역</h2><p>커뮤니티는 로그인한 기록자만 이용할 수 있습니다.</p><button class="btn" data-c-login>로그인</button></div>');
+    side.hidden = true; writeBtn.hidden = true;
+    show('<div class="cgate"><div class="cgate__txt">' +
+      '<p class="stitle__en">RESTRICTED ARCHIVE</p><h2>봉인된<br>기록 보관소</h2>' +
+      '<p>커뮤니티는 로그인한 기록자만 열람하고 기록을 남길 수 있습니다.</p>' +
+      '<button class="btn" data-c-login>로그인하고 봉인 풀기</button>' +
+      '<dl class="cgate__spec mono"><div><dt>Access</dt><dd>Recorder Only</dd></div><div><dt>Auth</dt><dd>Google</dd></div><div><dt>Status</dt><dd class="gold">Sealed</dd></div></dl></div>' +
+      '<div class="cgate__seal" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i><i class="s4"></i><b></b></div></div>');
   }
   function start() {
     user = RSC.auth && RSC.auth.user && RSC.auth.user();
     if (!user) { admin = false; return gate(); }
-    catsEl.hidden = false; writeBtn.hidden = false;
+    side.hidden = false; writeBtn.hidden = false;
     busy('기록 보관소에 접속하는 중…');
     RSC.auth.firebase().then(function (f) {
       if (F) return F;
@@ -51,7 +59,17 @@
   }
 
   /* ── 분류 탭 ── */
-  catsEl.innerHTML = CATS.map(function (c) { return '<button data-cat="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '">' + c[1] + '</button>'; }).join('');
+  catsEl.innerHTML = CATS.map(function (c, i) { return '<button data-cat="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '"><span class="mono">' + pad(i) + '</span><b>' + c[1] + '</b><em class="mono" data-cnt="' + c[0] + '">—</em></button>'; }).join('');
+  function counts() {
+    CATS.forEach(function (c) {
+      var n = c[0] === 'all' ? posts.length : posts.filter(function (p) { return p.cat === c[0]; }).length;
+      var e = catsEl.querySelector('[data-cnt="' + c[0] + '"]'); if (e) e.textContent = pad(n) + (c[0] === 'all' && more ? '+' : '');
+    });
+    if (!user) return;
+    var mine = posts.filter(function (p) { return p.uid === user.uid; });
+    meEl.innerHTML = '<p class="mono cside__k">Recorder</p><div class="cme__id">' + avatar(user.photoURL) + '<div><strong>' + esc(user.displayName || '기록자') + '</strong><span class="mono">' + (admin ? 'Archivist · 관리자' : 'Recorder') + '</span></div></div>' +
+      '<dl class="mono"><div><dt>Records</dt><dd>' + pad(mine.length) + '</dd></div><div><dt>Likes</dt><dd>' + pad(mine.reduce(function (a, p) { return a + (p.likeCount || 0); }, 0)) + '</dd></div></dl>';
+  }
   catsEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-cat]'); if (!b) return;
     cat = b.dataset.cat; catsEl.querySelectorAll('[data-cat]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
@@ -70,15 +88,21 @@
   function renderList() {
     var list = posts.filter(function (p) { return cat === 'all' || p.cat === cat; });
     list.sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0); });   /* 고정 글이 위로 (나머지는 최신순 유지) */
+    counts();
+    /* 장부 번호: 오래된 글부터 001 */
+    var order = posts.slice().reverse(), no = {}; order.forEach(function (p, i) { no[p.id] = i + 1; });
+    var head = '<header class="cledger__head"><p class="mono">Ledger / <b class="gold">' + esc(CAT[cat]) + '</b></p><p class="mono"><b class="gold">' + pad(list.length) + '</b> Records</p></header>';
     show(list.length
-      ? '<ol class="clist2">' + list.map(function (p) {
-          return '<li' + (p.pinned ? ' class="is-pin"' : '') + '><a href="#p=' + p.id + '">' +
-            '<span class="ctag mono">' + (p.pinned ? 'PIN · ' : '') + esc(CAT[p.cat] || p.cat) + '</span>' +
-            '<strong>' + esc(p.title) + (p.commentCount ? ' <em class="mono">[' + p.commentCount + ']</em>' : '') + (p.imageCount ? ' <i class="cimg-ic" title="이미지"></i>' : '') + '</strong>' +
-            '<span class="cmeta">' + avatar(p.photo) + esc(p.name || '기록자') + '</span>' +
-            '<span class="mono cwhen">' + when(p.createdAt) + '</span><span class="mono clike">♥ ' + (p.likeCount || 0) + '</span></a></li>';
-        }).join('') + '</ol>' + (more ? '<button class="btn btn--ghost cmore" data-c-more>더 보기</button>' : '')
-      : '<div class="cempty"><p class="mono gold">Empty</p><p>아직 글이 없습니다. 첫 기록을 남겨 보세요.</p></div>');
+      ? '<section class="cledger">' + head + '<ol class="clist2">' + list.map(function (p, i) {
+          return '<li' + (p.pinned ? ' class="is-pin"' : '') + ' style="--i:' + Math.min(i, 12) + '"><a href="#p=' + p.id + '">' +
+            '<span class="cno mono">' + pad(no[p.id] || 0, 3) + '</span>' +
+            '<span class="cmain"><span class="ctag mono">' + (p.pinned ? '<b>Pinned</b>' : '') + esc(CAT[p.cat] || p.cat) + '</span>' +
+              '<strong>' + esc(p.title) + (p.imageCount ? '<i class="cimg-ic" title="이미지 ' + p.imageCount + '장"></i>' : '') + '</strong>' +
+              '<span class="cex">' + esc(firstLine(p.body)) + '</span></span>' +
+            '<span class="cby">' + avatar(p.photo) + '<span><b>' + esc(p.name || '기록자') + '</b><span class="mono">' + when(p.createdAt) + '</span></span></span>' +
+            '<span class="cstat mono"><span title="댓글">C <b>' + pad(p.commentCount || 0) + '</b></span><span title="좋아요">♥ <b>' + pad(p.likeCount || 0) + '</b></span></span></a></li>';
+        }).join('') + '</ol></section>' + (more ? '<button class="btn btn--ghost cmore" data-c-more>더 보기</button>' : '')
+      : '<section class="cledger">' + head + '<div class="cempty"><p class="mono gold">Empty Ledger</p><p>아직 이 분류에 남은 기록이 없습니다. 첫 기록을 남겨 보세요.</p><button class="btn" data-c-new>새 기록 쓰기</button></div></section>');
   }
 
   /* ── 글 읽기 ── */
@@ -101,8 +125,8 @@
           ((c.uid === user.uid || admin) ? '<button class="cdel mono" data-c-cdel="' + d.id + '">삭제</button>' : '') + '</p><p>' + text(c.body) + '</p></div></li>';
       }).join('');
       show('<article class="cpost">' +
-        '<a class="cback mono" href="#">← 목록</a>' +
-        '<p class="ctag mono">' + (p.pinned ? 'PIN · ' : '') + esc(CAT[p.cat] || p.cat) + '</p><h2>' + esc(p.title) + '</h2>' +
+        '<a class="cback mono" href="#">← Ledger</a>' +
+        '<p class="cserial mono"><span>' + serial(id) + '</span><span class="ctag">' + (p.pinned ? '<b>Pinned</b>' : '') + esc(CAT[p.cat] || p.cat) + '</span></p><h2>' + esc(p.title) + '</h2>' +
         '<p class="cmeta">' + avatar(p.photo) + '<strong>' + esc(p.name || '기록자') + '</strong><span class="mono">' + when(p.createdAt) + (p.updatedAt ? ' · 수정됨' : '') + '</span></p>' +
         '<div class="cbody">' + text(p.body) + '</div>' + (imgs ? '<div class="cimgs">' + imgs + '</div>' : '') +
         '<div class="cact"><button class="clikebtn' + (liked ? ' is-on' : '') + '" data-c-like aria-pressed="' + liked + '">♥ <span>' + (p.likeCount || 0) + '</span></button>' +
@@ -110,7 +134,7 @@
           ((mine || admin) ? '<button class="btn btn--ghost" data-c-del>삭제</button>' : '') +
           (admin ? '<button class="btn btn--ghost" data-c-pin>' + (p.pinned ? '고정 해제' : '위에 고정') + '</button>' : '') +
           (mine && RSC.notify ? '<button class="btn btn--ghost cnotif" data-c-mute>' + (RSC.notify.muted(id) ? '이 글 알림 켜기' : '이 글 알림 끄기') + '</button>' : '') + '</div>' +
-        '<section class="ccom"><h3 class="mono">Comments <b class="gold">' + r[2].size + '</b></h3><ol>' + cms + '</ol>' +
+        '<section class="ccom"><h3 class="mono">Comments <b class="gold">' + pad(r[2].size) + '</b></h3>' + (cms ? '<ol>' + cms + '</ol>' : '<p class="ccom__none">아직 댓글이 없습니다.</p>') +
           '<form data-c-cform><textarea name="body" maxlength="1000" rows="3" placeholder="댓글을 남겨 주세요" required></textarea><button class="btn">댓글 등록</button></form></section>' +
         '</article>');
       view.dataset.pid = id; view.dataset.liked = liked ? '1' : ''; view.dataset.owner = p.uid; view.dataset.title = p.title;
@@ -124,8 +148,8 @@
     var go = function (p) {
       var cats = CATS.filter(function (c) { return c[0] !== 'all' && (c[0] !== 'notice' || admin); });
       show('<form class="cform" data-c-form' + (id ? ' data-id="' + id + '"' : '') + '>' +
-        '<a class="cback mono" href="' + (id ? '#p=' + id : '#') + '">← 돌아가기</a><h2>' + (id ? '글 수정' : '새 기록') + '</h2>' +
-        '<label><span class="mono">Category</span><select name="cat">' + cats.map(function (c) { return '<option value="' + c[0] + '"' + (p && p.cat === c[0] || (!p && c[0] === (cat !== 'all' && cat !== 'notice' ? cat : 'free')) ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></label>' +
+        '<a class="cback mono" href="' + (id ? '#p=' + id : '#') + '">← 돌아가기</a><header class="cform__head"><p class="mono gold">' + (id ? 'Amend Record / ' + serial(id) : 'New Record') + '</p><h2>' + (id ? '기록 수정' : '새 기록') + '</h2></header>' +
+        '<fieldset class="ccats"><legend class="mono">Category</legend>' + cats.map(function (c) { var on = p && p.cat === c[0] || (!p && c[0] === (cat !== 'all' && cat !== 'notice' ? cat : 'free')); return '<label><input type="radio" name="cat" value="' + c[0] + '"' + (on ? ' checked' : '') + '><span>' + c[1] + '</span></label>'; }).join('') + '</fieldset>' +
         '<label><span class="mono">Title</span><input name="title" maxlength="100" required value="' + esc(p ? p.title : '') + '"></label>' +
         '<label><span class="mono">Body</span><textarea name="body" maxlength="5000" rows="12" required>' + esc(p ? p.body : '') + '</textarea></label>' +
         (id ? '' : '<div class="cfiles"><label class="btn btn--ghost cfile"><input type="file" accept="image/*" multiple data-c-files>이미지 첨부 (최대 ' + MAXIMG + '장)</label><ul data-c-thumbs></ul></div>') +
@@ -179,6 +203,7 @@
   view.addEventListener('click', function (e) {
     var t = e.target;
     if (t.closest('[data-c-login]')) return RSC.auth && RSC.auth.open();
+    if (t.closest('[data-c-new]')) { location.hash = 'write'; return; }
     if (t.closest('[data-c-more]')) { busy(); return loadPosts(true).then(renderList).catch(fail); }
     var unf = t.closest('[data-c-unfile]'); if (unf) { pending.splice(+unf.dataset.cUnfile, 1); return thumbs(); }
     var pid = view.dataset.pid;
@@ -242,6 +267,8 @@
     if (!user) return gate();
     if (!booted) return;
     var h = location.hash, m;
+    /* 글·쓰기 화면에서도 왼쪽 색인 숫자가 맞게 (목록을 뒤에서 한 번 불러둔다) */
+    if (h && h !== '#' && !posts.length) loadPosts(false).then(counts, function () {});
     if ((m = /^#p=(.+)$/.exec(h))) return renderPost(m[1]);
     if (h === '#write') return renderForm(null);
     if ((m = /^#edit=(.+)$/.exec(h))) return renderForm(m[1]);
