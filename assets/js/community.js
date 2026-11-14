@@ -253,11 +253,15 @@
       var batch = F.writeBatch(db), ref = F.doc(F.collection(db, 'posts', pid, 'comments'));
       batch.set(ref, { body: body, uid: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '', createdAt: F.serverTimestamp() });
       batch.update(F.doc(db, 'posts', pid), { commentCount: F.increment(1) });
-      var owner = view.dataset.owner;
-      if (owner && owner !== user.uid)               /* 글쓴이 알림함에 넣는다 (끄기 설정은 받는 쪽에서 거른다) */
-        batch.set(F.doc(F.collection(db, 'users', owner, 'notifs')), { type: 'comment', pid: pid, title: (view.dataset.title || '').slice(0, 100),
-          from: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '', body: body.slice(0, 80), createdAt: F.serverTimestamp(), read: false });
-      batch.commit().then(function () { posts = []; lastDoc = null; renderPost(pid); }).catch(function (err) { b.disabled = false; alert('댓글을 저장하지 못했습니다 (' + (err.code || err.message) + ')'); });
+      var owner = view.dataset.owner, ptitle = (view.dataset.title || '').slice(0, 100);
+      batch.commit().then(function () {
+        /* 글쓴이 알림함은 따로, 실패해도 댓글은 남는다 (끄기 설정은 받는 쪽에서 거른다) */
+        if (owner && owner !== user.uid)
+          F.addDoc(F.collection(db, 'users', owner, 'notifs'), { type: 'comment', pid: pid, title: ptitle,
+            from: user.uid, name: user.displayName || '기록자', photo: user.photoURL || '', body: body.slice(0, 80), createdAt: F.serverTimestamp(), read: false })
+            .catch(function (err) { console.warn('[community] 알림을 넣지 못했습니다', err && err.code); });
+        posts = []; lastDoc = null; renderPost(pid);
+      }).catch(function (err) { b.disabled = false; alert('댓글을 저장하지 못했습니다 (' + (err.code || err.message) + ')'); });
     }
   });
   writeBtn.addEventListener('click', function () { location.hash = 'write'; });
