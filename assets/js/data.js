@@ -16,7 +16,7 @@ window.RSC_DATA = {
     /* 등록된 캐릭터 (번호: 덮어쓸 항목). 상세 설명은 아직 비워 둔다 */
     var CHARS = {
       1: { name: '루케리안 이그니바르', nameEn: 'LUKERIAN IGNIVAR',
-           image: 'assets/img/characters/01-lukerian.webp', thumb: 'assets/img/characters/01-lukerian-thumb.webp' }
+           image: 'assets/img/characters/01-lukerian.webp?v=2', thumb: 'assets/img/characters/01-lukerian-thumb.webp?v=2' }
     };
     return Object.assign({
       id: id,
@@ -188,6 +188,15 @@ window.RSC_DATA = {
   ],
 
   notices: [
+    {
+      title: 'Patch v-2.17.3',
+      date: '2026.11.14',
+      tag: '공지',
+      body: [
+        '루케리안 이그니바르 일러스트의 배경을 다시 깔끔하게 따냈습니다. 총과 코트 사이, 팔 틈, 다리 사이에 남아 있던 회색이 모두 지워졌습니다.',
+        '테두리의 회색 테를 없애 머리카락 끝까지 바탕과 자연스럽게 이어집니다. 바위 무늬와 총의 회색처럼 그림에 원래 있는 회색은 그대로 두었습니다.'
+      ]
+    },
     {
       title: 'Patch v-2.17.2',
       date: '2026.11.14',
