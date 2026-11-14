@@ -132,6 +132,8 @@
     $('[data-c-artno]').textContent = ch.id;
     RSC.scramble($('[data-c-code]'), ch.code, 900);
     $('[data-c-name]').textContent = ch.name;
+    /* 가장 긴 단어가 4글자를 넘으면 글자를 줄여 칸 밖으로 삐져나가지 않게 */
+    $('[data-c-name]').classList.toggle('is-long', Math.max.apply(null, ch.name.split(/\s+/).map(function (w) { return w.length; })) > 4);
     $('[data-c-title]').textContent = ch.quote || ch.title || '';
     $('[data-c-en]').textContent = ch.nameEn;
     $('[data-c-specs]').innerHTML = ch.specs.map(function (s) { return '<dt>' + esc(s[0]) + '</dt><dd>' + esc(s[1]) + '</dd>'; }).join('');

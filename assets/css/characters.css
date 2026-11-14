@@ -183,3 +183,7 @@
   .cfac svg, .cfac__all { width: 30px; height: 30px; }
   .cring__hint { display: none; }
 }
+/* 이름은 단어 단위로만 줄을 바꾼다 (예: 루케리안 / 이그니바르) */
+.cview__info h1 { word-break: keep-all; overflow-wrap: normal; }
+.cview__info h1.is-long { font-size: clamp(40px, 5vw, 80px); }
+@media (max-width: 600px) { .cview__info h1.is-long { font-size: clamp(34px, 10vw, 52px); } }
