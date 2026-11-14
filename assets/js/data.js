@@ -13,7 +13,12 @@ window.RSC_DATA = {
   /* 캐릭터 30명. faction 은 위 소속 id (지금은 임시로 8·8·7·7명씩 나눠 둠) */
   characters: Array.apply(null, Array(30)).map(function (_, k) {
     var n = k + 1, id = String(n).padStart(2, '0');
-    return {
+    /* 등록된 캐릭터 (번호: 덮어쓸 항목). 상세 설명은 아직 비워 둔다 */
+    var CHARS = {
+      1: { name: '루케리안 이그니바르', nameEn: 'LUKERIAN IGNIVAR',
+           image: 'assets/img/characters/01-lukerian.webp', thumb: 'assets/img/characters/01-lukerian-thumb.webp' }
+    };
+    return Object.assign({
       id: id,
       code: 'RSC-C' + id,
       faction: n <= 8 ? 'F1' : n <= 16 ? 'F2' : n <= 23 ? 'F3' : 'F4',
@@ -27,7 +32,7 @@ window.RSC_DATA = {
       record: [],
       image: '',               // 전신 일러스트
       thumb: ''                // 선택 창 배너
-    };
+    }, CHARS[n] || {});
   }),
 
   nations: [1, 2, 3, 4].map(function (n) {
@@ -183,6 +188,16 @@ window.RSC_DATA = {
   ],
 
   notices: [
+    {
+      title: 'Patch v-2.17.2',
+      date: '2026.11.14',
+      tag: '공지',
+      body: [
+        '캐릭터 01번에 「루케리안 이그니바르」를 등록했습니다. 캐릭터 선택 창의 배너와 상세 화면의 전신 일러스트가 들어갔습니다.',
+        '상세 설정(소속·종족·역할·프로필·능력·기록)은 아직 공개되지 않았습니다.',
+        '긴 이름이 단어 중간에서 끊기지 않도록, 단어 단위로 줄을 바꾸고 글자 크기를 맞추게 했습니다.'
+      ]
+    },
     {
       title: 'Patch v-2.17.1',
       date: '2026.11.13',
