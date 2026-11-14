@@ -44,7 +44,7 @@
   /* ── 01 HOME ── */
   var SECS = [['character', '캐릭터'], ['nation', '국가 소개'], ['map', '지도'], ['game', '게임'], ['world', '세계관'], ['novel', '소설'], ['notice', '공지'], ['gallery', '갤러리']];
   $('[data-quick]').innerHTML = SECS.map(function (s, i) {
-    return '<li><a href="#' + s[0] + '"><b>' + String(i + 2).padStart(2, '0') + '</b>' + s[1] + '</a></li>';
+    return '<li><a href="#' + s[0] + '"><b>' + String(i + 1).padStart(2, '0') + '</b>' + s[1] + '</a></li>';
   }).join('') + '<li class="home__quick-wide"><a href="community.html"><b>↗</b>커뮤니티 <span class="mono">Forum</span></a></li>';
 
   var clock = $('[data-clock]') || document.createElement('span');
@@ -1490,7 +1490,7 @@
 
   var hud = document.createElement('div');
   hud.className = 'deckhud';
-  hud.innerHTML = '<p class="mono deckhud__count"><b class="gold" data-d-no>01</b> / ' + String(secs.length).padStart(2, '0') + '<span data-d-name>Home</span></p>' +
+  hud.innerHTML = '<p class="mono deckhud__count"><b class="gold" data-d-no>00</b> / ' + String(secs.length - 1).padStart(2, '0') + '<span data-d-name>Home</span></p>' +
     '<button class="deckhud__next mono" data-d-next>Scroll</button><i class="deckline" aria-hidden="true"></i>';
   document.body.appendChild(hud);
   var cam = document.createElement('div');      /* 밀리터리 카메라 오버레이 (한 화면 모드) */
@@ -1514,7 +1514,7 @@
     var id = secs[cur].id;
     root.dataset.slide = id;
     RSC.setNav(id === 'end' ? '' : id);
-    $('[data-d-no]').textContent = String(cur + 1).padStart(2, '0');
+    $('[data-d-no]').textContent = String(cur).padStart(2, '0');   /* 홈 00, 구역 01~ (구역 제목의 Sec 번호와 같다) */
     $('[data-d-name]').textContent = EN[id] || id;
     $('[data-d-next]').textContent = cur === secs.length - 1 ? 'Top' : 'Scroll';
     if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
